@@ -1,0 +1,23 @@
+PROJECT 03 — EV NETWORK EXPANSION STRATEGY
+
+DATA SOURCE
+U.S. Department of Energy Alternative Fuels Data Center (AFDC), Alternative Fueling Station Locator and Alternative Fuel Corridor station datasets.
+
+SOURCE FIELDS USED / PLANNED
+Station status and access; EV network; Level 1, Level 2 and DC-fast EVSE port counts; connector types; latitude/longitude; city/state/ZIP; open date; date last confirmed; updated timestamp; facility type; funding sources when present.
+
+TRANSFORMATIONS
+1. Filter to electric stations and the intended access/status scope.
+2. Normalize null port counts and network naming.
+3. Calculate total ports, DC-fast share and ports per station.
+4. Aggregate by market/state/network/facility type.
+5. Keep federal corridor-qualified stations as a distinct strategic layer.
+6. Normalize strategy factors to 0–100.
+7. Apply transparent portfolio weights to build an Expansion Priority Score.
+8. Convert rankings into Expand / Densify / Defer recommendations.
+
+PORTFOLIO SCORE — NOT A DOE METRIC
+35% Coverage Gap + 30% DC-Fast Gap + 20% Corridor Relevance + 15% Network White Space.
+
+LIMITATIONS
+A real capital decision would require additional demand/economic inputs such as EV registrations, traffic/AADT, utilization, electricity/interconnection costs, real estate, permitting, incentives, competitive pipeline and expected returns.

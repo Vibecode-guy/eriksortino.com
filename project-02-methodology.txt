@@ -1,0 +1,21 @@
+PROJECT 02 — DATA & METHODOLOGY
+
+SOURCE
+City of Los Angeles Information Technology Agency — MyLA311 Service Request Data 2024
+Official landing page: https://data.lacity.org/City-Infrastructure-Service-Requests/MyLA311-Service-Request-Data-2024/b7dx-7gc3/about_data
+Dataset ID: b7dx-7gc3
+
+WHAT IS ORIGINAL
+Published MyLA311 service-request fields such as request number, CreatedDate, UpdatedDate, Owner, RequestType, Status, RequestSource, AssignTo, ServiceDate, ClosedDate and geographic fields.
+
+WHAT I TRANSFORM
+- Parse and validate timestamps.
+- Normalize blank/categorical values.
+- Derive month, weekday and hour.
+- Calculate resolution duration only for valid date sequences.
+- Create resolution-time bands.
+- Validate coordinates before spatial analysis.
+- Aggregate request type, owner, source and status for management views.
+
+WHAT I DO NOT CLAIM
+Derived metrics, analytical questions and recommendations are portfolio analysis and are not City of Los Angeles findings or endorsements. The page does not substitute synthetic values when the live API is unavailable.
