@@ -97,7 +97,14 @@ async function loadResolution(){
  const results=await Promise.allSettled([q(sampleQuery),q(countQuery),q(invalidQuery)]);
  const errors=[];
  const value=(i,label)=>{if(results[i].status==='fulfilled')return results[i].value;errors.push(label+': '+String(results[i].reason?.message||results[i].reason));return null;};
- const sample=value(0,'completed-record sample');
+ let sample=value(0,'completed-record sample');
+ // Fallback when the source rejects cross-column date comparisons.
+ if(!sample){
+  try{
+   sample=await q('$select='+enc('createddate,closeddate,requesttype')+'&$where='+enc('createddate is not null and closeddate is not null')+'&$order='+enc('createddate DESC')+'&$limit='+limit);
+   errors.push('Primary filtered sample failed; timestamp-only fallback succeeded. Client-side date validation applied.');
+  }catch(e){errors.push('timestamp-only fallback: '+String(e.message||e));}
+ }
  const total=value(1,'completed-record count');
  const bad=value(2,'invalid-date count');
  badEl.textContent=bad?Number(bad[0]?.n||0).toLocaleString():'Unavailable';
@@ -126,7 +133,7 @@ async function loadResolution(){
    box.textContent='No request type has at least 30 valid completed records in this sample.';
    insight.textContent='Insufficient qualifying sample sizes for request-type ranking.';
   }
-  document.getElementById('resolutionBanner').textContent='Analysis ready · Recent sample averages are labeled separately from citywide counts.';status.textContent='Average closure time and category rankings use the latest '+rows.length.toLocaleString()+' valid completed records (up to '+limit.toLocaleString()+'); not citywide averages. '+(totalN!==null?'Total valid completed records are counted separately across the dataset. ':'')+'Open and negative-duration records excluded.'+(errors.length?' Partial query errors: '+errors.join('; '):'');
+  document.getElementById('resolutionBanner').textContent=rows.length?'Analysis ready · '+rows.length.toLocaleString()+' validated recent completions analyzed.':'No valid completion timestamps in the returned sample.';status.textContent='Average closure time and category rankings use the latest '+rows.length.toLocaleString()+' valid completed records (up to '+limit.toLocaleString()+'); not citywide averages. '+(totalN!==null?'Total valid completed records are counted separately across the dataset. ':'')+'Open and negative-duration records excluded.'+(errors.length?' Partial query errors: '+errors.join('; '):'');
  }else{
   avgEl.textContent='Unavailable';
   box.textContent='Unable to retrieve completed-request timestamps.';
