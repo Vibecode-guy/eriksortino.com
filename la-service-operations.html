@@ -79,7 +79,57 @@ async function loadData(){const msg=document.getElementById('liveMsg');msg.textC
  msg.textContent='Live analytical snapshot loaded directly from the City of Los Angeles public API. No synthetic records substituted.';
 }catch(e){msg.textContent='Live API could not be reached from this browser session. No values have been fabricated; source and transformation methodology remain available below.';}}
 
-async function loadResolution(){const status=document.getElementById('resolutionStatus');status.textContent='Querying valid completion durations from City records…';const valid="createddate is not null and closeddate is not null and closeddate >= createddate";const invalid="createddate is not null and closeddate is not null and closeddate < createddate";try{const [summary,bad,categories]=await Promise.all([q('$select='+enc('count(*) as n,avg(date_diff_ms(closeddate,createddate)) as avg_ms')+'&$where='+enc(valid)),q('$select='+enc('count(*) as n')+'&$where='+enc(invalid)),q('$select='+enc('requesttype,count(*) as n,avg(date_diff_ms(closeddate,createddate)) as avg_ms')+'&$where='+enc(valid+' and requesttype is not null')+'&$group='+enc('requesttype')+'&$having='+enc('count(*) >= 30')+'&$order='+enc('avg_ms DESC')+'&$limit=8')]);const n=Number(summary[0]?.n||0),avg=Number(summary[0]?.avg_ms);document.getElementById('resolvedCount').textContent=n.toLocaleString();document.getElementById('avgHours').textContent=n&&Number.isFinite(avg)?(avg/3600000).toFixed(1)+' h':'—';document.getElementById('badDates').textContent=Number(bad[0]?.n||0).toLocaleString();const rows=categories.map(x=>({label:String(x.requesttype||'Unknown'),hours:Number(x.avg_ms)/3600000,n:Number(x.n)})).filter(x=>Number.isFinite(x.hours)&&x.hours>=0);const box=document.getElementById('resolutionBars');box.replaceChildren();if(rows.length){const max=Math.max(...rows.map(x=>x.hours),1);rows.forEach(x=>{const row=document.createElement('div');row.className='row';const name=document.createElement('span');name.textContent=x.label;const track=document.createElement('div');track.className='track';const fill=document.createElement('div');fill.className='fill';fill.style.width=(x.hours/max*100).toFixed(1)+'%';track.appendChild(fill);const val=document.createElement('b');val.textContent=x.hours.toFixed(1)+'h';val.title=x.n.toLocaleString()+' completed requests';row.append(name,track,val);box.appendChild(row)});document.getElementById('resolutionInsight').textContent='Highest average among qualifying categories: '+rows[0].label+' ('+rows[0].hours.toFixed(1)+' hours across '+rows[0].n.toLocaleString()+' completed requests). Next: compare medians, open backlog, assignment timing and geography before choosing a staffing or process intervention.';}else{box.textContent='No qualifying categories were returned.';document.getElementById('resolutionInsight').textContent='No qualifying category was returned; review the dataset and query conditions.';}status.textContent='Live 2024 City records; negative durations excluded, open requests excluded, minimum category sample 30. Counts and averages are not independently audited.';}catch(e){status.textContent='Resolution metrics unavailable: the City API did not return the required duration aggregates. No values were substituted.';document.getElementById('resolutionInsight').textContent='Validate closure-date fields and API aggregate support before interpreting service-resolution performance.';}}
+async function loadResolution(){
+ const status=document.getElementById('resolutionStatus');
+ status.textContent='Querying City completion-duration aggregates…';
+ const valid='createddate is not null and closeddate is not null and closeddate >= createddate';
+ const invalid='createddate is not null and closeddate is not null and closeddate < createddate';
+ const queries=[
+  '$select='+enc('count(*) as n,avg(date_diff_ms(closeddate,createddate)) as avg_ms')+'&$where='+enc(valid),
+  '$select='+enc('count(*) as n')+'&$where='+enc(invalid),
+  '$select='+enc('requesttype,count(*) as n,avg(date_diff_ms(closeddate,createddate)) as avg_ms')+'&$where='+enc(valid+' and requesttype is not null')+'&$group='+enc('requesttype')+'&$having='+enc('count(*) >= 30')+'&$order='+enc('avg_ms DESC')+'&$limit=8'
+ ];
+ const results=await Promise.allSettled(queries.map(query=>q(query)));
+ const errors=[];
+ const [summary,bad,categories]=results.map((result,i)=>{
+  if(result.status==='fulfilled')return result.value;
+  errors.push(['duration summary','invalid-date count','request-type ranking'][i]+': '+String(result.reason?.message||result.reason));
+  return null;
+ });
+ if(summary){
+  const n=Number(summary[0]?.n||0),avg=Number(summary[0]?.avg_ms);
+  document.getElementById('resolvedCount').textContent=n.toLocaleString();
+  document.getElementById('avgHours').textContent=n&&Number.isFinite(avg)?(avg/3600000).toFixed(1)+' h':'—';
+ }else{
+  document.getElementById('resolvedCount').textContent='Unavailable';
+  document.getElementById('avgHours').textContent='Unavailable';
+ }
+ document.getElementById('badDates').textContent=bad?Number(bad[0]?.n||0).toLocaleString():'Unavailable';
+ const box=document.getElementById('resolutionBars');
+ box.replaceChildren();
+ if(categories){
+  const rows=categories.map(x=>({label:String(x.requesttype||'Unknown'),hours:Number(x.avg_ms)/3600000,n:Number(x.n)})).filter(x=>Number.isFinite(x.hours)&&x.hours>=0);
+  if(rows.length){
+   const max=Math.max(...rows.map(x=>x.hours),1);
+   rows.forEach(x=>{
+    const row=document.createElement('div');row.className='row';
+    const name=document.createElement('span');name.textContent=x.label;
+    const track=document.createElement('div');track.className='track';
+    const fill=document.createElement('div');fill.className='fill';fill.style.width=(x.hours/max*100).toFixed(1)+'%';track.appendChild(fill);
+    const val=document.createElement('b');val.textContent=x.hours.toFixed(1)+'h';val.title=x.n.toLocaleString()+' completed requests';
+    row.append(name,track,val);box.appendChild(row);
+   });
+   document.getElementById('resolutionInsight').textContent='Highest average among qualifying categories: '+rows[0].label+' ('+rows[0].hours.toFixed(1)+' hours across '+rows[0].n.toLocaleString()+' completed requests). Compare medians, backlog, assignment timing and geography before changing staffing.';
+  }else{
+   box.textContent='No qualifying categories were returned.';
+   document.getElementById('resolutionInsight').textContent='Review request-type samples and query conditions.';
+  }
+ }else{
+  box.textContent='Request-type ranking unavailable; other metrics may still be available.';
+  document.getElementById('resolutionInsight').textContent='The request-type aggregate failed. Review API support for duration aggregation and grouping.';
+ }
+ status.textContent=errors.length?'Partial live results. Failed queries: '+errors.join('; ')+'. Refresh to retry.':'Live 2024 City records; negative durations and open requests excluded; minimum category sample 30. Counts and averages are not independently audited.';
+}
 async function loadGeo(){
  const note=document.getElementById('geoNote');
  note.textContent='Loading City geographic records…';
