@@ -399,8 +399,8 @@ async function loadWeekHour(){
     const n=matrix[d][h];hours[h]+=n;dayTotal+=n;
     const td=document.createElement('td'),intensity=n/peak;
     td.textContent=n.toLocaleString();td.title=days[d]+' '+String(h).padStart(2,'0')+':00 — '+n.toLocaleString()+' requests';
-    td.style.backgroundColor='rgba(30,96,72,'+(0.08+0.72*intensity).toFixed(3)+')';
-    if(intensity>=0.56)td.style.color='#fff';
+    td.style.backgroundColor='rgba(30,96,72,'+(0.06+0.36*intensity).toFixed(3)+')';
+    td.style.color='#17211d'; // Consistent high-contrast ink over the lightest-to-darkest heat cells.
     tr.appendChild(td);
    }
    const sum=document.createElement('td');sum.className='totalcell';sum.textContent=dayTotal.toLocaleString();tr.appendChild(sum);body.appendChild(tr);
