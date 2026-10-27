@@ -74,14 +74,36 @@ WHERE created_date IS NOT NULL;</div><div class="card method"><table><tr><th>Sou
 const API='https://data.lacity.org/resource/b7dx-7gc3.json';
 let monthlyData=[];
 function renderTrend(){if(!monthlyData.length)return;const mode=document.getElementById('trendMode').value;const names=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const sum=monthlyData.reduce((a,x)=>a+x.c,0);const max=Math.max(...monthlyData.map(x=>x.c),1);const trend=document.getElementById('monthTrend');trend.innerHTML='';monthlyData.forEach(x=>{const d=document.createElement('div');d.className='trendcol';d.style.height=(x.c?Math.max(3,x.c/max*100):0)+'%';const value=mode==='share'?(sum?(x.c/sum*100).toFixed(1)+'%':'0%'):x.c.toLocaleString();d.title=names[x.m-1]+': '+value;d.setAttribute('aria-label',d.title);const number=document.createElement('span');number.className='trendvalue';number.textContent=mode==='share'?(sum?(x.c/sum*100).toFixed(1)+'%':'0%'):(x.c/1000).toFixed(1)+'k';number.dataset.compact=mode==='share'?(sum?Math.round(x.c/sum*100)+'%':'0%'):Math.round(x.c/1000)+'k';number.title=x.c.toLocaleString()+' requests';d.appendChild(number);const label=document.createElement('span');label.textContent=names[x.m-1];d.appendChild(label);trend.appendChild(d)});const table=document.getElementById("trendTable");table.replaceChildren();monthlyData.forEach(x=>{const tr=document.createElement("tr");[names[x.m-1],x.c.toLocaleString(),sum?(100*x.c/sum).toFixed(2)+"%":"—"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});table.appendChild(tr)});trend.setAttribute("aria-label","Monthly 2024 MyLA311 requests; exact values in the accessible table below.");const peak=monthlyData.reduce((a,b)=>b.c>a.c?b:a);const low=monthlyData.reduce((a,b)=>b.c<a.c?b:a);document.getElementById('demandInsight').textContent='Peak demand: '+names[peak.m-1]+' ('+peak.c.toLocaleString()+' requests). Lowest: '+names[low.m-1]+' ('+low.c.toLocaleString()+'). Investigate request-type mix and service capacity before changing staffing; this dataset shows volume, not workload hours.';document.getElementById('trendNote').textContent='City of Los Angeles 2024 records. '+(mode==='share'?'Each bar reports its share of requests with a valid creation month.':'Each bar reports requests by creation month.')+' Numbers above the bars show thousands of requests (k) or percentage share. Exact counts are in the accessible monthly table. Bar heights use a common maximum.';}
-const q=async u=>{
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
- try{
-  const r=await fetch(API+'?'+u,{signal:controller.signal});
-  if(!r.ok){let detail='';try{const body=await r.json();detail=body.message||body.error||'';}catch(_){detail='';}throw Error('City API HTTP '+r.status+(detail?': '+String(detail).slice(0,260):''));}
-  const data=await r.json();if(!Array.isArray(data))throw Error('City API returned an unexpected response');
-  return data;
- }finally{clearTimeout(timer);}
+// Cap concurrent Socrata requests and deduplicate identical in-flight queries.
+const API_MAX_CONCURRENT=5;
+let apiActive=0;
+const apiWaiting=[],apiInFlight=new Map();
+function scheduleCityQuery(task){
+ return new Promise((resolve,reject)=>{
+  const start=()=>{
+   apiActive++;
+   Promise.resolve().then(task).then(resolve,reject).finally(()=>{
+    apiActive--;
+    const next=apiWaiting.shift();if(next)next();
+   });
+  };
+  if(apiActive<API_MAX_CONCURRENT)start();else apiWaiting.push(start);
+ });
+}
+const q=u=>{
+ if(apiInFlight.has(u))return apiInFlight.get(u);
+ const pending=scheduleCityQuery(async()=>{
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+  try{
+   const r=await fetch(API+'?'+u,{signal:controller.signal,headers:{Accept:'application/json'}});
+   if(!r.ok){let detail='';try{const body=await r.json();detail=body.message||body.error||'';}catch(_){detail='';}throw Error('City API HTTP '+r.status+(detail?': '+String(detail).slice(0,260):''));}
+   const data=await r.json();if(!Array.isArray(data))throw Error('City API returned an unexpected response');
+   return data;
+  }finally{clearTimeout(timer);}
+ });
+ apiInFlight.set(u,pending);
+ pending.finally(()=>{if(apiInFlight.get(u)===pending)apiInFlight.delete(u);}).catch(()=>{});
+ return pending;
 };
 const enc=s=>encodeURIComponent(s);
 function bars(id,rows,key='count'){const root=document.getElementById(id);root.replaceChildren();const mx=Math.max(...rows.map(x=>Number(x[key])||0),1);rows.forEach(x=>{const row=document.createElement('div');row.className='row';const label=document.createElement('span');label.textContent=String(x.label||x.requesttype||x.requestsource||'Unknown');const track=document.createElement('div');track.className='track';const fill=document.createElement('div');fill.className='fill';fill.style.width=(Math.max(0,Number(x[key])||0)/mx*100).toFixed(1)+'%';track.appendChild(fill);const val=document.createElement('b');val.textContent=Number(x[key]||0).toLocaleString();row.append(label,track,val);root.appendChild(row)})}
@@ -123,7 +145,7 @@ async function loadData(){const msg=document.getElementById('liveMsg');msg.textC
  bars('typeBars',typ);bars('sourceBars',src);renderPareto(typ,total);
  const byMonth=new Map(months.map(x=>[Number(x.month),Number(x.count)]));
  if([...byMonth.entries()].some(([m,c])=>!Number.isInteger(m)||m<1||m>12||!Number.isSafeInteger(c)||c<0))throw Error('Invalid monthly summary returned by City API');
- monthlyData=Array.from({length:12},(_,i)=>({m:i+1,c:byMonth.get(i+1)||0}));renderTrend();
+ monthlyData=Array.from({length:12},(_,i)=>({m:i+1,c:byMonth.get(i+1)||0}));if(monthlyData.reduce((sum,x)=>sum+x.c,0)!==total)throw Error('Monthly counts do not reconcile with the 2024 cohort total');renderTrend();
  msg.textContent='Live 2024 creation-cohort snapshot loaded from the City of Los Angeles public API. Recorded status reflects the current dataset; no synthetic records substituted.';
 }catch(e){
   for(const id of ['total','closed','types','owners'])document.getElementById(id).textContent='—';
@@ -317,9 +339,11 @@ async function loadFlow(){
  const closedWhere=cohort+" and closeddate >= createddate and closeddate < '2025-01-01T00:00:00'";
  const closedQuery='$select='+enc('date_extract_m(closeddate) as month,count(*) as n')+'&$where='+enc(closedWhere)+'&$group='+enc('date_extract_m(closeddate)')+'&$order='+enc('month');
  try{
-  const [created,closed]=await Promise.all([q(createdQuery),q(closedQuery)]);
+  const [created,closed,createdTotal,closedTotal]=await Promise.all([q(createdQuery),q(closedQuery),q('$select='+enc('count(*) as n')+'&$where='+enc(cohort)),q('$select='+enc('count(*) as n')+'&$where='+enc(closedWhere))]);
   const toMonths=rows=>{const a=Array(12).fill(0);for(const x of rows){const m=Number(x.month),n=Number(x.n);if(!Number.isInteger(m)||m<1||m>12||!Number.isFinite(n)||n<0)throw Error('Invalid monthly aggregate returned');a[m-1]+=n;}return a;};
   const arrivals=toMonths(created),completions=toMonths(closed);
+  const createdN=arrivals.reduce((a,b)=>a+b,0),closedN=completions.reduce((a,b)=>a+b,0);
+  if(!Number.isSafeInteger(Number(createdTotal[0]?.n))||!Number.isSafeInteger(Number(closedTotal[0]?.n))||createdN!==Number(createdTotal[0]?.n)||closedN!==Number(closedTotal[0]?.n))throw Error('Monthly flow aggregates do not reconcile with full-cohort totals');
   const max=Math.max(1,...arrivals,...completions),names=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const series=[];let outstanding=0;
   for(let i=0;i<12;i++){outstanding+=arrivals[i]-completions[i];if(outstanding<0)throw Error('Cohort closure count exceeds intake; cannot infer a reliable cumulative gap');series.push({name:names[i],created:arrivals[i],closed:completions[i],gap:outstanding});}
@@ -330,7 +354,6 @@ async function loadFlow(){
    const label=document.createElement('span');label.textContent=x.name;col.append(pair,label);chart.appendChild(col);
    const tr=document.createElement('tr');for(const v of [x.name,x.created.toLocaleString(),x.closed.toLocaleString(),x.gap.toLocaleString()]){const td=document.createElement('td');td.textContent=v;tr.appendChild(td);}table.appendChild(tr);
   }
-  const createdN=arrivals.reduce((a,b)=>a+b,0),closedN=completions.reduce((a,b)=>a+b,0);
   status.textContent='2024 creation cohort: '+createdN.toLocaleString()+' created; '+closedN.toLocaleString()+' with valid closure timestamps in calendar 2024; '+outstanding.toLocaleString()+' without such a timestamp by year-end. These are full-dataset aggregates, not samples. The cumulative gap is not official active backlog and includes requests closed later or without a ClosedDate field.';
  }catch(e){chart.textContent='Cohort trend unavailable; no inferred backlog is displayed.';table.replaceChildren();status.textContent='Monthly cohort query failed: '+String(e.message||e)+'. Other sections remain available.';}
 }
