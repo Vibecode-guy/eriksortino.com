@@ -32,14 +32,21 @@ function makeSummary(z,zt,g,gt,gg,ggt){
  const zipKey=x=>String(x.zipcode??'').trim();
  const unique=(rows,label)=>{const keys=rows.map(zipKey);if(new Set(keys).size!==keys.length)throw Error(label+': duplicate ZIP group');};
  unique(z,'ZIP');unique(g,'Geocoded');unique(gg,'Gap');
+ // Check geographic subset membership for each ZIP, not just the grand total.
+ const allZipCounts=new Map(z.map(x=>[zipKey(x),Number(x.n)]));
  const demand=new Map(g.map(x=>[zipKey(x),Number(x.n)])),gapByZip=new Map();
+ for(const row of g){
+  const zip=zipKey(row),n=Number(row.n),lat=Number(row.lat),lon=Number(row.lon);
+  if(!allZipCounts.has(zip)||n>allZipCounts.get(zip))throw Error('Geocoded ZIP demand exceeds all-record ZIP demand');
+  if(row.lat==null||row.lon==null||!Number.isFinite(lat)||!Number.isFinite(lon)||lat<33.65||lat>34.35||lon< -118.75||lon> -118.1)throw Error('Invalid geocoded ZIP mean coordinate');
+ }
  for(const row of gg){const zip=zipKey(row),n=Number(row.n);if(!demand.has(zip)||n>demand.get(zip))throw Error('Year-end gap exceeds matching ZIP demand');gapByZip.set(zip,n);}
  const zipGroups=z.map(x=>({zip:String(x.zipcode||'').trim()||null,requests:Number(x.n)}));
  const geocodedZipGroups=g.map(x=>({zip:String(x.zipcode||'').trim()||null,requests:Number(x.n),meanLatitude:x.lat==null?null:Number(x.lat),meanLongitude:x.lon==null?null:Number(x.lon),historicalYearEndTimestampGap:gapByZip.get(zipKey(x))||0}));
  if(geocodedZipGroups.some(x=>x.zip&&(!Number.isFinite(x.meanLatitude)||!Number.isFinite(x.meanLongitude))))throw Error('Invalid centroid');
  return {source:API,createdStartInclusive:'2024-01-01T00:00:00',createdEndExclusive:'2025-01-01T00:00:00',coordinateFilter:BOUNDS,generatedAt:new Date().toISOString(),
- notes:['2024 creation cohort only.','Missing and out-of-range coordinates are excluded from geocoded totals.','ZIPs are not operational districts; average request coordinates are not ZIP polygons.','Historical year-end closure-timestamp gap is not official open backlog; includes missing or late closure timestamps.','No staffing need or cost savings inferred.'],
- coverage:{cohortRequests:zt,geocodedPlausibleRequests:gt,excludedMissingOrOutsideBoundingBox:zt-gt,missingZipAllRecords:zipGroups.filter(x=>!x.zip).reduce((a,x)=>a+x.requests,0),missingZipGeocoded:geocodedZipGroups.filter(x=>!x.zip).reduce((a,x)=>a+x.requests,0),zipGroups:zipGroups.length,geocodedZipGroups:geocodedZipGroups.length,geocodedYearEndTimestampGapRequests:ggt,missingZipYearEndTimestampGap:gg.filter(x=>!zipKey(x)).reduce((a,x)=>a+Number(x.n),0)},
+ notes:['2024 creation cohort only.','Missing and out-of-range coordinates are excluded from geocoded totals.','ZIPs are not operational districts; average request coordinates are not ZIP polygons.','Historical year-end closure-timestamp gap is not official open backlog; includes missing or late closure timestamps.','Closure timestamps reflect the dataset when generated; late corrections or backfills can change the historical timestamp-gap indicator.','No staffing need or cost savings inferred.'],
+ coverage:{cohortRequests:zt,geocodedPlausibleRequests:gt,excludedMissingOrOutsideBoundingBox:zt-gt,geocodedCoveragePercent:zt?Number((100*gt/zt).toFixed(2)):null,excludedCoordinatePercent:zt?Number((100*(zt-gt)/zt).toFixed(2)):null,missingZipAllRecords:zipGroups.filter(x=>!x.zip).reduce((a,x)=>a+x.requests,0),missingZipGeocoded:geocodedZipGroups.filter(x=>!x.zip).reduce((a,x)=>a+x.requests,0),zipGroups:zipGroups.length,geocodedZipGroups:geocodedZipGroups.length,geocodedYearEndTimestampGapRequests:ggt,missingZipYearEndTimestampGap:gg.filter(x=>!zipKey(x)).reduce((a,x)=>a+Number(x.n),0)},
  zipGroups,geocodedZipGroups};
 }
 async function main(){
