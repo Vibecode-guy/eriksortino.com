@@ -39,7 +39,7 @@
   const matrixBody=node('tbody');matrixBody.id='regionMatrixTable';matrixTable.append(matrixBody);matrixWrap.append(matrixTable);matrixSection.append(matrixWrap);
   card.append(matrixSection);
   controls.insertAdjacentElement('afterend',card);
-  const style=node('style');style.textContent='.lens-btn{background:transparent;color:var(--green);border:1px solid var(--line);padding:6px 9px;font-size:13px;text-align:left}.lens-btn:hover,.lens-btn:focus-visible{background:#e7f1eb}.region-matrix{border-top:1px solid var(--line);margin-top:20px;padding-top:18px}.region-matrix-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.region-matrix-cell{background:#e7f1eb;border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}.region-matrix-cell h4{margin:0 0 5px;font-size:14px}.region-matrix-cell p{margin:0;font-size:13px;overflow-wrap:anywhere}@media(max-width:560px){.region-matrix-grid{grid-template-columns:1fr}}';document.head.append(style);
+  const style=node('style');style.textContent='.lens-btn{background:transparent;color:var(--green);border:1px solid var(--line);padding:6px 9px;font-size:13px;text-align:left}.lens-btn:hover,.lens-btn:focus-visible{background:#e7f1eb}.region-matrix{border-top:1px solid var(--line);margin-top:20px;padding-top:18px}.region-matrix-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.region-matrix-cell{background:#e7f1eb;border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}.region-matrix-cell h4{margin:0 0 5px;font-size:14px}.region-matrix-cell p{margin:0;font-size:13px;overflow-wrap:anywhere}.region-matrix-cell .next-action{margin-top:8px;font-size:12px;color:#435049}@media(max-width:560px){.region-matrix-grid{grid-template-columns:1fr}}';document.head.append(style);
   function explain(key){
    const el=document.getElementById('regionExplanation');
    if(!el)return;
@@ -71,11 +71,18 @@
       'low-low':'Below peer median · both signals'
     };
     matrixStatus.textContent=result.eligibleCount+' of six approximate lenses comparable; '+result.excludedCount+' excluded (no mapped demand or incomplete timestamp gap). Peer medians: '+result.demandMedian.toLocaleString()+' geocoded requests and '+result.gapMedian.toFixed(1)+'% timestamp-gap share. Equal-to-median values fall in the higher group. No official backlog, closure duration, or staffing conclusions.';
+    const nextChecks={
+      'high-high':'Next check: audit missing ClosedDate usage by service category; then compare category-normalized closure duration and actual capacity before any intervention.',
+      'high-low':'Next check: examine demand seasonality, intake channels, and category mix; volume alone does not demonstrate a capacity shortage.',
+      'low-high':'Next check: inspect timestamp completeness, closure coding, and long-tail service complexity before interpreting the gap.',
+      'low-low':'Next check: validate reporting completeness and use as a comparison group only after matching service mix and observation windows.'
+    };
     for(const key of ['high-high','high-low','low-high','low-low']){
       const cell=node('div');cell.className='region-matrix-cell';
       cell.append(node('h4',labels[key]));
       const matches=result.rows.filter(r=>r.quadrant===key);
       cell.append(node('p',matches.length?matches.map(r=>r.name).join(' · '):'No eligible area lenses in this quadrant.'));
+      const guidance=node('p',nextChecks[key]);guidance.className='next-action';cell.append(guidance);
       matrixGrid.append(cell);
     }
     for(const row of result.rows){
