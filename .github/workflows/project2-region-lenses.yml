@@ -1,0 +1,38 @@
+name: Project 2 regional lens checks
+on:
+  push:
+    paths:
+      - la-service-operations.html
+      - scripts/project2-region-lenses.js
+      - scripts/project2-region-ui.js
+      - scripts/test-project2-region-lenses.cjs
+      - .github/workflows/project2-region-lenses.yml
+  workflow_dispatch:
+jobs:
+  region-lens-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate script syntax
+        run: |
+          node --check scripts/project2-region-lenses.js
+          node --check scripts/project2-region-ui.js
+          node --check scripts/test-project2-region-lenses.cjs
+      - name: Run synthetic geographic reconciliation tests
+        run: node --test scripts/test-project2-region-lenses.cjs
+      - name: Verify dashboard loads both modules in dependency order
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const html=fs.readFileSync('la-service-operations.html','utf8');
+          const core=html.indexOf('src="scripts/project2-region-lenses.js"');
+          const ui=html.indexOf('src="scripts/project2-region-ui.js"');
+          assert(core>=0&&ui>core,'Regional scripts missing or out of order');
+          assert(html.includes('id="regionFocus"'),'Region selector missing');
+          const inline=html.match(/<script>\s*([\s\S]*?)<\/script><\/body>/);
+          assert(inline,'Dashboard inline JavaScript missing');
+          new Function(inline[1]);
+          NODE
