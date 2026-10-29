@@ -44,6 +44,7 @@ test('four investigation quadrants and accessible comparison rows render from va
  assert.equal(ids.get('regionMatrixTable').children.length,4);
  assert.match(ids.get('regionMatrixStatus').textContent,/4 of six approximate lenses comparable/);
  assert.match(ids.get('regionMatrixStatus').textContent,/No official backlog/);
+ assert.match(ids.get('regionMatrixGrid').children[0].children[2].textContent,/audit missing ClosedDate usage/);
 });
 test('failed geographic refresh clears stale matrix rather than displaying old values',()=>{
  const {window,ids}=harness();window.renderGeoHeat(fixture,1000);window.renderGeoHeat([],0);
