@@ -61,5 +61,26 @@
       }))
     };
   }
-  return {REGIONS,distanceKm,assignLens,summarize};
+  // Relative investigation screen only. Closure duration and actual staffing
+  // capacity are unavailable; this MUST NOT be called a service-pressure score.
+  function median(values){
+    const sorted=[...values].sort((a,b)=>a-b),middle=Math.floor(sorted.length/2);
+    return sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2;
+  }
+  function investigationMatrix(summary){
+    if(!summary||!Array.isArray(summary.rows))throw Error('Expected reconciled regional summary');
+    const eligible=summary.rows.filter(r=>r.zipGroups>0&&Number.isSafeInteger(r.requests)&&r.requests>0&&
+      Number.isFinite(r.historicalGapShare)&&r.historicalGapShare>=0&&r.historicalGapShare<=100);
+    const excludedCount=summary.rows.length-eligible.length;
+    if(eligible.length<3)return {eligibleCount:eligible.length,excludedCount,demandMedian:null,gapMedian:null,rows:[]};
+    const demandMedian=median(eligible.map(r=>r.requests));
+    const gapMedian=median(eligible.map(r=>r.historicalGapShare));
+    const rows=eligible.map(r=>{
+      const demandHigh=r.requests>=demandMedian,gapHigh=r.historicalGapShare>=gapMedian;
+      return {id:r.id,name:r.name,requests:r.requests,gapShare:r.historicalGapShare,
+        demandHigh,gapHigh,quadrant:(demandHigh?'high':'low')+'-'+(gapHigh?'high':'low')};
+    });
+    return {eligibleCount:eligible.length,excludedCount,demandMedian,gapMedian,rows};
+  }
+  return {REGIONS,distanceKm,assignLens,summarize,investigationMatrix};
 });
