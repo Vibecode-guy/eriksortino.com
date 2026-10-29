@@ -2,7 +2,7 @@
 // Synthetic ZIP aggregates only. No City measurements are invented.
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
-const {REGIONS,assignLens,summarize,distanceKm}=require('./project2-region-lenses.js');
+const {REGIONS,assignLens,summarize,distanceKm,investigationMatrix}=require('./project2-region-lenses.js');
 const zip=(id,n,lat,lon,gap)=>({zip:id,n,lat,lon,gap});
 test('six named lenses exist; no ZIP is counted twice',()=>{
  assert.equal(REGIONS.length,6);
@@ -48,4 +48,42 @@ test('zero mapped ZIPs never invent a coverage percentage',()=>{
  const r=summarize([]);
  assert.equal(r.assignedShare,null);
  assert.equal(r.rows.every(x=>x.historicalGap===null),true);
+});
+
+test('investigation screen uses peer medians and never claims staffing need',()=>{
+ const data=[
+  zip('90731',100,33.73,-118.29,10),
+  zip('90012',200,34.05,-118.24,100),
+  zip('90045',300,33.95,-118.38,30),
+  zip('91316',400,34.18,-118.45,200)
+ ];
+ const result=investigationMatrix(summarize(data));
+ assert.equal(result.eligibleCount,4);
+ assert.equal(result.demandMedian,250);
+ assert.equal(result.gapMedian,30);
+ assert.equal(result.rows.find(x=>x.id==='harbor').quadrant,'low-low');
+ assert.equal(result.rows.find(x=>x.id==='dtla').quadrant,'low-high');
+ assert.equal(result.rows.find(x=>x.id==='westside').quadrant,'high-low');
+ assert.equal(result.rows.find(x=>x.id==='valley').quadrant,'high-high');
+});
+test('matrix excludes unavailable timestamp gaps and requires three comparable lenses',()=>{
+ const data=[
+  zip('90731',100,33.73,-118.29,null),
+  zip('90012',200,34.05,-118.24,100),
+  zip('90045',300,33.95,-118.38,30),
+  zip('91316',400,34.18,-118.45,200)
+ ];
+ const result=investigationMatrix(summarize(data));
+ assert.equal(result.eligibleCount,3);
+ assert.equal(result.excludedCount,3);
+ assert.equal(result.rows.some(x=>x.id==='harbor'),false);
+ const insufficient=investigationMatrix(summarize(data.slice(0,2)));
+ assert.equal(insufficient.rows.length,0);
+ assert.equal(insufficient.demandMedian,null);
+});
+test('matrix never manufactures metrics from empty or missing regions',()=>{
+ const empty=investigationMatrix(summarize([]));
+ assert.equal(empty.eligibleCount,0);
+ assert.equal(empty.rows.length,0);
+ assert.throws(()=>investigationMatrix(null),/Expected/);
 });
