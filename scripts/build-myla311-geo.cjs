@@ -3,6 +3,7 @@
 // No raw case IDs, addresses or individual points are exported.
 'use strict';
 const fs=require('node:fs'),path=require('node:path');
+const {summarize: summarizeRegionLenses,investigationMatrix}=require('./project2-region-lenses.js');
 const API='https://data.lacity.org/resource/b7dx-7gc3.json';
 const COHORT="createddate >= '2024-01-01T00:00:00' and createddate < '2025-01-01T00:00:00'";
 const BOUNDS='latitude >= 33.65 and latitude <= 34.35 and longitude >= -118.75 and longitude <= -118.1';
@@ -44,10 +45,29 @@ function makeSummary(z,zt,g,gt,gg,ggt){
  const zipGroups=z.map(x=>({zip:String(x.zipcode||'').trim()||null,requests:Number(x.n)}));
  const geocodedZipGroups=g.map(x=>({zip:String(x.zipcode||'').trim()||null,requests:Number(x.n),meanLatitude:x.lat==null?null:Number(x.lat),meanLongitude:x.lon==null?null:Number(x.lon),historicalYearEndTimestampGap:gapByZip.get(zipKey(x))||0}));
  if(geocodedZipGroups.some(x=>x.zip&&(!Number.isFinite(x.meanLatitude)||!Number.isFinite(x.meanLongitude))))throw Error('Invalid centroid');
+ // Reuse the exact exploratory lens classifier used by the interactive dashboard.
+ // Missing ZIP groups cannot be assigned to a lens; report them separately.
+ const lensPoints=geocodedZipGroups.filter(x=>x.zip).map(x=>({
+  zip:x.zip,n:x.requests,lat:x.meanLatitude,lon:x.meanLongitude,gap:x.historicalYearEndTimestampGap
+ }));
+ const regionLenses=summarizeRegionLenses(lensPoints);
+ const missingZipMapped=geocodedZipGroups.filter(x=>!x.zip).reduce((a,x)=>a+x.requests,0);
+ if(regionLenses.mappedRequests+missingZipMapped!==gt)throw Error('Regional lens input does not reconcile to geocoded total');
+ const matrix=investigationMatrix(regionLenses);
  return {source:API,createdStartInclusive:'2024-01-01T00:00:00',createdEndExclusive:'2025-01-01T00:00:00',coordinateFilter:BOUNDS,generatedAt:new Date().toISOString(),
- notes:['2024 creation cohort only.','Missing and out-of-range coordinates are excluded from geocoded totals.','ZIPs are not operational districts; average request coordinates are not ZIP polygons.','Historical year-end closure-timestamp gap is not official open backlog; includes missing or late closure timestamps.','Closure timestamps reflect the dataset when generated; late corrections or backfills can change the historical timestamp-gap indicator.','No staffing need or cost savings inferred.'],
+ notes:['2024 creation cohort only.','Missing and out-of-range coordinates are excluded from geocoded totals.','ZIPs are not operational districts; average request coordinates are not ZIP polygons.','Historical year-end closure-timestamp gap is not official open backlog; includes missing or late closure timestamps.','Closure timestamps reflect the dataset when generated; late corrections or backfills can change the historical timestamp-gap indicator.','No staffing need or cost savings inferred.','Exploratory region lenses use ZIP-group mean-coordinate proximity, not official area boundaries.','Investigation matrix uses only relative demand and timestamp-gap share; it does not measure closure duration, staffing capacity or service pressure.'],
  coverage:{cohortRequests:zt,geocodedPlausibleRequests:gt,excludedMissingOrOutsideBoundingBox:zt-gt,geocodedCoveragePercent:zt?Number((100*gt/zt).toFixed(2)):null,excludedCoordinatePercent:zt?Number((100*(zt-gt)/zt).toFixed(2)):null,missingZipAllRecords:zipGroups.filter(x=>!x.zip).reduce((a,x)=>a+x.requests,0),missingZipGeocoded:geocodedZipGroups.filter(x=>!x.zip).reduce((a,x)=>a+x.requests,0),zipGroups:zipGroups.length,geocodedZipGroups:geocodedZipGroups.length,geocodedYearEndTimestampGapRequests:ggt,missingZipYearEndTimestampGap:gg.filter(x=>!zipKey(x)).reduce((a,x)=>a+Number(x.n),0)},
- zipGroups,geocodedZipGroups};
+ zipGroups,geocodedZipGroups,
+ exploratoryRegionLenses:{
+  method:'Nearest eligible reference center within disclosed radius; one assignment per ZIP-group mean coordinate; not official boundaries',
+  mappedRequests:regionLenses.mappedRequests,
+  assignedRequests:regionLenses.assignedRequests,
+  unassignedRequests:regionLenses.unassignedRequests,
+  unassignedZipGroups:regionLenses.unassignedZipGroups,
+  missingZipMappedRequests:missingZipMapped,
+  regions:regionLenses.rows,
+  twoSignalInvestigationMatrix:matrix
+ }};
 }
 async function main(){
  const [z,zc,g,gc,gg,ggc]=await Promise.all([
