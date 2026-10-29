@@ -87,3 +87,30 @@ test('matrix never manufactures metrics from empty or missing regions',()=>{
  assert.equal(empty.rows.length,0);
  assert.throws(()=>investigationMatrix(null),/Expected/);
 });
+
+test('reproducible pipeline reconciles exported region lenses and excludes missing ZIPs',()=>{
+ const {makeSummary}=require('./build-myla311-geo.cjs');
+ const result=makeSummary(
+  [{zipcode:'90731',n:'100'},{zipcode:'90012',n:'200'},{zipcode:null,n:'10'}],310,
+  [{zipcode:'90731',n:'90',lat:'33.73',lon:'-118.29'},
+   {zipcode:'90012',n:'180',lat:'34.05',lon:'-118.24'},
+   {zipcode:null,n:'10',lat:'34.02',lon:'-118.23'}],280,
+  [{zipcode:'90731',n:'20'},{zipcode:'90012',n:'40'},{zipcode:null,n:'1'}],61
+ );
+ const lens=result.exploratoryRegionLenses;
+ assert.equal(lens.mappedRequests,270);
+ assert.equal(lens.assignedRequests+lens.unassignedRequests+lens.missingZipMappedRequests,280);
+ assert.equal(lens.regions.find(r=>r.id==='harbor').requests,90);
+ assert.equal(lens.regions.find(r=>r.id==='dtla').historicalGap,40);
+ assert.equal(lens.twoSignalInvestigationMatrix.rows.length,0);
+ assert.equal(lens.twoSignalInvestigationMatrix.eligibleCount,2);
+});
+test('pipeline rejects ZIP-level geocoded demand exceeding all-record demand',()=>{
+ const {makeSummary}=require('./build-myla311-geo.cjs');
+ assert.throws(()=>makeSummary(
+  [{zipcode:'90731',n:'50'},{zipcode:'90012',n:'100'}],150,
+  [{zipcode:'90731',n:'80',lat:'33.73',lon:'-118.29'},
+   {zipcode:'90012',n:'20',lat:'34.05',lon:'-118.24'}],100,
+  [{zipcode:'90731',n:'10'}],10
+ ),/exceeds all-record ZIP demand/);
+});
