@@ -10,7 +10,7 @@
   if(!controls||!window.Project2Regions||typeof window.renderGeoHeat!=='function')return;
   const card=node('div');card.className='card';card.id='regionLensCard';card.style.margin='16px 0';
   card.append(node('h3','Six-area ZIP request-mean exploration'));
-  card.append(node('p','Approximate proximity lenses, not official neighborhood boundaries. Each geocoded ZIP group is assigned at most once to its nearest eligible reference center within the disclosed radius. ZIPs may cross neighborhoods; out-of-radius ZIPs are excluded. Counts reflect reconciled 2024 geocoded requests only.'));
+  card.append(node('p','Approximate proximity lenses, not official neighborhood boundaries. Each geocoded ZIP group is assigned at most once to its nearest eligible reference center within the disclosed radius. ZIPs may cross neighborhoods; out-of-radius ZIPs are excluded. Counts reflect reconciled 2024 geocoded requests only. The City notes that ClosedDate is not used for every request type, so missing timestamps cannot be equated with unfinished work.'));
   const status=node('p','Waiting for reconciled City aggregates.');status.id='regionLensStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');card.append(status);
   const wrap=node('div');wrap.className='geo-table-wrap';
   const table=node('table');table.className='geo-table';
