@@ -7,6 +7,7 @@ on:
       - scripts/project2-region-ui.js
       - scripts/build-myla311-geo.cjs
       - scripts/test-project2-region-lenses.cjs
+      - scripts/test-project2-region-ui.cjs
       - .github/workflows/project2-region-lenses.yml
   workflow_dispatch:
 jobs:
@@ -23,8 +24,9 @@ jobs:
           node --check scripts/project2-region-ui.js
           node --check scripts/build-myla311-geo.cjs
           node --check scripts/test-project2-region-lenses.cjs
+          node --check scripts/test-project2-region-ui.cjs
       - name: Run synthetic geographic reconciliation tests
-        run: node --test scripts/test-project2-region-lenses.cjs
+        run: node --test scripts/test-project2-region-lenses.cjs scripts/test-project2-region-ui.cjs
       - name: Verify dashboard loads both modules in dependency order
         run: |
           node - <<'NODE'
