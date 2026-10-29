@@ -1,4 +1,4 @@
-/* Progressive enhancement for the 2024 MyLA311 ZIP-centroid map.
+/* Progressive enhancement for the 2024 MyLA311 ZIP request-mean map.
  * This adds exploratory six-area lenses without changing City query logic.
  * A ZIP is counted at most once; the lenses are not official boundaries. */
 (function(){
@@ -9,14 +9,14 @@
   const controls=document.querySelector('#coverage .controls');
   if(!controls||!window.Project2Regions||typeof window.renderGeoHeat!=='function')return;
   const card=node('div');card.className='card';card.id='regionLensCard';card.style.margin='16px 0';
-  card.append(node('h3','Six-area ZIP-centroid exploration'));
+  card.append(node('h3','Six-area ZIP request-mean exploration'));
   card.append(node('p','Approximate proximity lenses, not official neighborhood boundaries. Each geocoded ZIP group is assigned at most once to its nearest eligible reference center within the disclosed radius. ZIPs may cross neighborhoods; out-of-radius ZIPs are excluded. Counts reflect reconciled 2024 geocoded requests only.'));
   const status=node('p','Waiting for reconciled City aggregates.');status.id='regionLensStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');card.append(status);
   const wrap=node('div');wrap.className='geo-table-wrap';
   const table=node('table');table.className='geo-table';
-  table.append(node('caption','Exploratory ZIP-centroid lenses; select an area to highlight its mapped ZIPs'));
+  table.append(node('caption','Exploratory ZIP request-mean lenses; select an area to highlight its mapped ZIPs'));
   const head=node('thead'),headRow=node('tr');
-  for(const label of ['Area lens','Geocoded requests','ZIP groups','Year-end timestamp gap','Gap share','Median / p90 closure']){
+  for(const label of ['Area lens','Radius (km)','Geocoded requests','ZIP groups','Year-end timestamp gap','Gap share','Median / p90 closure']){
    const th=node('th',label);th.scope='col';headRow.append(th);
   }
   head.append(headRow);table.append(head);
@@ -27,7 +27,7 @@
   function explain(key){
    const el=document.getElementById('regionExplanation');
    if(!el)return;
-   if(key==='all'){el.textContent='All-city map. The six-area ZIP-centroid lenses are approximate, not official service districts.';return;}
+   if(key==='all'){el.textContent='All-city map. The six-area ZIP request-mean lenses are approximate, not official service districts.';return;}
    const row=latest?.rows.find(x=>x.id===key);
    if(!row){el.textContent='Selected approximate area. Regional counts unavailable until reconciled geocoded data load.';return;}
    el.textContent=row.name+' exploratory lens: '+row.requests.toLocaleString()+' mapped 2024 requests in '+row.zipGroups+' ZIP groups within '+row.radiusKm+' km of the reference center. '+(row.historicalGap===null?'Year-end timestamp gap unavailable.':row.historicalGap.toLocaleString()+' ('+row.historicalGapShare.toFixed(1)+'%) missing or late year-end closure timestamp.')+' This is not official backlog, an administrative boundary, or staffing evidence. Regional closure median/p90 remain unavailable.';
@@ -48,10 +48,10 @@
     for(const row of result.rows){
      const tr=node('tr'),th=node('th');th.scope='row';
      const button=node('button',row.name);button.type='button';button.className='lens-btn';
-     button.title='Inspect ZIP mean coordinates within '+row.radiusKm+' km of '+row.name;
+     button.title='Inspect ZIP request-mean coordinates within '+row.radiusKm+' km of '+row.name;
      button.addEventListener('click',()=>{document.getElementById('regionFocus').value=row.id;window.focusRegion(row.id);});
      th.append(button);tr.append(th);
-     for(const value of [row.requests.toLocaleString(),row.zipGroups.toLocaleString(),row.historicalGap===null?'Unavailable':row.historicalGap.toLocaleString(),row.historicalGapShare===null?'Unavailable':row.historicalGapShare.toFixed(1)+'%','Not calculated'])tr.append(node('td',value));
+     for(const value of [String(row.radiusKm),row.requests.toLocaleString(),row.zipGroups.toLocaleString(),row.historicalGap===null?'Unavailable':row.historicalGap.toLocaleString(),row.historicalGapShare===null?'Unavailable':row.historicalGapShare.toFixed(1)+'%','Not calculated'])tr.append(node('td',value));
      body.append(tr);
     }
     status.textContent='Six non-overlapping exploratory lenses calculated from validated ZIP aggregates; these are not official region totals.';
