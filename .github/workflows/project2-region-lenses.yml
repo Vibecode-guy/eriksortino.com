@@ -5,6 +5,7 @@ on:
       - la-service-operations.html
       - scripts/project2-region-lenses.js
       - scripts/project2-region-ui.js
+      - scripts/build-myla311-geo.cjs
       - scripts/test-project2-region-lenses.cjs
       - .github/workflows/project2-region-lenses.yml
   workflow_dispatch:
@@ -20,6 +21,7 @@ jobs:
         run: |
           node --check scripts/project2-region-lenses.js
           node --check scripts/project2-region-ui.js
+          node --check scripts/build-myla311-geo.cjs
           node --check scripts/test-project2-region-lenses.cjs
       - name: Run synthetic geographic reconciliation tests
         run: node --test scripts/test-project2-region-lenses.cjs
