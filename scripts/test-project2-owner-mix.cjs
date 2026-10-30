@@ -39,3 +39,39 @@ test('ties are deterministic',()=>{
  assert.equal(d.ownerRows[0].name,'Agency A');
  assert.equal(d.topPair.owner,'Agency A');
 });
+
+function fakeDocument(){
+ const createElement=tag=>({tag,children:[],textContent:'',scope:'',replaceChildren(...items){this.children=[...items];},append(...items){this.children.push(...items);}});
+ const ids=['ownerTypeHead','ownerTypeBody','ownerTypeFoot','ownerTypeStatus'];
+ const nodes=Object.fromEntries(ids.map(id=>[id,createElement(id)]));
+ return {nodes,createElement,getElementById:id=>nodes[id]};
+}
+test('owner mix accessible table renders reconciled values and clears on failure',async()=>{
+ const prior=global.document,doc=fakeDocument();global.document=doc;
+ try{
+  const {refresh}=require('./project2-owner-mix.js'),cohort="createddate >= '2024-01-01'";
+  const good=q=>Promise.resolve(decodeURIComponent(q).includes('$group=')?[g('Agency','Pothole',5)]:[{n:'5'}]);
+  await refresh(good,cohort);
+  assert.equal(doc.nodes.ownerTypeBody.children.length,1);
+  assert.equal(doc.nodes.ownerTypeFoot.children.length,1);
+  assert.match(doc.nodes.ownerTypeStatus.textContent,/5 requests/);
+  const bad=q=>Promise.resolve(decodeURIComponent(q).includes('$group=')?[g('Agency','Pothole',5)]:[{n:'98'}]);
+  await refresh(bad,cohort);
+  assert.equal(doc.nodes.ownerTypeBody.children.length,0);
+  assert.match(doc.nodes.ownerTypeStatus.textContent,/unavailable/);
+ }finally{global.document=prior;}
+});
+test('a stale slower owner mix refresh cannot overwrite the newer snapshot',async()=>{
+ const prior=global.document,doc=fakeDocument();global.document=doc;
+ try{
+  const {refresh}=require('./project2-owner-mix.js'),cohort="createddate >= '2024-01-01'",pending=[];
+  const slow=q=>new Promise(resolve=>pending.push({q,resolve}));
+  const first=refresh(slow,cohort);
+  const fast=q=>Promise.resolve(decodeURIComponent(q).includes('$group=')?[g('Agency','Pothole',5)]:[{n:'5'}]);
+  await refresh(fast,cohort);
+  for(const item of pending)item.resolve(decodeURIComponent(item.q).includes('$group=')?[g('Old agency','Old type',8)]:[{n:'8'}]);
+  await first;
+  assert.match(doc.nodes.ownerTypeStatus.textContent,/5 requests/);
+  assert.equal(doc.nodes.ownerTypeBody.children[0].children[0].textContent,'Agency');
+ }finally{global.document=prior;}
+});
