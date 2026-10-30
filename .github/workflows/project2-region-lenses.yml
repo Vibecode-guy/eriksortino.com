@@ -5,6 +5,8 @@ on:
       - la-service-operations.html
       - scripts/project2-region-lenses.js
       - scripts/project2-region-ui.js
+      - scripts/project2-data-quality.js
+      - scripts/test-project2-data-quality.cjs
       - scripts/build-myla311-geo.cjs
       - scripts/test-project2-region-lenses.cjs
       - scripts/test-project2-region-ui.cjs
@@ -22,11 +24,13 @@ jobs:
         run: |
           node --check scripts/project2-region-lenses.js
           node --check scripts/project2-region-ui.js
+          node --check scripts/project2-data-quality.js
+          node --check scripts/test-project2-data-quality.cjs
           node --check scripts/build-myla311-geo.cjs
           node --check scripts/test-project2-region-lenses.cjs
           node --check scripts/test-project2-region-ui.cjs
       - name: Run synthetic geographic reconciliation tests
-        run: node --test scripts/test-project2-region-lenses.cjs scripts/test-project2-region-ui.cjs
+        run: node --test scripts/test-project2-region-lenses.cjs scripts/test-project2-region-ui.cjs scripts/test-project2-data-quality.cjs
       - name: Verify dashboard loads both modules in dependency order
         run: |
           node - <<'NODE'
@@ -36,6 +40,8 @@ jobs:
           const ui=html.indexOf('src="scripts/project2-region-ui.js"');
           assert(core>=0&&ui>core,'Regional scripts missing or out of order');
           assert(html.includes('id="regionFocus"'),'Region selector missing');
+          assert(html.includes('src="scripts/project2-data-quality.js"'),'Data quality module missing');
+          assert(html.includes('window.Project2Quality.refresh(q,COHORT_2024)'),'Quality refresh not integrated');
           const inline=html.match(/<script>\s*([\s\S]*?)<\/script><\/body>/);
           assert(inline,'Dashboard inline JavaScript missing');
           new Function(inline[1]);
