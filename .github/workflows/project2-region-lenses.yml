@@ -6,6 +6,8 @@ on:
       - scripts/project2-region-lenses.js
       - scripts/project2-region-ui.js
       - scripts/project2-data-quality.js
+      - scripts/project2-owner-mix.js
+      - scripts/test-project2-owner-mix.cjs
       - scripts/test-project2-data-quality.cjs
       - scripts/test-project2-data-quality-ui.cjs
       - scripts/test-project2-pareto.cjs
@@ -27,6 +29,8 @@ jobs:
           node --check scripts/project2-region-lenses.js
           node --check scripts/project2-region-ui.js
           node --check scripts/project2-data-quality.js
+          node --check scripts/project2-owner-mix.js
+          node --check scripts/test-project2-owner-mix.cjs
           node --check scripts/test-project2-data-quality.cjs
           node --check scripts/test-project2-data-quality-ui.cjs
           node --check scripts/test-project2-pareto.cjs
@@ -34,7 +38,7 @@ jobs:
           node --check scripts/test-project2-region-lenses.cjs
           node --check scripts/test-project2-region-ui.cjs
       - name: Run synthetic geographic reconciliation tests
-        run: node --test scripts/test-project2-region-lenses.cjs scripts/test-project2-region-ui.cjs scripts/test-project2-data-quality.cjs scripts/test-project2-data-quality-ui.cjs scripts/test-project2-pareto.cjs
+        run: node --test scripts/test-project2-region-lenses.cjs scripts/test-project2-region-ui.cjs scripts/test-project2-data-quality.cjs scripts/test-project2-data-quality-ui.cjs scripts/test-project2-pareto.cjs scripts/test-project2-owner-mix.cjs
       - name: Verify dashboard loads both modules in dependency order
         run: |
           node - <<'NODE'
@@ -45,6 +49,9 @@ jobs:
           assert(core>=0&&ui>core,'Regional scripts missing or out of order');
           assert(html.includes('id="regionFocus"'),'Region selector missing');
           assert(html.includes('src="scripts/project2-data-quality.js"'),'Data quality module missing');
+          assert(html.includes('src="scripts/project2-owner-mix.js"'),'Owner mix module missing');
+          assert(html.includes('id="ownerTypeSection"'),'Owner mix section missing');
+          assert(html.includes('window.Project2OwnerMix.refresh(q,COHORT_2024)'),'Owner mix refresh missing');
           assert(html.includes('window.Project2Quality.refresh(q,COHORT_2024)'),'Quality refresh not integrated');
           const inline=html.match(/<script>\s*([\s\S]*?)<\/script><\/body>/);
           assert(inline,'Dashboard inline JavaScript missing');
