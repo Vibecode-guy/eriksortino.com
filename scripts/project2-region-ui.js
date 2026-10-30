@@ -53,7 +53,7 @@
    for(const p of geoPoints){
     const marker=geoMarkers.get(p.zip);if(!marker||typeof marker.setStyle!=='function')continue;
     const active=key==='all'||window.Project2Regions.assignLens(p)===key;
-    marker.setStyle({color:active?'#174a38':'#78877e',weight:active?2:1,fillOpacity:active?.68:.10});
+    marker.setStyle({color:active?'#174a38':'#78877e',weight:active?2:1,fillOpacity:active?.32:.07});
    }
   }
   function renderMatrix(summary){
