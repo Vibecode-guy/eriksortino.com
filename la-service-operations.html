@@ -656,8 +656,8 @@ function renderGeoHeat(points,total=0){
  if(points.length){
   const max=Math.max(1,...points.map(x=>x.n));
   geoLayer=L.layerGroup(points.map(x=>{
-   const radius=5+19*Math.sqrt(x.n/max);
-   const marker=L.circleMarker([x.lat,x.lon],{radius,color:'#174a38',weight:1,fillColor:'#b65b37',fillOpacity:.48});geoMarkers.set(x.zip,marker);
+   const radius=4+13*Math.sqrt(x.n/max);
+   const marker=L.circleMarker([x.lat,x.lon],{radius,color:'#174a38',weight:1,fillColor:'#b65b37',fillOpacity:.27});geoMarkers.set(x.zip,marker);
    const popup=document.createElement('div');const title=document.createElement('strong');title.textContent='ZIP '+x.zip;const count=document.createElement('p');count.textContent=x.n.toLocaleString()+' geocoded requests ('+(100*x.n/total).toFixed(2)+'% of valid geocoded records). '+(x.gap===null?'Year-end gap unavailable.':x.gap.toLocaleString()+' ('+(100*x.gap/x.n).toFixed(1)+'%) without valid closure timestamp by 2025-01-01; not official open backlog.')+' Mean coordinate, not a ZIP boundary.';popup.append(title,count);marker.bindPopup(popup);
    return marker;
   })).addTo(cityMap);
