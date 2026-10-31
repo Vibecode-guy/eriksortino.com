@@ -100,6 +100,10 @@ test('reproducible pipeline reconciles exported region lenses and excludes missi
  const lens=result.exploratoryRegionLenses;
  assert.equal(lens.mappedRequests,270);
  assert.equal(lens.assignedRequests+lens.unassignedRequests+lens.missingZipMappedRequests,280);
+ assert.equal(lens.overlappingRequests,180);
+ assert.equal(lens.overlappingZipGroups,1);
+ assert.equal(lens.nearRadiusEdgeRequests,0);
+ assert.equal(lens.radiusEdgeThresholdKm,2);
  assert.equal(lens.regions.find(r=>r.id==='harbor').requests,90);
  assert.equal(lens.regions.find(r=>r.id==='dtla').historicalGap,40);
  assert.equal(lens.twoSignalInvestigationMatrix.rows.length,0);
