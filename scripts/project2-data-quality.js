@@ -65,6 +65,9 @@
   status.textContent='Checking full-cohort field completeness…';body.replaceChildren();
   try{
    const totalRows=await queryFn(buildQuery(cohort));
+   // A newer refresh makes this result obsolete. Do not launch six additional
+   // queries for a stale cohort, and never wait on superseded metric requests.
+   if(ticket!==serial)return;
    const total=validateCount(totalRows&&totalRows[0]&&totalRows[0].count,'cohort');
    const results=await Promise.allSettled(METRICS.map(m=>queryFn(buildQuery(cohort,m.where))));
    if(ticket!==serial)return;
