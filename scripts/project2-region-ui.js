@@ -4,6 +4,8 @@
 (function(){
  'use strict';
  let latest=null;
+ const lensButtons=new Map();
+ function updatePressed(key){for(const [id,button] of lensButtons)button.setAttribute('aria-pressed',String(id===key));}
  function node(tag,text){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;}
  function setup(){
   const controls=document.querySelector('#coverage .controls');
@@ -39,7 +41,7 @@
   const matrixBody=node('tbody');matrixBody.id='regionMatrixTable';matrixTable.append(matrixBody);matrixWrap.append(matrixTable);matrixSection.append(matrixWrap);
   card.append(matrixSection);
   controls.insertAdjacentElement('afterend',card);
-  const style=node('style');style.textContent='.lens-btn{background:transparent;color:var(--green);border:1px solid var(--line);padding:6px 9px;font-size:13px;text-align:left}.lens-btn:hover,.lens-btn:focus-visible{background:#e7f1eb}.region-matrix{border-top:1px solid var(--line);margin-top:20px;padding-top:18px}.region-matrix-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.region-matrix-cell{background:#e7f1eb;border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}.region-matrix-cell h4{margin:0 0 5px;font-size:14px}.region-matrix-cell p{margin:0;font-size:13px;overflow-wrap:anywhere}.region-matrix-cell .next-action{margin-top:8px;font-size:12px;color:#435049}@media(max-width:560px){.region-matrix-grid{grid-template-columns:1fr}}';document.head.append(style);
+  const style=node('style');style.textContent='.lens-btn{background:transparent;color:var(--green);border:1px solid var(--line);padding:6px 9px;font-size:13px;text-align:left}.lens-btn:hover,.lens-btn:focus-visible,.lens-btn[aria-pressed="true"]{background:#e7f1eb}.lens-btn[aria-pressed="true"]{border-color:var(--green);font-weight:700}.region-matrix{border-top:1px solid var(--line);margin-top:20px;padding-top:18px}.region-matrix-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.region-matrix-cell{background:#e7f1eb;border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}.region-matrix-cell h4{margin:0 0 5px;font-size:14px}.region-matrix-cell p{margin:0;font-size:13px;overflow-wrap:anywhere}.region-matrix-cell .next-action{margin-top:8px;font-size:12px;color:#435049}@media(max-width:560px){.region-matrix-grid{grid-template-columns:1fr}}';document.head.append(style);
   function explain(key){
    const el=document.getElementById('regionExplanation');
    if(!el)return;
@@ -101,7 +103,7 @@
     }
   }
   function render(points){
-   latest=null;body.replaceChildren();
+   latest=null;body.replaceChildren();lensButtons.clear();
    if(!points.length){status.textContent='Waiting for complete reconciled geocoded ZIP aggregates.';note.textContent='No approximate area totals without validated City data.';renderMatrix(null);return;}
    try{
     const result=window.Project2Regions.summarize(points);latest=result;renderMatrix(result);
@@ -109,14 +111,15 @@
      const tr=node('tr'),th=node('th');th.scope='row';
      const button=node('button',row.name);button.type='button';button.className='lens-btn';
      button.title='Inspect ZIP request-mean coordinates within '+row.radiusKm+' km of '+row.name;
+     button.setAttribute('aria-pressed','false');lensButtons.set(row.id,button);
      button.addEventListener('click',()=>{document.getElementById('regionFocus').value=row.id;window.focusRegion(row.id);});
      th.append(button);tr.append(th);
      for(const value of [String(row.radiusKm),row.requests.toLocaleString(),row.zipGroups.toLocaleString(),row.historicalGap===null?'Unavailable':row.historicalGap.toLocaleString(),row.historicalGapShare===null?'Unavailable':row.historicalGapShare.toFixed(1)+'%','Not calculated'])tr.append(node('td',value));
      body.append(tr);
     }
     status.textContent='Six non-overlapping exploratory lenses calculated from validated ZIP aggregates; these are not official region totals.';
-    note.textContent='Assigned '+result.assignedRequests.toLocaleString()+' of '+result.mappedRequests.toLocaleString()+' mapped requests ('+(result.assignedShare===null?'—':result.assignedShare.toFixed(1)+'%')+'). '+result.unassignedRequests.toLocaleString()+' requests in '+result.unassignedZipGroups+' ZIP groups are outside all six radii. Missing gap data remain unavailable, not zero. Regional median/p90 require separately validated data.';
-    const key=document.getElementById('regionFocus').value;highlight(key);explain(key);
+    note.textContent='Assigned '+result.assignedRequests.toLocaleString()+' of '+result.mappedRequests.toLocaleString()+' mapped requests ('+(result.assignedShare===null?'—':result.assignedShare.toFixed(1)+'%')+'). '+result.unassignedRequests.toLocaleString()+' requests in '+result.unassignedZipGroups+' ZIP groups are outside all six radii. '+result.overlappingRequests.toLocaleString()+' requests across '+result.overlappingZipGroups+' ZIP groups lie within multiple reference radii (assigned to nearest center); '+result.nearRadiusEdgeRequests.toLocaleString()+' requests across '+result.nearRadiusEdgeZipGroups+' ZIP groups lie within 2 km of their assigned radius edge. These are overlapping uncertainty flags, not additional excluded records or official boundary measures. Missing gap data remain unavailable, not zero. Regional median/p90 require separately validated data.';
+    const key=document.getElementById('regionFocus').value;updatePressed(key);highlight(key);explain(key);
    }catch(e){latest=null;renderMatrix(null);status.textContent='Regional lens unavailable: '+String(e.message||e).slice(0,160);note.textContent='No partial regional values displayed.';}
   }
   const originalRender=window.renderGeoHeat;
@@ -130,9 +133,9 @@
     window.renderGeoHeat(geoPoints,geoMapTotal);
   }
   const originalFocus=window.focusRegion;
-  window.focusRegion=function(key){const out=originalFocus.call(this,key);redrawCircleLens();highlight(key);explain(key);return out;};
+  window.focusRegion=function(key){const out=originalFocus.call(this,key);redrawCircleLens();updatePressed(key);highlight(key);explain(key);return out;};
   const originalReset=window.fitCityMap;
-  window.fitCityMap=function(){const out=originalReset.call(this);document.getElementById('regionFocus').value='all';redrawCircleLens();highlight('all');explain('all');return out;};
+  window.fitCityMap=function(){const out=originalReset.call(this);document.getElementById('regionFocus').value='all';redrawCircleLens();updatePressed('all');highlight('all');explain('all');return out;};
  }
  document.addEventListener('DOMContentLoaded',setup);
 })();
