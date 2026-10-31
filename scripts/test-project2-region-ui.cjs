@@ -4,7 +4,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm');
 const {summarize}=require('./project2-region-lenses.js');
 const source=fs.readFileSync(require('node:path').join(__dirname,'project2-region-ui.js'),'utf8');
-function harness(){
+function harness(mode='heat'){
  const ids=new Map(),handlers={};
  class Element{
   constructor(tag){this.tag=tag;this.children=[];this.textContent='';this.value='';this.style={};this.attributes={};}
@@ -26,12 +26,13 @@ function harness(){
  const selector=new Element('select');selector.id='regionFocus';selector.value='all';
  const explanation=new Element('p');explanation.id='regionExplanation';
  const geoMarkers=new Map(),geoPoints=[];
- const geoLayer={points:[],setLatLngs(points){this.points=points;}};
- const window={Project2Regions:require('./project2-region-lenses.js'),renderGeoHeat(points){geoPoints.splice(0,geoPoints.length,...points);if(!points.length)geoLayer.setLatLngs([]);},focusRegion(){},fitCityMap(){}};
+ const geoLayer=mode==='heat'?{points:[],setLatLngs(points){this.points=points;}}:{};
+ const stats={renderCalls:0};
+ const window={Project2Regions:require('./project2-region-lenses.js'),renderGeoHeat(points){stats.renderCalls++;geoPoints.splice(0,geoPoints.length,...points);if(!points.length&&typeof geoLayer.setLatLngs==='function')geoLayer.setLatLngs([]);},focusRegion(){},fitCityMap(){}};
  vm.runInNewContext(source,{document,window,geoMarkers,geoPoints,geoLayer});
  assert.equal(typeof handlers.DOMContentLoaded,'function');
  handlers.DOMContentLoaded();
- return {window,ids,controls,geoLayer};
+ return {window,ids,controls,geoLayer,stats};
 }
 const fixture=[
  {zip:'90731',n:100,lat:33.73,lon:-118.29,gap:10},
@@ -75,4 +76,23 @@ test('selecting a lens filters the default red heat layer and reset restores all
  assert.equal(geoLayer.points.length,fixture.length);
  window.renderGeoHeat([],0);
  assert.equal(geoLayer.points.length,0);
+});
+
+test('circle top-20 mode redraws on lens selection and reset without a City API call',()=>{
+ const {window,ids,stats}=harness('circle');
+ window.renderGeoHeat(fixture,1000);
+ assert.equal(stats.renderCalls,1);
+ ids.get('regionFocus').value='harbor';
+ window.focusRegion('harbor');
+ assert.equal(stats.renderCalls,2);
+ window.fitCityMap();
+ assert.equal(ids.get('regionFocus').value,'all');
+ assert.equal(stats.renderCalls,3);
+});
+test('heat mode changes weighted points in place rather than rebuilding the map',()=>{
+ const {window,stats,geoLayer}=harness();
+ window.renderGeoHeat(fixture,1000);
+ window.focusRegion('harbor');
+ assert.equal(stats.renderCalls,1);
+ assert.equal(geoLayer.points.length,1);
 });
