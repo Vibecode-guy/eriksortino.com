@@ -96,3 +96,20 @@ test('heat mode changes weighted points in place rather than rebuilding the map'
  assert.equal(stats.renderCalls,1);
  assert.equal(geoLayer.points.length,1);
 });
+
+test('region selection is announced and geographic assignment uncertainty is disclosed',()=>{
+ const {window,ids}=harness();
+ window.renderGeoHeat(fixture,1000);
+ const firstRow=ids.get('regionLensTable').children[0];
+ const harborButton=firstRow.children[0].children[0];
+ assert.equal(harborButton.attributes['aria-pressed'],'false');
+ const note=ids.get('regionLensCoverage').textContent;
+ assert.match(note,/multiple reference radii/);
+ assert.match(note,/within 2 km/);
+ assert.match(note,/not additional excluded records/);
+ ids.get('regionFocus').value='harbor';
+ window.focusRegion('harbor');
+ assert.equal(harborButton.attributes['aria-pressed'],'true');
+ window.fitCityMap();
+ assert.equal(harborButton.attributes['aria-pressed'],'false');
+});
