@@ -29,7 +29,7 @@ function harness(mode='heat'){
  const geoLayer=mode==='heat'?{points:[],setLatLngs(points){this.points=points;}}:{};
  const stats={renderCalls:0};
  const window={Project2Regions:require('./project2-region-lenses.js'),renderGeoHeat(points){stats.renderCalls++;geoPoints.splice(0,geoPoints.length,...points);if(!points.length&&typeof geoLayer.setLatLngs==='function')geoLayer.setLatLngs([]);},focusRegion(){},fitCityMap(){}};
- vm.runInNewContext(source,{document,window,geoMarkers,geoPoints,geoLayer});
+ vm.runInNewContext(source,{document,window,geoMarkers,geoPoints,geoLayer,geoMapTotal:1000});
  assert.equal(typeof handlers.DOMContentLoaded,'function');
  handlers.DOMContentLoaded();
  return {window,ids,controls,geoLayer,stats};
