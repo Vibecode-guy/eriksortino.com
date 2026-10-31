@@ -22,10 +22,15 @@
     const h=Math.sin(dLat/2)**2+Math.cos(a[0]*rad)*Math.cos(b[0]*rad)*Math.sin(dLon/2)**2;
     return 12742*Math.asin(Math.min(1,Math.sqrt(h)));
   }
-  function assignLens(point){
-    const candidates=REGIONS.map(region=>({region,distance:distanceKm([point.lat,point.lon],region.center)}))
+  // Multiple reference radii can overlap. Assignment remains deterministic, but
+  // overlap and proximity to a radius edge must be disclosed as uncertainty.
+  function eligibleLenses(point){
+    return REGIONS.map(region=>({region,distance:distanceKm([point.lat,point.lon],region.center)}))
       .filter(x=>x.distance<=x.region.radiusKm)
       .sort((a,b)=>a.distance-b.distance||a.region.id.localeCompare(b.region.id));
+  }
+  function assignLens(point){
+    const candidates=eligibleLenses(point);
     return candidates.length?candidates[0].region.id:null;
   }
   function summarize(points){
@@ -33,6 +38,7 @@
     const seen=new Set(),rows=REGIONS.map(r=>({...r,zipCodes:[],requests:0,gapCount:0,gapComplete:true}));
     const byId=new Map(rows.map(r=>[r.id,r]));
     let mappedRequests=0,assignedRequests=0,unassignedRequests=0,unassignedZipGroups=0;
+    let overlappingZipGroups=0,overlappingRequests=0,nearRadiusEdgeZipGroups=0,nearRadiusEdgeRequests=0;
     for(const p of points){
       const zip=String(p.zip??'').trim(),n=Number(p.n),lat=Number(p.lat),lon=Number(p.lon);
       if(!zip||seen.has(zip)||!Number.isSafeInteger(n)||n<=0||
@@ -44,15 +50,20 @@
       if(gap!==null&&(!Number.isSafeInteger(gap)||gap<0||gap>n))
         throw Error('Invalid historical timestamp-gap count');
       mappedRequests+=n;
-      const id=assignLens({lat,lon});
-      if(!id){unassignedRequests+=n;unassignedZipGroups++;continue;}
-      const row=byId.get(id);row.zipCodes.push(zip);row.requests+=n;assignedRequests+=n;
+      const candidates=eligibleLenses({lat,lon});
+      if(candidates.length>1){overlappingZipGroups++;overlappingRequests+=n;}
+      const chosen=candidates[0];
+      if(!chosen){unassignedRequests+=n;unassignedZipGroups++;continue;}
+      // Within 2 km of the selected *reference radius*, not a legal boundary.
+      if(chosen.region.radiusKm-chosen.distance<2){nearRadiusEdgeZipGroups++;nearRadiusEdgeRequests+=n;}
+      const row=byId.get(chosen.region.id);row.zipCodes.push(zip);row.requests+=n;assignedRequests+=n;
       if(gap===null)row.gapComplete=false;else row.gapCount+=gap;
     }
     if(!Number.isSafeInteger(mappedRequests)||assignedRequests+unassignedRequests!==mappedRequests)
       throw Error('Regional lens counts do not reconcile');
     return {
       mappedRequests,assignedRequests,unassignedRequests,unassignedZipGroups,
+      overlappingZipGroups,overlappingRequests,nearRadiusEdgeZipGroups,nearRadiusEdgeRequests,
       assignedShare:mappedRequests?100*assignedRequests/mappedRequests:null,
       rows:rows.map(r=>({
         ...r,zipGroups:r.zipCodes.length,
