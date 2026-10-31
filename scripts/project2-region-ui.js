@@ -121,10 +121,18 @@
   }
   const originalRender=window.renderGeoHeat;
   window.renderGeoHeat=function(...args){const out=originalRender.apply(this,args);render(args[0]||[]);return out;};
+  // A top-20 circle layer needs rebuilding when the area changes; otherwise
+  // it can keep showing the city's top ZIPs and omit the selected area's ZIPs.
+  // Heat layers can update in place through setLatLngs, avoiding a full redraw.
+  function redrawCircleLens(){
+   if(typeof geoLayer!=='undefined'&&geoLayer&&typeof geoLayer.setLatLngs!=='function'&&
+      typeof geoPoints!=='undefined'&&geoPoints.length&&typeof geoMapTotal!=='undefined')
+    window.renderGeoHeat(geoPoints,geoMapTotal);
+  }
   const originalFocus=window.focusRegion;
-  window.focusRegion=function(key){const out=originalFocus.call(this,key);highlight(key);explain(key);return out;};
+  window.focusRegion=function(key){const out=originalFocus.call(this,key);redrawCircleLens();highlight(key);explain(key);return out;};
   const originalReset=window.fitCityMap;
-  window.fitCityMap=function(){const out=originalReset.call(this);document.getElementById('regionFocus').value='all';highlight('all');explain('all');return out;};
+  window.fitCityMap=function(){const out=originalReset.call(this);document.getElementById('regionFocus').value='all';redrawCircleLens();highlight('all');explain('all');return out;};
  }
  document.addEventListener('DOMContentLoaded',setup);
 })();
