@@ -27,7 +27,7 @@ function harness(){
  const explanation=new Element('p');explanation.id='regionExplanation';
  const geoMarkers=new Map(),geoPoints=[];
  const geoLayer={points:[],setLatLngs(points){this.points=points;}};
- const window={Project2Regions:require('./project2-region-lenses.js'),renderGeoHeat(points){geoPoints.splice(0,geoPoints.length,...points);},focusRegion(){},fitCityMap(){}};
+ const window={Project2Regions:require('./project2-region-lenses.js'),renderGeoHeat(points){geoPoints.splice(0,geoPoints.length,...points);if(!points.length)geoLayer.setLatLngs([]);},focusRegion(){},fitCityMap(){}};
  vm.runInNewContext(source,{document,window,geoMarkers,geoPoints,geoLayer});
  assert.equal(typeof handlers.DOMContentLoaded,'function');
  handlers.DOMContentLoaded();
