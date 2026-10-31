@@ -25,12 +25,13 @@ function harness(){
  };
  const selector=new Element('select');selector.id='regionFocus';selector.value='all';
  const explanation=new Element('p');explanation.id='regionExplanation';
- const window={Project2Regions:require('./project2-region-lenses.js'),renderGeoHeat(){},focusRegion(){},fitCityMap(){}};
  const geoMarkers=new Map(),geoPoints=[];
- vm.runInNewContext(source,{document,window,geoMarkers,geoPoints});
+ const geoLayer={points:[],setLatLngs(points){this.points=points;}};
+ const window={Project2Regions:require('./project2-region-lenses.js'),renderGeoHeat(points){geoPoints.splice(0,geoPoints.length,...points);},focusRegion(){},fitCityMap(){}};
+ vm.runInNewContext(source,{document,window,geoMarkers,geoPoints,geoLayer});
  assert.equal(typeof handlers.DOMContentLoaded,'function');
  handlers.DOMContentLoaded();
- return {window,ids,controls};
+ return {window,ids,controls,geoLayer};
 }
 const fixture=[
  {zip:'90731',n:100,lat:33.73,lon:-118.29,gap:10},
@@ -57,4 +58,21 @@ test('incomplete timestamp-gap measurements are not converted to zero',()=>{
  window.renderGeoHeat(fixture.map((x,i)=>i===0?{...x,gap:null}:x),1000);
  assert.equal(ids.get('regionMatrixTable').children.length,3);
  assert.match(ids.get('regionMatrixStatus').textContent,/3 of six approximate lenses comparable/);
+});
+
+test('selecting a lens filters the default red heat layer and reset restores all ZIPs',()=>{
+ const {window,ids,geoLayer}=harness();
+ window.renderGeoHeat(fixture,1000);
+ assert.equal(geoLayer.points.length,fixture.length);
+ window.focusRegion('harbor');
+ assert.equal(geoLayer.points.length,1);
+ assert.equal(geoLayer.points[0][0],33.73);
+ assert.equal(geoLayer.points[0][1],-118.29);
+ assert.equal(geoLayer.points[0][2],Math.sqrt(100/400));
+ assert.match(ids.get('regionExplanation').textContent,/Harbor/);
+ window.fitCityMap();
+ assert.equal(ids.get('regionFocus').value,'all');
+ assert.equal(geoLayer.points.length,fixture.length);
+ window.renderGeoHeat([],0);
+ assert.equal(geoLayer.points.length,0);
 });
