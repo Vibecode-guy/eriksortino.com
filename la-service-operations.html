@@ -726,7 +726,9 @@ function renderGeoHeat(points,total=0){
  if(points.length){
   const max=Math.max(1,...points.map(x=>x.n));
   const displayMode=document.getElementById("geoDisplayMode")?.value||"heat";
-  const visiblePoints=displayMode==="all"?points:points.slice().sort((a,b)=>b.n-a.n||a.zip.localeCompare(b.zip)).slice(0,20);
+  const lensKey=document.getElementById('regionFocus')?.value||'all';
+  const lensSubset=lensKey==='all'||!window.Project2Regions?points:points.filter(p=>window.Project2Regions.assignLens(p)===lensKey);
+  const visiblePoints=displayMode==="all"?points:lensSubset.slice().sort((a,b)=>b.n-a.n||a.zip.localeCompare(b.zip)).slice(0,20);
   if(displayMode==="heat"&&window.L.heatLayer){geoLayer=L.heatLayer(points.map(x=>[x.lat,x.lon,Math.sqrt(x.n/max)]),{radius:27,blur:23,maxZoom:12,minOpacity:.16,gradient:{0.12:"#ffe5e5",0.35:"#f7aaaa",0.58:"#e35a5a",0.78:"#c51b2b",1:"#740015"}}).addTo(cityMap);}
   else geoLayer=L.layerGroup(visiblePoints.map(x=>{
    const radius=4+13*Math.sqrt(x.n/max);
