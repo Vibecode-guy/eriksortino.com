@@ -10,7 +10,7 @@
   if(!controls||!window.Project2Regions||typeof window.renderGeoHeat!=='function')return;
   const card=node('div');card.className='card';card.id='regionLensCard';card.style.margin='16px 0';
   card.append(node('h3','Six-area ZIP request-mean exploration'));
-  card.append(node('p','Approximate proximity lenses, not official neighborhood boundaries. Each geocoded ZIP group is assigned at most once to its nearest eligible reference center within the disclosed radius. ZIPs may cross neighborhoods; out-of-radius ZIPs are excluded. Counts reflect reconciled 2024 geocoded requests only. The City notes that ClosedDate is not used for every request type, so missing timestamps cannot be equated with unfinished work.'));
+  card.append(node('p','Approximate proximity lenses, not official neighborhood boundaries. Each geocoded ZIP group is assigned at most once to its nearest eligible reference center within the disclosed radius. ZIPs may cross neighborhoods; out-of-radius ZIPs are excluded. Selecting an area filters the red heat map or highlights circle markers without changing the full-cohort intensity scale. Counts reflect reconciled 2024 geocoded requests only. The City notes that ClosedDate is not used for every request type, so missing timestamps cannot be equated with unfinished work.'));
   const status=node('p','Waiting for reconciled City aggregates.');status.id='regionLensStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');card.append(status);
   const wrap=node('div');wrap.className='geo-table-wrap';
   const table=node('table');table.className='geo-table';
@@ -49,7 +49,16 @@
    el.textContent=row.name+' exploratory lens: '+row.requests.toLocaleString()+' mapped 2024 requests in '+row.zipGroups+' ZIP groups within '+row.radiusKm+' km of the reference center. '+(row.historicalGap===null?'Year-end timestamp gap unavailable.':row.historicalGap.toLocaleString()+' ('+row.historicalGapShare.toFixed(1)+'%) missing or late year-end closure timestamp.')+' This is not official backlog, an administrative boundary, or staffing evidence. Regional closure median/p90 remain unavailable.';
   }
   function highlight(key){
-   if(typeof geoMarkers==='undefined'||typeof geoPoints==='undefined')return;
+   if(typeof geoPoints==='undefined')return;
+   // Leaflet.heat has no individual markers. Filter its weighted coordinates
+   // when a lens is selected; keep the full-cohort scale so intensities remain
+   // comparable between areas. Circle-marker modes still use style dimming.
+   if(typeof geoLayer!=='undefined'&&geoLayer&&typeof geoLayer.setLatLngs==='function'){
+    const max=Math.max(1,...geoPoints.map(p=>p.n));
+    const visible=key==='all'?geoPoints:geoPoints.filter(p=>window.Project2Regions.assignLens(p)===key);
+    geoLayer.setLatLngs(visible.map(p=>[p.lat,p.lon,Math.sqrt(p.n/max)]));
+   }
+   if(typeof geoMarkers==='undefined')return;
    for(const p of geoPoints){
     const marker=geoMarkers.get(p.zip);if(!marker||typeof marker.setStyle!=='function')continue;
     const active=key==='all'||window.Project2Regions.assignLens(p)===key;
