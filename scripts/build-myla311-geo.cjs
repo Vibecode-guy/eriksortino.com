@@ -55,7 +55,7 @@ function makeSummary(z,zt,g,gt,gg,ggt){
  if(regionLenses.mappedRequests+missingZipMapped!==gt)throw Error('Regional lens input does not reconcile to geocoded total');
  const matrix=investigationMatrix(regionLenses);
  return {source:API,createdStartInclusive:'2024-01-01T00:00:00',createdEndExclusive:'2025-01-01T00:00:00',coordinateFilter:BOUNDS,generatedAt:new Date().toISOString(),
- notes:['2024 creation cohort only.','Missing and out-of-range coordinates are excluded from geocoded totals.','ZIPs are not operational districts; average request coordinates are not ZIP polygons.','Historical year-end closure-timestamp gap is not official open backlog; includes missing or late closure timestamps.','Closure timestamps reflect the dataset when generated; late corrections or backfills can change the historical timestamp-gap indicator.','No staffing need or cost savings inferred.','Exploratory region lenses use ZIP-group mean-coordinate proximity, not official area boundaries.','Investigation matrix uses only relative demand and timestamp-gap share; it does not measure closure duration, staffing capacity or service pressure.'],
+ notes:['2024 creation cohort only.','Missing and out-of-range coordinates are excluded from geocoded totals.','ZIPs are not operational districts; average request coordinates are not ZIP polygons.','Historical year-end closure-timestamp gap is not official open backlog; includes missing or late closure timestamps.','Closure timestamps reflect the dataset when generated; late corrections or backfills can change the historical timestamp-gap indicator.','No staffing need or cost savings inferred.','Exploratory region lenses use ZIP-group mean-coordinate proximity, not official area boundaries. ZIP means inside multiple reference radii are assigned to the nearest eligible center; near-radius-edge means are flagged, not silently treated as precise.','Investigation matrix uses only relative demand and timestamp-gap share; it does not measure closure duration, staffing capacity or service pressure.'],
  coverage:{cohortRequests:zt,geocodedPlausibleRequests:gt,excludedMissingOrOutsideBoundingBox:zt-gt,geocodedCoveragePercent:zt?Number((100*gt/zt).toFixed(2)):null,excludedCoordinatePercent:zt?Number((100*(zt-gt)/zt).toFixed(2)):null,missingZipAllRecords:zipGroups.filter(x=>!x.zip).reduce((a,x)=>a+x.requests,0),missingZipGeocoded:geocodedZipGroups.filter(x=>!x.zip).reduce((a,x)=>a+x.requests,0),zipGroups:zipGroups.length,geocodedZipGroups:geocodedZipGroups.length,geocodedYearEndTimestampGapRequests:ggt,missingZipYearEndTimestampGap:gg.filter(x=>!zipKey(x)).reduce((a,x)=>a+Number(x.n),0)},
  zipGroups,geocodedZipGroups,
  exploratoryRegionLenses:{
@@ -64,6 +64,11 @@ function makeSummary(z,zt,g,gt,gg,ggt){
   assignedRequests:regionLenses.assignedRequests,
   unassignedRequests:regionLenses.unassignedRequests,
   unassignedZipGroups:regionLenses.unassignedZipGroups,
+  overlappingZipGroups:regionLenses.overlappingZipGroups,
+  overlappingRequests:regionLenses.overlappingRequests,
+  nearRadiusEdgeZipGroups:regionLenses.nearRadiusEdgeZipGroups,
+  nearRadiusEdgeRequests:regionLenses.nearRadiusEdgeRequests,
+  radiusEdgeThresholdKm:2,
   missingZipMappedRequests:missingZipMapped,
   regions:regionLenses.rows,
   twoSignalInvestigationMatrix:matrix
