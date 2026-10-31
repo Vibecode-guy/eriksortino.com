@@ -114,3 +114,24 @@ test('pipeline rejects ZIP-level geocoded demand exceeding all-record demand',()
   [{zipcode:'90731',n:'10'}],10
  ),/exceeds all-record ZIP demand/);
 });
+
+test('overlapping and near-radius-edge ZIP means are counted without double-assignment',()=>{
+ const r=summarize([
+  zip('90012',100,34.0522,-118.2437,10), // DTLA, also inside East lens
+  zip('90000',25,34.0522,-118.318,3),   // DTLA near its 8-km radius
+  zip('90731',50,33.7361,-118.2923,5)  // Harbor only
+ ]);
+ assert.equal(r.mappedRequests,175);
+ assert.equal(r.assignedRequests,175);
+ assert.equal(r.overlappingZipGroups,2);
+ assert.equal(r.overlappingRequests,125);
+ assert.equal(r.nearRadiusEdgeZipGroups,1);
+ assert.equal(r.nearRadiusEdgeRequests,25);
+ assert.equal(r.rows.reduce((n,x)=>n+x.requests,0),175);
+});
+test('unassigned ZIP means are not counted as near an assigned radius edge',()=>{
+ const r=summarize([zip('99999',40,33.66,-118.70,1)]);
+ assert.equal(r.unassignedRequests,40);
+ assert.equal(r.overlappingRequests,0);
+ assert.equal(r.nearRadiusEdgeRequests,0);
+});
