@@ -5,6 +5,8 @@ on:
       - project3-av-command-center.html
       - index.html
       - scripts/project3-engine.js
+      - scripts/project3-analytics.js
+      - scripts/test-project3-analytics.cjs
       - scripts/test-project3-engine.cjs
       - PROJECT3_ROADMAP.md
       - .github/workflows/project3-checks.yml
@@ -20,8 +22,10 @@ jobs:
       - name: Validate JavaScript syntax and dispatch acceptance tests
         run: |
           node --check scripts/project3-engine.js
+          node --check scripts/project3-analytics.js
+          node --check scripts/test-project3-analytics.cjs
           node --check scripts/test-project3-engine.cjs
-          node --test scripts/test-project3-engine.cjs
+          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs
       - name: Validate static integration, disclosure and inline JS
         run: |
           node - <<'NODE'
@@ -30,7 +34,9 @@ jobs:
           const home=fs.readFileSync('index.html','utf8');
           assert(home.includes('href="project3-av-command-center.html"'),'Portfolio navigation missing');
           assert(page.includes('src="scripts/project3-engine.js"'),'Engine script missing');
+          assert(page.includes('src="scripts/project3-analytics.js"'),'Analytics script missing');
           for(const id of ['vehicleMarkers','vehicleSelect','incidentType','createIncident','queue','providerSelect','assignProvider','advanceIncident','kAvail','kP90','kCost','announcer'])assert(page.includes('id="'+id+'"'),'Missing UI control: '+id);
+          for(const id of ['aProviders','aTypes','aAreas','aStages','aReady','aSla'])assert(page.includes('id="'+id+'"'),'Missing analytics panel: '+id);
           assert(page.includes('Synthetic scenario')&&page.includes('No actual company or partner data'),'Synthetic disclosures missing');
           const inline=page.match(/<script>\s*([\s\S]*?)<\/script><\/body>/);
           assert(inline,'Inline UI script missing');
