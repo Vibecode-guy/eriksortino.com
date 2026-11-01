@@ -20,9 +20,9 @@
 - [x] Acceptance: select vehicle → create incident → assign provider → complete → KPIs update.
 
 ### Phase 3 — Analytics
-- [ ] Fleet availability/utilization and documented denominators (availability implemented; utilization pending).
-- [ ] Mean/p90 response, recovery cost, provider performance, incident trends (response and cost implemented; provider/trends pending).
-- [ ] Geographic and type breakdown; bottleneck analysis.
+- [x] Snapshot fleet availability and fleet-minute incident downtime/service-ready exposure with explicit denominators. Commercial trip utilization is not modeled; remains pending Phase 4 trip/demand model.
+- [x] Mean/nearest-rank p90 completed response, completed recovery costs, provider assignment/completion/SLA/spend, incident counts by type and area.
+- [x] Geographic and incident-type breakdowns; completed-stage mean/p90 and largest observed mean bottleneck (descriptive only).
 
 ### Phase 4 — Planning
 - [ ] Provider staging comparisons and dispatch recommendations with explainable assumptions.
@@ -30,11 +30,13 @@
 - [ ] Before/after comparisons with reproducible simulation settings.
 
 ### Phase 5 — Quality and deployment
-- [x] Unit tests for state transitions, provider eligibility, KPI formulas, edge cases (5 synthetic tests in GitHub Actions).
+- [x] Unit tests for state transitions, provider eligibility, KPI formulas, edge cases, fleet-minute denominators, provider metrics, SLA and bottleneck summaries (11 synthetic tests in GitHub Actions).
 - [ ] Keyboard navigation, semantic status, focus behavior, mobile responsive checks.
 - [ ] Clearly disclose synthetic data, scenario assumptions, limitations.
 - [ ] Publish executive summary and methodology.
 - [ ] Verify production deployment and key workflow.
 
 ## Verification log
+- 2026-11-01: Phase 3 analytics delivered in `scripts/project3-analytics.js`, `scripts/test-project3-analytics.cjs`, and `project3-av-command-center.html`; workflow `.github/workflows/project3-checks.yml` updated. New responsive tables show provider performance, SLA attainment, incident type and vehicle-area trends, stage bottlenecks, and time-weighted incident downtime. **Not commercial utilization**; trip utilization remains unavailable until a trip-demand model exists. CI Project 3 checks passed (11 tests and static wiring) at commit `167ac9b8`, run `41314537777`. Live browser/mobile visual verification not performed. GitHub Pages deployment for `167ac9b8` was in progress at the time of this entry. No changes to Project 1 or Project 2.
+
 - 2026-10-31: Roadmap initialized. Implemented initial dark responsive command center, 12 synthetic AVs, 4 synthetic providers, incident queue, workflow, SLA clock, escalation, fleet and response KPIs. Added homepage link. GitHub Actions Project 3 MVP checks passed at commit `cab0f264`. Production URL / mobile visual verification pending; CI tests validate state machine and static wiring, not a browser interaction test. Project 1 and Project 2 files untouched.
