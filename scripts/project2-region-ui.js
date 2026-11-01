@@ -4,6 +4,20 @@
 (function(){
  'use strict';
  let latest=null;
+ let durationExport=null,durationChecked=false,durationRequest=null;
+ function rangeLabel(r){if(!r||!Number.isFinite(r.lowerHours))return 'Unavailable';const low=r.lowerHours,high=r.upperHours;return high===null?low.toLocaleString()+'+ hours':low.toLocaleString()+'–'+high.toLocaleString()+' hours';}
+ function durationRow(row){if(!durationExport||!latest)return 'Not validated';const d=durationExport.regions.find(x=>x.id===row.id);return d&&d.count>0?rangeLabel(d.medianRange)+' / '+rangeLabel(d.p90Range):'Insufficient completed timestamps';}
+ function validateDurationExport(d,summary){
+  if(!d||d.source!=='https://data.lacity.org/resource/b7dx-7gc3.json'||d.createdStartInclusive!=='2024-01-01'||d.createdEndExclusive!=='2025-01-01'||!Array.isArray(d.regions)||!Number.isSafeInteger(d.total)||d.total<0||!Number.isSafeInteger(d.missingZipCount)||!Number.isSafeInteger(d.unassignedCount))throw Error('Invalid duration export provenance');
+  const seen=new Set();let sum=d.missingZipCount+d.unassignedCount;
+  for(const r of d.regions){const base=summary.rows.find(x=>x.id===r.id);if(!base||seen.has(r.id)||!Number.isSafeInteger(r.count)||r.count<0||r.count>base.requests||!Array.isArray(r.counts)||r.counts.length!==8||r.counts.some(n=>!Number.isSafeInteger(n)||n<0)||r.counts.reduce((a,b)=>a+b,0)!==r.count)throw Error('Duration regional counts inconsistent with geographic data');seen.add(r.id);sum+=r.count;
+   for(const range of [r.medianRange,r.p90Range])if(r.count>0&&(!range||!Number.isFinite(range.lowerHours)||range.lowerHours<0||(range.upperHours!==null&&(!Number.isFinite(range.upperHours)||range.upperHours<=range.lowerHours))))throw Error('Invalid duration percentile range');
+  }
+  if(sum!==d.total||d.total>summary.mappedRequests)throw Error('Duration export totals do not reconcile');
+ }
+ async function loadDurations(){if(durationChecked||durationRequest)return durationRequest;durationRequest=(async()=>{try{const response=await fetch('data/myla311-2024-duration-intervals.json',{cache:'no-store'});if(!response.ok)throw Error('No published validated duration export');const data=await response.json();if(!latest)return;validateDurationExport(data,latest);durationExport=data;}catch(e){durationExport=null;}finally{durationChecked=true;durationRequest=null;if(latest)renderDurationCells();}})();return durationRequest;}
+ function renderDurationCells(){const cells=document.querySelectorAll('#regionLensTable tr');if(!latest)return;for(let i=0;i<cells.length;i++){const row=latest.rows[i];if(row&&cells[i].lastElementChild)cells[i].lastElementChild.textContent=durationRow(row);}const n=document.getElementById('regionLensCoverage');if(n&&durationExport)n.textContent+=' Validated duration intervals from '+durationExport.generatedAt+'; '+durationExport.total.toLocaleString()+' geocoded records with usable closure timestamps, '+durationExport.missingZipCount.toLocaleString()+' missing ZIP and '+durationExport.unassignedCount.toLocaleString()+' outside lenses. Percentiles are hour-bin intervals, not exact values; ClosedDate coverage varies by service type.';}
+
  const lensButtons=new Map();
  function updatePressed(key){for(const [id,button] of lensButtons)button.setAttribute('aria-pressed',String(id===key));}
  function node(tag,text){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;}
@@ -114,11 +128,12 @@
      button.setAttribute('aria-pressed','false');lensButtons.set(row.id,button);
      button.addEventListener('click',()=>{document.getElementById('regionFocus').value=row.id;window.focusRegion(row.id);});
      th.append(button);tr.append(th);
-     for(const value of [String(row.radiusKm),row.requests.toLocaleString(),row.zipGroups.toLocaleString(),row.historicalGap===null?'Unavailable':row.historicalGap.toLocaleString(),row.historicalGapShare===null?'Unavailable':row.historicalGapShare.toFixed(1)+'%','Not calculated'])tr.append(node('td',value));
+     for(const value of [String(row.radiusKm),row.requests.toLocaleString(),row.zipGroups.toLocaleString(),row.historicalGap===null?'Unavailable':row.historicalGap.toLocaleString(),row.historicalGapShare===null?'Unavailable':row.historicalGapShare.toFixed(1)+'%',durationRow(row)])tr.append(node('td',value));
      body.append(tr);
     }
-    status.textContent='Six non-overlapping exploratory lenses calculated from validated ZIP aggregates; these are not official region totals.';
+    status.textContent='Six uniquely assigned exploratory lenses calculated from validated ZIP aggregates; these are not official region totals.';
     note.textContent='Assigned '+result.assignedRequests.toLocaleString()+' of '+result.mappedRequests.toLocaleString()+' mapped requests ('+(result.assignedShare===null?'—':result.assignedShare.toFixed(1)+'%')+'). '+result.unassignedRequests.toLocaleString()+' requests in '+result.unassignedZipGroups+' ZIP groups are outside all six radii. '+result.overlappingRequests.toLocaleString()+' requests across '+result.overlappingZipGroups+' ZIP groups lie within multiple reference radii (assigned to nearest center); '+result.nearRadiusEdgeRequests.toLocaleString()+' requests across '+result.nearRadiusEdgeZipGroups+' ZIP groups lie within 2 km of their assigned radius edge. These are overlapping uncertainty flags, not additional excluded records or official boundary measures. Missing gap data remain unavailable, not zero. Regional median/p90 require separately validated data.';
+    if(durationExport){try{validateDurationExport(durationExport,result);}catch(e){durationExport=null;} }if(durationExport)renderDurationCells();else if(!durationChecked)loadDurations();
     const key=document.getElementById('regionFocus').value;updatePressed(key);highlight(key);explain(key);
    }catch(e){latest=null;renderMatrix(null);status.textContent='Regional lens unavailable: '+String(e.message||e).slice(0,160);note.textContent='No partial regional values displayed.';}
   }
