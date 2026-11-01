@@ -1,0 +1,43 @@
+name: Project 2 duration pipeline checks
+on:
+  push:
+    paths:
+      - scripts/project2-duration-bins.cjs
+      - scripts/build-myla311-durations.cjs
+      - scripts/test-project2-duration-bins.cjs
+      - scripts/test-project2-duration-pipeline.cjs
+      - .github/workflows/project2-duration-checks.yml
+  workflow_dispatch:
+    inputs:
+      validate_live_api:
+        description: 'Run the complete City API duration export (may be slow)'
+        required: false
+        type: boolean
+        default: false
+jobs:
+  duration-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check duration scripts
+        run: |
+          node --check scripts/project2-duration-bins.cjs
+          node --check scripts/build-myla311-durations.cjs
+          node --check scripts/test-project2-duration-bins.cjs
+          node --check scripts/test-project2-duration-pipeline.cjs
+      - name: Run synthetic duration tests
+        run: node --test scripts/test-project2-duration-bins.cjs scripts/test-project2-duration-pipeline.cjs
+      - name: Live City API validation and export
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.validate_live_api }}
+        run: node scripts/build-myla311-durations.cjs /tmp/project2-duration-intervals.json
+      - name: Upload verified duration export
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.validate_live_api && success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: project2-duration-intervals
+          path: /tmp/project2-duration-intervals.json
+          retention-days: 7
