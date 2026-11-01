@@ -8,7 +8,7 @@ function summarizeBins(zipGroups,binRows,expectedTotal){
  if(!Number.isSafeInteger(expectedTotal)||expectedTotal<0)throw Error('Invalid independent duration total');
  const zipMap=new Map();
  for(const row of zipGroups){const zip=String(row.zip??'').trim();if(!zip||zipMap.has(zip)||!Number.isSafeInteger(Number(row.n))||Number(row.n)<0)throw Error('Invalid ZIP coverage');zipMap.set(zip,row);}
- const regions=new Map(),unassigned=Array(EDGES.length).fill(0),missingZip=Array(EDGES.length).fill(0),seen=new Set();
+ const regions=new Map(),unassigned=Array(EDGES.length).fill(0),missingZip=Array(EDGES.length).fill(0),seen=new Set(),durationByZip=new Map();
  let total=0;
  for(const row of binRows){
   const zip=String(row.zip??'').trim(),bin=Number(row.bin),n=Number(row.n),key=zip+'|'+bin;
@@ -16,6 +16,10 @@ function summarizeBins(zipGroups,binRows,expectedTotal){
   seen.add(key);total+=n;
   if(!zip){missingZip[bin]+=n;continue;}
   const point=zipMap.get(zip);if(!point)throw Error('Duration ZIP missing from geographic cohort');
+  const accumulated=(durationByZip.get(zip)||0)+n;
+  if(!Number.isSafeInteger(accumulated)||accumulated>Number(point.n))throw Error('Completed duration count exceeds geographic ZIP demand');
+  durationByZip.set(zip,accumulated);
+  if(!Number.isFinite(Number(point.lat))||!Number.isFinite(Number(point.lon)))throw Error('Invalid ZIP centroid');
   const id=assignLens({lat:Number(point.lat),lon:Number(point.lon)});
   const target=id?(regions.get(id)||Array(EDGES.length).fill(0)):unassigned;
   target[bin]+=n;if(id)regions.set(id,target);
