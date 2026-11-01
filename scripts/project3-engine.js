@@ -1,0 +1,36 @@
+/* Project 3 synthetic AV operations simulator. No real fleet or partner data. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.AVCommand=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const VEHICLES=[
+ ['AV-101','Westchester',33.959,-118.402],['AV-102','Marina del Rey',33.981,-118.451],['AV-103','Venice',33.994,-118.469],
+ ['AV-104','Santa Monica',34.017,-118.491],['AV-105','Culver City',34.021,-118.396],['AV-106','Mid-City',34.048,-118.356],
+ ['AV-107','Downtown LA',34.049,-118.246],['AV-108','Hollywood',34.101,-118.329],['AV-109','Koreatown',34.061,-118.301],
+ ['AV-110','South LA',33.990,-118.293],['AV-111','Inglewood',33.961,-118.353],['AV-112','San Pedro',33.739,-118.289]
+];
+const PROVIDERS=[
+ {id:'P-01',name:'Westside Roadside',area:'West LA',lat:34.010,lon:-118.420,capabilities:['door_ajar','immobilized'],baseCost:95},
+ {id:'P-02',name:'Central Recovery',area:'Central LA',lat:34.045,lon:-118.300,capabilities:['door_ajar','immobilized','flatbed','depot'],baseCost:225},
+ {id:'P-03',name:'Harbor Flatbed',area:'Harbor',lat:33.775,lon:-118.285,capabilities:['flatbed','depot','immobilized'],baseCost:195},
+ {id:'P-04',name:'Valley Response',area:'Valley',lat:34.175,lon:-118.420,capabilities:['door_ajar','immobilized','flatbed'],baseCost:175}
+];
+const TYPES={
+ door_ajar:{label:'Door ajar',severity:'Low',sla:30,needs:'door_ajar',minutes:[4,8,6],impact:'Vehicle temporarily unavailable'},
+ immobilized:{label:'Immobilized AV',severity:'High',sla:35,needs:'immobilized',minutes:[5,12,15],impact:'Vehicle unavailable'},
+ flatbed:{label:'Flatbed recovery',severity:'Critical',sla:45,needs:'flatbed',minutes:[8,16,35],impact:'Vehicle unavailable'},
+ depot:{label:'Depot transport',severity:'Medium',sla:60,needs:'depot',minutes:[6,18,32],impact:'Vehicle unavailable'}
+};
+function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:VEHICLES.map(([id,area,lat,lon])=>({id,area,lat,lon,status:'available'})),providers:PROVIDERS.map(p=>({...p})),incidents:[]};}
+function vehicle(s,id){const v=s.vehicles.find(x=>x.id===id);if(!v)throw Error('Unknown vehicle');return v;}
+function incident(s,id){const i=s.incidents.find(x=>x.id===id);if(!i)throw Error('Unknown incident');return i;}
+function provider(s,id){const p=s.providers.find(x=>x.id===id);if(!p)throw Error('Unknown provider');return p;}
+function createIncident(s,vehicleId,type){const v=vehicle(s,vehicleId),t=TYPES[type];if(!t)throw Error('Unknown incident type');if(v.status!=='available')throw Error('Vehicle already unavailable');const i={id:'INC-'+String(s.nextId++).padStart(3,'0'),vehicleId,type,severity:t.severity,sla:t.sla,created:s.minute,status:'queued',providerId:null,assignedAt:null,enRouteAt:null,onSceneAt:null,completedAt:null,cost:0,escalated:false};s.incidents.unshift(i);v.status='incident';return i;}
+function eligibleProviders(s,incidentId){const i=incident(s,incidentId);return s.providers.filter(p=>p.capabilities.includes(TYPES[i.type].needs)).map(p=>({...p,estimatedMinutes:estimateTravel(vehicle(s,i.vehicleId),p)})).sort((a,b)=>a.estimatedMinutes-b.estimatedMinutes||a.id.localeCompare(b.id));}
+function estimateTravel(v,p){const dy=(v.lat-p.lat)*111,dx=(v.lon-p.lon)*92;return Math.max(6,Math.round(Math.hypot(dx,dy)/.52+5));} // synthetic effective speed ~31 km/h
+function assign(s,incidentId,providerId){const i=incident(s,incidentId),p=provider(s,providerId);if(i.status!=='queued')throw Error('Incident must be queued');if(!p.capabilities.includes(TYPES[i.type].needs))throw Error('Provider not equipped');i.providerId=p.id;i.assignedAt=s.minute;i.status='dispatched';return i;}
+function advance(s,incidentId){const i=incident(s,incidentId),t=TYPES[i.type];if(i.status==='queued')throw Error('Assign provider first');if(i.status==='completed')throw Error('Incident already completed');const next={dispatched:'en_route',en_route:'on_scene',on_scene:'completed'}[i.status];if(!next)throw Error('Invalid state');const mins=i.status==='dispatched'?t.minutes[0]:i.status==='en_route'?estimateTravel(vehicle(s,i.vehicleId),provider(s,i.providerId)):t.minutes[2];s.minute+=mins;i.status=next;if(next==='en_route')i.enRouteAt=s.minute;if(next==='on_scene')i.onSceneAt=s.minute;if(next==='completed'){i.completedAt=s.minute;i.cost=provider(s,i.providerId).baseCost+(i.type==='flatbed'?125:i.type==='depot'?95:0);vehicle(s,i.vehicleId).status='available';}return i;}
+function escalate(s,id){const i=incident(s,id);if(i.status==='completed')throw Error('Cannot escalate completed incident');i.escalated=true;return i;}
+function tick(s,minutes=5){if(!Number.isInteger(minutes)||minutes<1||minutes>1440)throw Error('Invalid clock advance');s.minute+=minutes;}
+function kpis(s){const total=s.vehicles.length,available=s.vehicles.filter(v=>v.status==='available').length,completed=s.incidents.filter(i=>i.completedAt!==null);const times=completed.map(i=>i.onSceneAt-i.created).sort((a,b)=>a-b);const mean=times.length?times.reduce((a,b)=>a+b,0)/times.length:null;const p90=times.length?times[Math.ceil(times.length*.9)-1]:null;const cost=completed.reduce((a,i)=>a+i.cost,0);return {total,available,availabilityPercent:total?100*available/total:0,active:s.incidents.filter(i=>i.status!=='completed').length,completed:completed.length,meanResponse:mean,p90Response:p90,totalCost:cost,breached:s.incidents.filter(i=>i.status!=='completed'&&s.minute-i.created>i.sla).length};}
+function elapsed(s,i){return (i.completedAt===null?s.minute:i.completedAt)-i.created;}
+return {TYPES,initialState,createIncident,eligibleProviders,assign,advance,escalate,tick,kpis,elapsed,estimateTravel};
+});
