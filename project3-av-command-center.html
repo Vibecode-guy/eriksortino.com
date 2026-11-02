@@ -54,6 +54,7 @@
 <script src="scripts/project3-engine.js"></script>
 <script src="scripts/project3-analytics.js"></script>
 <script src="scripts/project3-planning.js"></script>
+<script src="scripts/project3-planning-ui.js"></script>
 <script>
 (function(){'use strict';
 const E=window.AVCommand;if(!E){document.getElementById('announcer').textContent='Simulator failed to load.';return;}
@@ -80,72 +81,6 @@ function renderAnalytics(){
  fill('aTypes',a.types.map(r=>[E.TYPES[r.key]?.label||r.key,r.incidents,r.active,r.completed,money(r.spend)]));
  fill('aAreas',a.areas.map(r=>[r.key,r.incidents,r.active,r.breached]));
  fill('aStages',a.stages.map(r=>[r.name,r.samples,mins(r.meanMinutes),mins(r.p90Minutes)]));
-}
-function renderPlanning(){
- const P=window.AVPlanning;if(!P){$('planStatus').textContent='Planning module unavailable.';return;}
- try{
-  const c={fleetSize:Number($('planFleet').value),incidentsPer100PerDay:Number($('planRate').value),budget:Number($('planBudget').value)};
-  const x=P.compare(c),base=x.baseline,chosen=x.recommendation,fmt=n=>n===null?'—':n.toLocaleString(undefined,{maximumFractionDigits:1});
-  const cash=n=>(n<0?'−renderAnalytics();$('kAvail').textContent=k.available+'/'+k.total+' ('+k.availabilityPercent.toFixed(0)+'%)';$('kActive').textContent=k.active;$('kDone').textContent=k.completed;$('kMean').textContent=k.meanResponse===null?'—':k.meanResponse.toFixed(1);$('kP90').textContent=k.p90Response===null?'—':k.p90Response;$('kCost').textContent='$'+k.totalCost.toLocaleString();$('clock').textContent='T + '+String(state.minute).padStart(3,'0')+' min';$('queueCount').textContent=state.incidents.length+' total · '+k.breached+' active SLA breaches';
-const vs=$('vehicleSelect');vs.replaceChildren();for(const v of state.vehicles){const o=document.createElement('option');o.value=v.id;o.textContent=v.id+' · '+v.area+' · '+v.status;vs.append(o);}vs.value=state.selected;const v=selectedVehicle();$('selectedLabel').textContent=v.id;$('vehicleDetails').textContent=v.id+' · '+v.area+' · '+(v.status==='available'?'Available for service':'Unavailable during incident');$('createIncident').disabled=v.status!=='available';drawMap();
-const queue=$('queue');queue.replaceChildren();if(!state.incidents.length){const d=document.createElement('div');d.className='empty';d.textContent='No incidents yet. Generate one from the fleet controls.';queue.append(d);}
-for(const i of state.incidents){const b=document.createElement('button');b.className='incident';b.setAttribute('aria-pressed',String(chosen===i.id));const elapsed=E.elapsed(state,i),late=i.status!=='completed'&&elapsed>i.sla;b.innerHTML='<strong></strong><small></small>';b.querySelector('strong').textContent=i.id+' · '+E.TYPES[i.type].label+' · '+i.vehicleId;b.querySelector('small').textContent=i.status.replace('_',' ')+' · '+elapsed+' min elapsed · SLA '+i.sla+' min'+(late?' · BREACHED':'')+(i.escalated?' · ESCALATED':'');b.addEventListener('click',()=>{chosen=i.id;render();});queue.append(b);}
-const i=selectedIncident(),p=$('providerSelect');p.replaceChildren();$('assignProvider').disabled=true;$('advanceIncident').disabled=true;$('escalateIncident').disabled=true;p.disabled=true;
-if(!i){$('incidentDetails').className='empty';$('incidentDetails').textContent='Choose an incident from the queue to assign a provider and progress the response.';$('nextAction').textContent='Awaiting incident';return;}
-const details=$('incidentDetails');details.className='fact';details.replaceChildren();for(const [label,val] of [['Incident',i.id],['Severity',i.severity],['Status',i.status.replace('_',' ')],['Elapsed',E.elapsed(state,i)+' min'],['SLA',i.sla+' min'],['Assigned',i.providerId||'Not assigned'],['Escalation',i.escalated?'Yes':'No'],['Cost',i.completedAt===null?'Pending':'$'+i.cost]]){const d=document.createElement('div'),span=document.createElement('span'),strong=document.createElement('strong');span.textContent=label;strong.textContent=val;d.append(span,strong);details.append(d);}
-if(i.status==='queued'){for(const option of E.eligibleProviders(state,i.id)){const o=document.createElement('option');o.value=option.id;o.textContent=option.name+' · ETA '+option.estimatedMinutes+' min';p.append(o);}p.disabled=false;$('assignProvider').disabled=false;$('nextAction').textContent='Assign compatible provider';}
-else if(i.status==='completed'){$('nextAction').textContent='Completed';}
-else{$('advanceIncident').disabled=false;$('nextAction').textContent={dispatched:'Next: en route',en_route:'Next: on scene',on_scene:'Next: completed'}[i.status];}
-$('escalateIncident').disabled=i.status==='completed'||i.escalated;
-}
-$('vehicleSelect').addEventListener('change',e=>{state.selected=e.target.value;render();});
-$('createIncident').addEventListener('click',()=>{try{const i=E.createIncident(state,state.selected,$('incidentType').value);chosen=i.id;render();say('Created '+i.id);}catch(e){say(e.message);}});
-$('assignProvider').addEventListener('click',()=>{try{E.assign(state,chosen,$('providerSelect').value);render();say('Provider assigned');}catch(e){say(e.message);}});
-$('advanceIncident').addEventListener('click',()=>{try{const i=E.advance(state,chosen);render();say(i.id+' moved to '+i.status);}catch(e){say(e.message);}});
-$('escalateIncident').addEventListener('click',()=>{try{E.escalate(state,chosen);render();say('Incident escalated');}catch(e){say(e.message);}});
-$('tickClock').addEventListener('click',()=>{E.tick(state);render();say('Simulation clock advanced five minutes');});
-$('resetSim').addEventListener('click',()=>{state=E.initialState();chosen=null;render();say('Simulation reset');});
-for(const id of ['planFleet','planRate','planBudget'])$(id).addEventListener('change',renderPlanning);
-$('planReset').addEventListener('click',()=>{$('planFleet').value='24';$('planRate').value='5';$('planBudget').value='5000';renderPlanning();say('Planning defaults restored');});
-render();renderPlanning();
-})();
-</script></body></html>
-:'renderAnalytics();$('kAvail').textContent=k.available+'/'+k.total+' ('+k.availabilityPercent.toFixed(0)+'%)';$('kActive').textContent=k.active;$('kDone').textContent=k.completed;$('kMean').textContent=k.meanResponse===null?'—':k.meanResponse.toFixed(1);$('kP90').textContent=k.p90Response===null?'—':k.p90Response;$('kCost').textContent='$'+k.totalCost.toLocaleString();$('clock').textContent='T + '+String(state.minute).padStart(3,'0')+' min';$('queueCount').textContent=state.incidents.length+' total · '+k.breached+' active SLA breaches';
-const vs=$('vehicleSelect');vs.replaceChildren();for(const v of state.vehicles){const o=document.createElement('option');o.value=v.id;o.textContent=v.id+' · '+v.area+' · '+v.status;vs.append(o);}vs.value=state.selected;const v=selectedVehicle();$('selectedLabel').textContent=v.id;$('vehicleDetails').textContent=v.id+' · '+v.area+' · '+(v.status==='available'?'Available for service':'Unavailable during incident');$('createIncident').disabled=v.status!=='available';drawMap();
-const queue=$('queue');queue.replaceChildren();if(!state.incidents.length){const d=document.createElement('div');d.className='empty';d.textContent='No incidents yet. Generate one from the fleet controls.';queue.append(d);}
-for(const i of state.incidents){const b=document.createElement('button');b.className='incident';b.setAttribute('aria-pressed',String(chosen===i.id));const elapsed=E.elapsed(state,i),late=i.status!=='completed'&&elapsed>i.sla;b.innerHTML='<strong></strong><small></small>';b.querySelector('strong').textContent=i.id+' · '+E.TYPES[i.type].label+' · '+i.vehicleId;b.querySelector('small').textContent=i.status.replace('_',' ')+' · '+elapsed+' min elapsed · SLA '+i.sla+' min'+(late?' · BREACHED':'')+(i.escalated?' · ESCALATED':'');b.addEventListener('click',()=>{chosen=i.id;render();});queue.append(b);}
-const i=selectedIncident(),p=$('providerSelect');p.replaceChildren();$('assignProvider').disabled=true;$('advanceIncident').disabled=true;$('escalateIncident').disabled=true;p.disabled=true;
-if(!i){$('incidentDetails').className='empty';$('incidentDetails').textContent='Choose an incident from the queue to assign a provider and progress the response.';$('nextAction').textContent='Awaiting incident';return;}
-const details=$('incidentDetails');details.className='fact';details.replaceChildren();for(const [label,val] of [['Incident',i.id],['Severity',i.severity],['Status',i.status.replace('_',' ')],['Elapsed',E.elapsed(state,i)+' min'],['SLA',i.sla+' min'],['Assigned',i.providerId||'Not assigned'],['Escalation',i.escalated?'Yes':'No'],['Cost',i.completedAt===null?'Pending':'$'+i.cost]]){const d=document.createElement('div'),span=document.createElement('span'),strong=document.createElement('strong');span.textContent=label;strong.textContent=val;d.append(span,strong);details.append(d);}
-if(i.status==='queued'){for(const option of E.eligibleProviders(state,i.id)){const o=document.createElement('option');o.value=option.id;o.textContent=option.name+' · ETA '+option.estimatedMinutes+' min';p.append(o);}p.disabled=false;$('assignProvider').disabled=false;$('nextAction').textContent='Assign compatible provider';}
-else if(i.status==='completed'){$('nextAction').textContent='Completed';}
-else{$('advanceIncident').disabled=false;$('nextAction').textContent={dispatched:'Next: en route',en_route:'Next: on scene',on_scene:'Next: completed'}[i.status];}
-$('escalateIncident').disabled=i.status==='completed'||i.escalated;
-}
-$('vehicleSelect').addEventListener('change',e=>{state.selected=e.target.value;render();});
-$('createIncident').addEventListener('click',()=>{try{const i=E.createIncident(state,state.selected,$('incidentType').value);chosen=i.id;render();say('Created '+i.id);}catch(e){say(e.message);}});
-$('assignProvider').addEventListener('click',()=>{try{E.assign(state,chosen,$('providerSelect').value);render();say('Provider assigned');}catch(e){say(e.message);}});
-$('advanceIncident').addEventListener('click',()=>{try{const i=E.advance(state,chosen);render();say(i.id+' moved to '+i.status);}catch(e){say(e.message);}});
-$('escalateIncident').addEventListener('click',()=>{try{E.escalate(state,chosen);render();say('Incident escalated');}catch(e){say(e.message);}});
-$('tickClock').addEventListener('click',()=>{E.tick(state);render();say('Simulation clock advanced five minutes');});
-$('resetSim').addEventListener('click',()=>{state=E.initialState();chosen=null;render();say('Simulation reset');});
-render();
-})();
-</script></body></html>
-)+Math.abs(n).toLocaleString(),delta=(n,unit)=>n===null?'—':(n>0?'+':n<0?'−':'')+fmt(Math.abs(n))+unit;
-  $('planStatus').textContent=x.assumptions.events+' synthetic incidents across '+x.assumptions.horizonDays+' days; '+c.fleetSize+' modeled AVs; '+c.incidentsPer100PerDay+' incidents per 100 AVs/day. All scenarios use the same seeded event set.';
-  $('planRecommendation').textContent='Modeled recommendation: '+chosen.label+'. p90 '+fmt(chosen.p90Response)+' min ('+delta(chosen.p90Response===null||base.p90Response===null?null:chosen.p90Response-base.p90Response,' min')+' versus baseline); incremental 30-day cost '+cash(chosen.totalCost-base.totalCost)+' against '+cash(c.budget)+' ceiling. Selection minimizes modeled p90 within budget, then mean response and total cost. This is not operational dispatch advice.';
-  const body=$('planTable');body.replaceChildren();
-  for(const r of x.scenarios){
-   const tr=document.createElement('tr');
-   const values=[r.label+(r.id===chosen.id?' · recommended':''),r.meanResponse===null?'—':fmt(r.meanResponse)+' min',r.p90Response===null?'—':fmt(r.p90Response)+' min',delta(r.p90Response===null||base.p90Response===null?null:r.p90Response-base.p90Response,' min'),r.slaPercent===null?'—':fmt(r.slaPercent)+'%',r.meanQueue===null?'—':fmt(r.meanQueue)+' min',cash(r.totalCost),cash(r.totalCost-base.totalCost)];
-   values.forEach((v,i)=>{const cell=document.createElement(i===0?'th':'td');if(i===0)cell.scope='row';cell.textContent=v;tr.append(cell);});body.append(tr);
-  }
-  const examples=$('planExamples');examples.replaceChildren();
-  if(!chosen.examples.length){const li=document.createElement('li');li.textContent='No incidents in the selected scenario.';examples.append(li);}
-  for(const e of chosen.examples){const li=document.createElement('li');li.textContent=e.vehicleId+' / '+E.TYPES[e.type].label+' → '+e.provider+': '+e.queueMinutes+' min crew wait + dispatch preparation + '+e.travelMinutes+' min synthetic travel = '+e.responseMinutes+' min response; estimated variable cost '+cash(e.estimatedCost)+'. '+e.reason;examples.append(li);}
-  $('planMethod').textContent='Assumptions: '+x.assumptions.providerCrewCapacity+'. Added crew overhead '+cash(x.assumptions.siteFixedCost)+'/30 days; variable distance charge '+cash(x.assumptions.perKmCost)+'/km plus fictional provider base fees and recovery surcharges. '+x.assumptions.eventGeneration+'. '+x.assumptions.dispatchRule+'. Travel uses straight-line distance and constant effective speed; no real traffic, commercial trips, or real service-provider capacity. Site comparisons are estimates, not forecasts.';
- }catch(e){$('planStatus').textContent='Planning calculation unavailable: '+e.message;$('planRecommendation').textContent='No scenario recommendation available.';$('planTable').replaceChildren();$('planExamples').replaceChildren();}
 }
 function render(){const k=E.kpis(state);renderAnalytics();$('kAvail').textContent=k.available+'/'+k.total+' ('+k.availabilityPercent.toFixed(0)+'%)';$('kActive').textContent=k.active;$('kDone').textContent=k.completed;$('kMean').textContent=k.meanResponse===null?'—':k.meanResponse.toFixed(1);$('kP90').textContent=k.p90Response===null?'—':k.p90Response;$('kCost').textContent='$'+k.totalCost.toLocaleString();$('clock').textContent='T + '+String(state.minute).padStart(3,'0')+' min';$('queueCount').textContent=state.incidents.length+' total · '+k.breached+' active SLA breaches';
 const vs=$('vehicleSelect');vs.replaceChildren();for(const v of state.vehicles){const o=document.createElement('option');o.value=v.id;o.textContent=v.id+' · '+v.area+' · '+v.status;vs.append(o);}vs.value=state.selected;const v=selectedVehicle();$('selectedLabel').textContent=v.id;$('vehicleDetails').textContent=v.id+' · '+v.area+' · '+(v.status==='available'?'Available for service':'Unavailable during incident');$('createIncident').disabled=v.status!=='available';drawMap();
