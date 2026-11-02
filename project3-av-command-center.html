@@ -98,7 +98,7 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 <g id="vehicleMarkers"></g></svg>
 <div class="legend"><span><b>●</b> Available</span><span><b class="offline">●</b> Incident / recovery</span><span>Map is approximate; positions are synthetic</span></div><div class="hub-legend" aria-label="Proposed response coverage legend"><span>◆ Teal · Central LA → West LA / Venice</span><span>◆ Gold · Valley</span><span>◆ Blue · South LA → LAX / San Pedro</span></div><p class="analytics-note">Dashed outlines and corridors are hypothetical service-planning illustrations, not measured travel-time catchments or routing recommendations. Planner selections highlight an illustrative corridor; they do not change the 12 tabletop vehicle markers.</p>
 <div id="coverageDecision" class="coverage-decision" role="status" aria-live="polite">Planning overlay: calculating modeled staging recommendation…</div>
-<div class="panelhead" style="margin-top:18px"><h2>Vehicle controls</h2><span class="clock" id="selectedLabel">AV-101</span></div>
+<div class="controls" aria-label="Fleet map filters"><div><label for="fleetSearch">Search vehicle ID or area</label><input id="fleetSearch" type="search" placeholder="AV-115 or Venice" style="width:100%;min-height:44px;border-radius:9px;background:#0b1926;color:#edf7ff;border:1px solid #466174;padding:10px"></div><div><label for="fleetStatusFilter">Map status</label><select id="fleetStatusFilter"><option value="all">All vehicles</option><option value="available">Available</option><option value="unavailable">Unavailable / response</option></select></div></div><p id="fleetFilterCount" class="analytics-note" role="status" aria-live="polite"></p><div class="panelhead" style="margin-top:18px"><h2>Vehicle controls</h2><span class="clock" id="selectedLabel">AV-101</span></div>
 <div class="controls"><div><label for="vehicleSelect">Select vehicle</label><select id="vehicleSelect"></select></div><div><label for="incidentType">Incident type</label><select id="incidentType"><option value="immobilized">Immobilized AV</option><option value="door_ajar">Door ajar</option><option value="flat_tire">Flat tire · roadside assessment</option><option value="flatbed">Flatbed recovery</option><option value="depot">Depot transport</option></select></div></div>
 <div class="rowbuttons"><button id="createIncident" class="primary">Generate incident</button><button id="tickClock">Advance clock +5 min</button><button id="resetSim">Restore demo</button></div>
 <p id="vehicleDetails" aria-live="polite"></p></section>
@@ -155,12 +155,12 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 <div class="notice"><strong>Methodology &amp; limitations.</strong> Synthetic deterministic workflow, not a dispatch recommendation for real vehicles. Simulated travel uses straight-line distance and a fixed effective speed; no traffic, permits, service contracts, real SLAs, real rates, safety clearance, or operational telemetry. The clock advances only when you press controls. Response time is incident creation to on-scene; p90 uses nearest-rank among completed incidents with an on-scene timestamp. Averages and p90 display “—” before any completed incidents. No actual company or partner data.</div>
 <p id="announcer" role="status" aria-live="polite" class="sr-only"></p></main>
 <footer class="foot"><a href="index.html">← Portfolio home</a><a href="PROJECT3_ROADMAP.md">Development roadmap</a><span>Project 3 · illustrative simulation only · © 2026 Erik Sortino</span></footer></div>
-<div id="startupHealth" role="status" aria-live="polite" style="margin:12px 0;padding:10px;border:1px solid #416579;border-radius:8px;color:#d5e9f1">Simulator build 2026-11-02-b2 · initializing…</div>
+<div id="startupHealth" role="status" aria-live="polite" style="margin:12px 0;padding:10px;border:1px solid #416579;border-radius:8px;color:#d5e9f1">Simulator build 2026-11-02-c1 · initializing…</div>
 <script>
 window.addEventListener('error',function(e){var n=document.getElementById('startupHealth');if(n){n.textContent='Simulator startup error: '+(e.message||'script load failed')+' · '+(e.filename||'unknown file');n.style.borderColor='#f59a9a';}});
 window.addEventListener('load',function(){setTimeout(function(){var n=document.getElementById('startupHealth');if(n&&n.textContent.includes('initializing')){n.textContent='Simulator did not initialize. Check network script loading or JavaScript errors.';n.style.borderColor='#f59a9a';}},1200);});
 </script>
-<script src="scripts/project3-engine.js?v=20261102-timeline1"></script>
+<script src="scripts/project3-engine.js?v=20261102-fleet100"></script>
 <script src="scripts/project3-analytics.js?v=20261102-boot2"></script>
 <script src="scripts/project3-planning.js?v=20261102-boot2"></script>
 <script src="scripts/project3-planning-ui.js?v=20261102-boot2"></script>
@@ -186,7 +186,7 @@ function say(t){$('announcer').textContent=t;}
 function selectedVehicle(){return state.vehicles.find(v=>v.id===state.selected);}
 function selectedIncident(){return state.incidents.find(i=>i.id===chosen);}
 function point(v){const x=65+(v.lon+118.53)/.39*760,y=60+(34.23-v.lat)/.55*500;return {x:Math.max(35,Math.min(860,x)),y:Math.max(35,Math.min(580,y))};}
-function drawMap(){const g=$('vehicleMarkers');g.replaceChildren();for(const v of state.vehicles){const p=point(v),c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('r',v.id===state.selected?'13':'10');c.setAttribute('fill',v.status==='available'?'#89e7b3':'#ff8b92');c.setAttribute('class','vehicle'+(v.id===state.selected?' selected':''));c.setAttribute('tabindex','0');c.setAttribute('role','button');c.setAttribute('aria-label',v.id+' in '+v.area+', '+v.status+'. Select vehicle');const title=document.createElementNS('http://www.w3.org/2000/svg','title');title.textContent=v.id+' · '+v.area+' · '+v.status;c.append(title);const choose=()=>{state.selected=v.id;render();say('Selected '+v.id);};c.addEventListener('click',choose);c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}});g.append(c);}}
+function drawMap(){const g=$('vehicleMarkers');g.replaceChildren();for(const v of state.vehicles){const q=$('fleetSearch').value.trim().toLowerCase(),filter=$('fleetStatusFilter').value;if(q&&!((v.id+' '+v.area).toLowerCase().includes(q)))continue;if(filter==='available'&&v.status!=='available')continue;if(filter==='unavailable'&&v.status==='available')continue;const p=point(v),c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('r',v.id===state.selected?'13':'10');c.setAttribute('fill',v.status==='available'?'#89e7b3':'#ff8b92');c.setAttribute('class','vehicle'+(v.id===state.selected?' selected':''));c.setAttribute('tabindex','0');c.setAttribute('role','button');c.setAttribute('aria-label',v.id+' in '+v.area+', '+v.status+'. Select vehicle');const title=document.createElementNS('http://www.w3.org/2000/svg','title');title.textContent=v.id+' · '+v.area+' · '+v.status;c.append(title);const choose=()=>{state.selected=v.id;render();say('Selected '+v.id);};c.addEventListener('click',choose);c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}});g.append(c);} $('fleetFilterCount').textContent=g.children.length+' of '+state.vehicles.length+' simulated vehicles shown on map';}
 function renderAnalytics(){
  const A=window.AVAnalytics;if(!A){$('aFleetNote').textContent='Analytics module unavailable.';return;}
  let a;try{a=A.summarize(state);}catch(e){$('aFleetNote').textContent='Analytics unavailable: '+e.message;return;}
@@ -224,8 +224,9 @@ function renderSafetyTimeline(i){
  for(const event of events){const item=document.createElement('li'),strong=document.createElement('strong'),detail=document.createElement('span');strong.textContent='T + '+String(event.minute).padStart(3,'0')+' min · '+event.label;detail.textContent=' — '+event.detail;item.append(strong,detail);list.append(item);}
 }
 function renderEvacuation(i){
- const select=$('replacementAV');select.replaceChildren();$('flagDanger').disabled=!active||i.customerSafety.danger;$('emergencyEscalation').disabled=!active||!i.customerSafety.danger||i.customerSafety.emergencyEscalatedAt!==null;
+ const select=$('replacementAV');select.replaceChildren();
  const active=!!i&&i.status!=='completed',e=i?.evacuation;
+ $('flagDanger').disabled=!active||!!i.customerSafety.danger;$('emergencyEscalation').disabled=!active||!i.customerSafety.danger||i.customerSafety.emergencyEscalatedAt!==null;
  for(const v of active&&!e?E.availableReplacementAVs(state,i.id):[]){const o=document.createElement('option');o.value=v.id;o.textContent=v.id+' · '+v.area+' · ETA '+v.estimatedMinutes+' min';select.append(o);}
  select.disabled=!active||!!e||!select.options.length;
  $('dispatchReplacement').disabled=select.disabled;
@@ -239,6 +240,7 @@ $('emergencyEscalation').addEventListener('click',()=>{try{E.escalateCustomerEme
 $('dispatchReplacement').addEventListener('click',()=>{try{E.dispatchReplacement(state,chosen,$('replacementAV').value);render();say('Replacement AV dispatched');}catch(e){say(e.message);}});
 $('arriveReplacement').addEventListener('click',()=>{try{E.arriveReplacement(state,chosen);render();say('Replacement AV arrived');}catch(e){say(e.message);}});
 $('completeTransfer').addEventListener('click',()=>{try{E.completePassengerTransfer(state,chosen,$('transferClearance').checked);render();say('Simulated passenger transfer complete');}catch(e){say(e.message);}});
+$('fleetSearch').addEventListener('input',drawMap);$('fleetStatusFilter').addEventListener('change',drawMap);
 $('vehicleSelect').addEventListener('change',e=>{state.selected=e.target.value;render();});
 $('createIncident').addEventListener('click',()=>{try{const i=E.createIncident(state,state.selected,$('incidentType').value);chosen=i.id;render();say('Created '+i.id);}catch(e){say(e.message);}});
 function updateRecoveryChoices(i){
@@ -256,6 +258,6 @@ $('advanceIncident').addEventListener('click',()=>{try{const i=E.advance(state,c
 $('escalateIncident').addEventListener('click',()=>{try{E.escalate(state,chosen);render();say('Incident escalated');}catch(e){say(e.message);}});
 $('tickClock').addEventListener('click',()=>{E.tick(state);render();say('Simulation clock advanced five minutes');});
 $('resetSim').addEventListener('click',()=>{state=buildDemo();chosen=state.incidents.find(i=>i.status==='queued')?.id||null;render();say('Demo scenario restored');});
-try{render();$('startupHealth').textContent='Simulator build 2026-11-02-b2 · demo running';}catch(e){$('startupHealth').textContent='Simulator rendering error: '+e.message;throw e;}
+try{render();$('startupHealth').textContent='Simulator build 2026-11-02-c1 · demo running';}catch(e){$('startupHealth').textContent='Simulator rendering error: '+e.message;throw e;}
 })();
 </script></body></html>
