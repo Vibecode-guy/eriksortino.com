@@ -19,6 +19,11 @@ function render(){
    decision.textContent='30-day modeled staging: '+chosen.label+' · p90 '+fmt(chosen.p90Response)+' min'+(improvement===null?'':(' · '+(improvement>=0?fmt(improvement)+' min faster':fmt(-improvement)+' min slower')+' than baseline'))+' · SLA met '+fmt(chosen.slaPercent)+'% · incremental cost '+cash(chosen.totalCost-base.totalCost)+'. Map highlight is illustrative, not a measured coverage boundary.';
   }
   $('planRecommendation').textContent='Modeled recommendation: '+chosen.label+'. p90 '+fmt(chosen.p90Response)+' min ('+delta(chosen.p90Response===null||base.p90Response===null?null:chosen.p90Response-base.p90Response,' min')+' versus baseline); incremental 30-day cost '+cash(chosen.totalCost-base.totalCost)+' against '+cash(c.budget)+' ceiling. Rule: lowest modeled p90 within budget, then mean response and total cost. Not real-world dispatch advice.';
+  const stress=$('stressSummary');
+  if(stress){
+   const mostLoaded=chosen.crewLoad[0],queueChange=chosen.queuedEvents-base.queuedEvents;
+   stress.textContent='Modeled capacity pressure · '+chosen.queuedEvents+' of '+chosen.events+' incidents queued ('+fmt(chosen.queuedPercent)+'%); '+chosen.over30Queue+' waited over 30 min for a crew. Baseline queued '+base.queuedEvents+' incidents; recommended staging changes queued events by '+(queueChange>0?'+':'')+queueChange+'. Busiest fictional crew: '+(mostLoaded?mostLoaded.id+' ('+mostLoaded.count+' assignments)':'none')+'. This is a single-crew-per-provider workload model, not observed fleet performance.';
+  }
   const cards=$('scenarioCards'),chart=$('scenarioChart');
   if(cards&&chart){
    cards.replaceChildren();chart.replaceChildren();
@@ -60,9 +65,21 @@ function render(){
   $('planTable').replaceChildren();$('planExamples').replaceChildren();
  }
 }
-for(const id of ['planFleet','planRate','planBudget'])$(id).addEventListener('change',render);
+for(const id of ['planFleet','planRate','planBudget'])$(id).addEventListener('change',()=>{syncPresets();render();});
+const presets={normal:{fleet:'24',rate:'5',budget:'5000'},surge:{fleet:'120',rate:'20',budget:'10000'},extreme:{fleet:'240',rate:'30',budget:'25000'}};
+function syncPresets(){
+ for(const button of document.querySelectorAll('[data-stress]')){
+  const p=presets[button.dataset.stress];
+  button.setAttribute('aria-pressed',String(!!p&&$('planFleet').value===p.fleet&&$('planRate').value===p.rate&&$('planBudget').value===p.budget));
+ }
+}
+for(const button of document.querySelectorAll('[data-stress]'))button.addEventListener('click',()=>{
+ const p=presets[button.dataset.stress];if(!p)return;
+ $('planFleet').value=p.fleet;$('planRate').value=p.rate;$('planBudget').value=p.budget;syncPresets();render();
+});
+syncPresets();
 $('planReset').addEventListener('click',()=>{
- $('planFleet').value='24';$('planRate').value='5';$('planBudget').value='5000';render();
+ $('planFleet').value='24';$('planRate').value='5';$('planBudget').value='5000';syncPresets();render();
  const announcer=$('announcer');if(announcer)announcer.textContent='Planning defaults restored';
 });
 render();
