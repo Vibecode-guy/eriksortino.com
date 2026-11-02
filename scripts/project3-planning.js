@@ -42,7 +42,7 @@ function simulate(config,siteId,events){
  const providers=fleet.providers.map(p=>({...p}));
  if(site.id!=='baseline')providers.push({id:'P-05',name:'Additional staged crew ('+site.label+')',lat:site.lat,lon:site.lon,capabilities:TYPE_ORDER.slice(),baseCost:205});
  const ready=new Map(providers.map(p=>[p.id,0])),jobs=new Map(providers.map(p=>[p.id,0]));
- const responses=[],waits=[],examples=[];let met=0,variableCost=0;
+ const responses=[],waits=[],examples=[];let met=0,variableCost=0,queuedEvents=0,over30Queue=0;
  for(const event of events){
   const v=vehicles.get(event.vehicleId),t=E.TYPES[event.type];if(!v||!t)throw Error('Invalid synthetic event');
   const candidates=providers.filter(p=>p.capabilities.includes(t.needs)).map(p=>{
@@ -53,11 +53,11 @@ function simulate(config,siteId,events){
   }).sort((a,b)=>a.response-b.response||a.cost-b.cost||a.provider.id.localeCompare(b.provider.id));
   if(!candidates.length)throw Error('No compatible provider');
   const best=candidates[0];ready.set(best.provider.id,best.onScene+t.minutes[2]);jobs.set(best.provider.id,jobs.get(best.provider.id)+1);
-  responses.push(best.response);waits.push(best.wait);if(best.response<=t.sla)met++;variableCost+=best.cost;
+  responses.push(best.response);waits.push(best.wait);if(best.wait>0)queuedEvents++;if(best.wait>30)over30Queue++;if(best.response<=t.sla)met++;variableCost+=best.cost;
   if(examples.length<3)examples.push({vehicleId:event.vehicleId,type:event.type,provider:best.provider.name,travelMinutes:best.travel,queueMinutes:best.wait,responseMinutes:best.response,estimatedCost:best.cost,reason:'Eligible capability; earliest modeled on-scene arrival among available crews, then lower variable cost, then provider ID.'});
  }
  const overhead=site.id==='baseline'?0:FIXED_SITE_COST;
- return {id:site.id,label:site.label,events:events.length,meanResponse:mean(responses),p90Response:percentile(responses,.9),meanQueue:mean(waits),p90Queue:percentile(waits,.9),slaMet:met,slaPercent:events.length?Math.round(1000*met/events.length)/10:null,variableCost,overhead,totalCost:variableCost+overhead,providerJobs:[...jobs].map(([id,count])=>({id,count})),examples};
+ return {id:site.id,label:site.label,events:events.length,meanResponse:mean(responses),p90Response:percentile(responses,.9),meanQueue:mean(waits),p90Queue:percentile(waits,.9),queuedEvents,over30Queue,queuedPercent:events.length?Math.round(1000*queuedEvents/events.length)/10:0,crewLoad:[...jobs].map(([id,count])=>({id,count})).sort((a,b)=>b.count-a.count||a.id.localeCompare(b.id)),slaMet:met,slaPercent:events.length?Math.round(1000*met/events.length)/10:null,variableCost,overhead,totalCost:variableCost+overhead,providerJobs:[...jobs].map(([id,count])=>({id,count})),examples};
 }
 function compare(config){
  const c=validate(config),events=eventsFor(c),scenarios=SITES.map(s=>simulate(c,s.id,events)),baseline=scenarios[0];
