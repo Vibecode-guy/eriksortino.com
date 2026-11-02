@@ -50,3 +50,19 @@ test('flat tire requires a service decision and flatbed-equipped provider for re
  E.resolveTire(s,t.id,'roadside');E.advance(s,t.id);
  assert.equal(t.cost,150);
 });
+
+test('roadside-only tire assessment hands off to a separate flatbed crew',()=>{
+ const s=E.initialState(),i=E.createIncident(s,'AV-101','flat_tire');
+ E.assign(s,i.id,'P-01');E.advance(s,i.id);E.advance(s,i.id);
+ const firstArrival=i.onSceneAt;
+ E.requestRecovery(s,i.id,'P-02');
+ assert.equal(i.status,'recovery_dispatched');
+ assert.equal(i.recoveryProviderId,'P-02');
+ assert.equal(i.onSceneAt,firstArrival);
+ E.advance(s,i.id);assert.equal(i.status,'recovery_en_route');
+ E.advance(s,i.id);assert.equal(i.status,'recovery_on_scene');
+ assert.ok(i.recoveryOnSceneAt>firstArrival);
+ E.advance(s,i.id);assert.equal(i.status,'completed');
+ assert.equal(i.cost,495);
+ assert.equal(E.kpis(s).available,12);
+});
