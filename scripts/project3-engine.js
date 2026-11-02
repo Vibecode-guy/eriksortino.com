@@ -55,7 +55,7 @@ function demoState(){
 function vehicle(s,id){const v=s.vehicles.find(x=>x.id===id);if(!v)throw Error('Unknown vehicle');return v;}
 function incident(s,id){const i=s.incidents.find(x=>x.id===id);if(!i)throw Error('Unknown incident');return i;}
 function provider(s,id){const p=s.providers.find(x=>x.id===id);if(!p)throw Error('Unknown provider');return p;}
-function createIncident(s,vehicleId,type){const v=vehicle(s,vehicleId),t=TYPES[type];if(!t)throw Error('Unknown incident type');if(v.status!=='available')throw Error('Vehicle already unavailable');const i={id:'INC-'+String(s.nextId++).padStart(3,'0'),vehicleId,type,severity:t.severity,sla:t.sla,created:s.minute,status:'queued',providerId:null,assignedAt:null,enRouteAt:null,onSceneAt:null,completedAt:null,cost:0,tireResolution:null,recoveryProviderId:null,recoveryRequestedAt:null,recoveryOnSceneAt:null,redispatchReason:null,evacuation:null,customerSafety:{danger:false,reason:null,flaggedAt:null,emergencyEscalatedAt:null,safeAt:null},escalated:false};s.incidents.unshift(i);v.status='incident';return i;}
+function createIncident(s,vehicleId,type){const v=vehicle(s,vehicleId),t=TYPES[type];if(!t)throw Error('Unknown incident type');if(v.status!=='available')throw Error('Vehicle already unavailable');const i={id:'INC-'+String(s.nextId++).padStart(3,'0'),vehicleId,type,severity:t.severity,sla:t.sla,created:s.minute,status:'queued',providerId:null,assignedAt:null,enRouteAt:null,onSceneAt:null,completedAt:null,cost:0,tireResolution:null,recoveryProviderId:null,recoveryRequestedAt:null,recoveryOnSceneAt:null,redispatchReason:null,owner:null,acknowledgedAt:null,notes:[],pendingActions:[],evacuation:null,customerSafety:{danger:false,reason:null,flaggedAt:null,emergencyEscalatedAt:null,safeAt:null},escalated:false};s.incidents.unshift(i);v.status='incident';return i;}
 function providerBusy(s,id,excludeId){return s.incidents.some(i=>i.id!==excludeId&&i.status!=='completed'&&(i.providerId===id||i.recoveryProviderId===id));}
 function providerBoard(s){return s.providers.map(p=>{const current=s.incidents.find(i=>i.status!=='completed'&&(i.providerId===p.id||i.recoveryProviderId===p.id));return {...p,busy:!!current,incidentId:current?.id||null};});}
 function eligibleProviders(s,incidentId){const i=incident(s,incidentId);return s.providers.filter(p=>!providerBusy(s,p.id,i.id)&&p.capabilities.includes(TYPES[i.type].needs)).map(p=>({...p,estimatedMinutes:estimateTravel(vehicle(s,i.vehicleId),p)})).sort((a,b)=>a.estimatedMinutes-b.estimatedMinutes||a.id.localeCompare(b.id));}
@@ -161,6 +161,50 @@ function prioritizedIncidents(s){
 function kpis(s){const total=s.vehicles.length,available=s.vehicles.filter(v=>v.status==='available').length,completed=s.incidents.filter(i=>i.completedAt!==null);const times=completed.map(i=>i.onSceneAt-i.created).sort((a,b)=>a-b);const mean=times.length?times.reduce((a,b)=>a+b,0)/times.length:null;const p90=times.length?times[Math.ceil(times.length*.9)-1]:null;const cost=completed.reduce((a,i)=>a+i.cost,0);return {total,available,availabilityPercent:total?100*available/total:0,active:s.incidents.filter(i=>i.status!=='completed').length,completed:completed.length,meanResponse:mean,p90Response:p90,totalCost:cost,breached:s.incidents.filter(i=>i.status!=='completed'&&s.minute-i.created>i.sla).length};}
 function elapsed(s,i){return (i.completedAt===null?s.minute:i.completedAt)-i.created;}
 function vehicleHealth(v){const n=Number(v.id.split('-')[1]);const batteryPercent=22+(n*37%77);const connectivity=n%17===0?'intermittent':'online';const fault=n%23===0?'inspection_required':n%31===0?'sensor_review':'none';return {batteryPercent,connectivity,fault,readiness:v.status!=='available'?'unavailable':batteryPercent<30||connectivity!=='online'||fault!=='none'?'review':'ready'};}
-function shiftHandoff(s){const active=prioritizedIncidents(s).filter(i=>i.status!=='completed');return {minute:s.minute,active:active.length,overdue:active.filter(i=>s.minute-i.created>i.sla).length,unavailable:s.vehicles.filter(v=>v.status!=='available').length,healthReview:s.vehicles.filter(v=>vehicleHealth(v).readiness==='review').length,availableTeams:providerBoard(s).filter(p=>!p.busy).length,items:active.map(i=>({id:i.id,vehicleId:i.vehicleId,type:i.type,status:i.status,elapsed:s.minute-i.created,provider:i.providerId||'Unassigned',safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};}
-return {vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+const DISPATCHERS=['Day Shift Dispatcher','Swing Shift Dispatcher','Overnight Dispatcher'];
+function assignIncidentOwner(s,id,owner){
+ const i=incident(s,id);
+ if(!DISPATCHERS.includes(owner))throw Error('Unknown dispatcher');
+ if(i.status==='completed')throw Error('Cannot reassign a completed incident');
+ i.owner=owner;i.acknowledgedAt=null;return i;
+}
+function acknowledgeIncident(s,id,owner){
+ const i=incident(s,id);
+ if(i.status==='completed'||i.owner!==owner)throw Error('Only the assigned dispatcher can acknowledge an open incident');
+ i.acknowledgedAt=s.minute;return i;
+}
+function addIncidentNote(s,id,author,text){
+ const i=incident(s,id);
+ if(!DISPATCHERS.includes(author))throw Error('Unknown note author');
+ const value=String(text||'').trim();
+ if(!value||value.length>500)throw Error('Note must be 1–500 characters');
+ const note={id:i.notes.length+1,minute:s.minute,author,text:value};i.notes.push(note);return note;
+}
+function addPendingAction(s,id,text){
+ const i=incident(s,id),value=String(text||'').trim();
+ if(i.status==='completed')throw Error('Cannot add pending action to completed incident');
+ if(!value||value.length>200)throw Error('Action must be 1–200 characters');
+ const action={id:i.pendingActions.length+1,createdAt:s.minute,text:value,doneAt:null};
+ i.pendingActions.push(action);return action;
+}
+function completePendingAction(s,id,actionId){
+ const i=incident(s,id),action=i.pendingActions.find(a=>a.id===actionId);
+ if(!action||action.doneAt!==null)throw Error('Action unavailable or already completed');
+ action.doneAt=s.minute;return action;
+}
+function shiftHandoff(s){
+ const active=prioritizedIncidents(s).filter(i=>i.status!=='completed');
+ return {minute:s.minute,active:active.length,overdue:active.filter(i=>s.minute-i.created>i.sla).length,
+  unowned:active.filter(i=>!i.owner).length,unacknowledged:active.filter(i=>i.owner&&i.acknowledgedAt===null).length,
+  openActions:active.reduce((n,i)=>n+i.pendingActions.filter(a=>a.doneAt===null).length,0),
+  unavailable:s.vehicles.filter(v=>v.status!=='available').length,
+  healthReview:s.vehicles.filter(v=>vehicleHealth(v).readiness==='review').length,
+  availableTeams:providerBoard(s).filter(p=>!p.busy).length,
+  items:active.map(i=>({id:i.id,vehicleId:i.vehicleId,type:i.type,status:i.status,elapsed:s.minute-i.created,
+   provider:i.providerId||'Unassigned',owner:i.owner||'Unassigned',acknowledged:i.acknowledgedAt!==null,
+   notes:i.notes.length,actions:i.pendingActions.filter(a=>a.doneAt===null).map(a=>a.text),
+   safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};
+}
+
+return {DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
