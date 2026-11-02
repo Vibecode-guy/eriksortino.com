@@ -234,3 +234,18 @@ test('critical customer safety SLA measures time to transfer independently',()=>
  assert.equal(E.incidentSla(s,i.id).status,'breached');
  assert.equal(E.slaMonitoring(s).critical,0);
 });
+
+test('provider offer acceptance rate counts accepted declined and timed out offers',()=>{
+ const s=E.initialState();
+ const a=E.createIncident(s,'AV-105','immobilized');
+ E.recordProviderOffer(s,a.id,'P-02','declined');
+ assert.throws(()=>E.recordProviderOffer(s,a.id,'P-02','accepted'),/already offered/);
+ const b=E.createIncident(s,'AV-106','immobilized');
+ E.recordProviderOffer(s,b.id,'P-02','timed_out');
+ const d=E.createIncident(s,'AV-108','immobilized');
+ E.recordProviderOffer(s,d.id,'P-02','accepted');
+ assert.equal(d.providerId,'P-02');
+ const p=E.providerAcceptance(s).find(p=>p.providerId==='P-02');
+ assert.deepEqual([p.offers,p.accepted,p.declined,p.timedOut,p.rate],[3,1,1,1,100/3]);
+ assert.equal(E.providerAcceptance(s).find(p=>p.offers===0).rate,null);
+});
