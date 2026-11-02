@@ -154,6 +154,22 @@ function safetyMetrics(s){
  const times=safe.map(i=>i.customerSafety.safeAt-i.customerSafety.flaggedAt);
  return {flagged:flagged.length,awaiting:awaiting.length,safe:safe.length,emergencyEscalated:flagged.filter(i=>i.customerSafety.emergencyEscalatedAt!==null).length,meanTimeToSafety:times.length?times.reduce((a,b)=>a+b,0)/times.length:null};
 }
+function incidentSla(s,id){
+ const i=incident(s,id);
+ const safety=i.customerSafety?.danger&&i.customerSafety.safeAt===null;
+ const limit=safety?10:i.sla;
+ const start=safety?i.customerSafety.flaggedAt:i.created;
+ const stop=safety?i.customerSafety.safeAt:i.onSceneAt;
+ const elapsed=Math.max(0,(stop===null||stop===undefined?s.minute:stop)-start);
+ const remaining=limit-elapsed;
+ const status=stop!==null&&stop!==undefined?(remaining<0?'breached':'met'):remaining<0?'breached':remaining<=Math.max(5,Math.ceil(limit*.2))?'warning':'on_track';
+ return {id:i.id,limit,elapsed,remaining,status,safety,closed:stop!==null&&stop!==undefined};
+}
+function slaMonitoring(s){
+ const items=s.incidents.filter(i=>i.customerSafety?.danger||i.onSceneAt===null).map(i=>incidentSla(s,i.id));
+ const open=items.filter(i=>!i.closed);
+ return {items,critical:open.filter(i=>i.safety).length,warning:open.filter(i=>i.status==='warning').length,breached:open.filter(i=>i.status==='breached').length};
+}
 function prioritizedIncidents(s){
  const priority=i=>i.customerSafety?.danger&&i.customerSafety.safeAt===null?0:i.status!=='completed'?1:2;
  return s.incidents.slice().sort((a,b)=>priority(a)-priority(b)||a.created-b.created||a.id.localeCompare(b.id));
@@ -206,5 +222,5 @@ function shiftHandoff(s){
    safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};
 }
 
-return {DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+return {incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
