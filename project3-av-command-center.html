@@ -217,8 +217,7 @@ function renderResources(){
    p.onTimeRate===null?'N/A':p.onTimeRate.toFixed(1)+'%',
    p.cancellationRate===null?'N/A':p.cancellationRate.toFixed(1)+'%',
    p.averageAdditional===null?'N/A':'$'+p.averageAdditional.toFixed(2),
-   x.nps===null?'N/A':x.nps.toFixed(0)+' ('+x.responses+')',
-   x.spsAverage===null?'N/A':x.spsAverage.toFixed(1)+' ('+x.spsResponses+')']){
+   x.nps===null?'N/A':x.nps.toFixed(0)+' ('+x.responses+')']){
    const td=document.createElement('td');td.textContent=v;tr.append(td);
   }
   quality.append(tr);
