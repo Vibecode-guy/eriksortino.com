@@ -288,3 +288,13 @@ test('unified scorecard is transparent, denominator-safe and provisional for sma
  assert.equal(p.eligibleForRanking,false);
  assert.equal(p.dimensions.find(x=>x.name==='additionalCharges').value,90);
 });
+
+test('synthetic provider history is deterministic, complete and isolated from live dispatch',()=>{
+ const s=E.initialState(),before=E.kpis(s),history=E.providerHistory(s);
+ assert.equal(history.length,s.providers.length);
+ assert.ok(history.every(p=>p.periods.length===2&&p.periods.every(r=>r.offers>0&&r.responses>0&&r.score>=0&&r.score<=100)));
+ assert.deepEqual(E.providerHistory(s),history);
+ assert.deepEqual(E.kpis(s),before);
+ assert.equal(s.incidents.length,0);
+ assert.ok(history.some(p=>p.recommendation==='Quality review'));
+});
