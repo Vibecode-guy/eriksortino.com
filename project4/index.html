@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Project 4 | NYC Transportation Intelligence Lab</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,sans-serif;color:#e8eef8;background:#0b1220}*{box-sizing:border-box}body{margin:0}main{max-width:1150px;margin:auto;padding:36px 20px 90px}a{color:#8ac7ff}h1{font-size:clamp(30px,5vw,54px);letter-spacing:-.04em;margin:12px 0}h2{font-size:21px}.muted{color:#a5b2c7}.eyebrow{color:#66c6e8;font-weight:750;letter-spacing:.12em;font-size:12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:#151f31;border:1px solid #2b3b53;border-radius:16px;padding:20px}.value{font-size:28px;font-weight:800;margin-top:8px}.panel{margin-top:24px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.tabs button{background:#18253b;border:1px solid #3b526d;color:#e8eef8;border-radius:9px;padding:11px 14px;cursor:pointer}.tabs button[aria-selected=true]{background:#165b79;border-color:#49b4df}.layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}pre{overflow:auto;background:#080f1c;border-radius:12px;padding:18px;color:#a9e6d2;line-height:1.5;font-size:12px}#chart{display:flex;align-items:end;gap:5px;height:230px;border-bottom:1px solid #5a6880;padding:10px 0 0}.bar{flex:1;background:linear-gradient(#52c4e9,#2479a9);border-radius:4px 4px 0 0;min-width:4px;position:relative}.bar:hover{background:#8fe3ff}.bar:hover:after{content:attr(title);position:absolute;bottom:100%;left:0;white-space:nowrap;background:#f1f5fa;color:#102033;padding:5px;border-radius:4px;z-index:2;font-size:11px}.note{background:#13283a;border-left:3px solid #51b9df;padding:14px 18px;border-radius:6px}.empty{padding:38px 12px;text-align:center;color:#b3c1d3;border:1px dashed #54657b;border-radius:12px}.small{font-size:13px}@media(max-width:720px){.grid,.layout{grid-template-columns:1fr}}
+</style></head><body><main>
+<div class="eyebrow">PROJECT 04 / SQL + DATA ANALYTICS</div><h1>NYC Transportation<br>Intelligence Lab</h1>
+<p class="muted">An explainable, SQL-first exploration of official NYC TLC Yellow Taxi trip records. See the question, inspect the query, and interpret the result.</p>
+<div class="note" id="status">Checking for verified SQL-generated metrics. No illustrative figures are presented as real trip results.</div>
+<section class="grid panel"><div class="card"><div class="muted">Records audited</div><div class="value" id="records">—</div></div><div class="card"><div class="muted">Missing pickup timestamps</div><div class="value" id="missing">—</div></div><div class="card"><div class="muted">Invalid trip distances</div><div class="value" id="invalid">—</div></div></section>
+<section class="card panel"><h2>Explore the SQL</h2><p class="muted">Select an operational question to reveal the actual query, analytical reasoning and corresponding output.</p>
+<div class="tabs" role="tablist"><button aria-selected="true" data-id="hourly">Hourly demand</button><button aria-selected="false" data-id="zones">Pickup zones</button><button aria-selected="false" data-id="quality">Data quality</button></div>
+<div class="layout"><div><h2 id="question"></h2><p id="explanation" class="muted"></p><pre><code id="sql"></code></pre></div><div><h2>SQL output</h2><p id="interpretation" class="muted"></p><div id="chart" aria-label="SQL output visualization"></div><div id="empty" class="empty">Run the pipeline to populate verified results.</div></div></div></section>
+<section class="card panel"><h2>Data lineage &amp; limitations</h2><p>Source: <a href="https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page">NYC Taxi &amp; Limousine Commission</a>. Monthly Yellow Taxi Parquet files are queried using DuckDB. This dashboard displays precomputed, versionable SQL output rather than loading millions of rows into a visitor's browser.</p><p class="muted small">Pickup volume is observed trip activity, not unserved demand. These records do not measure available vehicles, driver shifts, or dispatch response times. Data-quality exceptions are reported separately and are not silently discarded.</p></section>
+</main><script>
+const analyses={
+hourly:{title:"When does pickup demand peak?",why:"EXTRACT(HOUR) converts each pickup timestamp into an hour (0–23). GROUP BY aggregates records and COUNT measures observed trips. ORDER BY produces chronological hours.",take:"Use peaks to prioritize service coverage and shift planning; trip counts alone cannot prove unmet demand.",sql:`SELECT
+  EXTRACT(HOUR FROM tpep_pickup_datetime)::INTEGER AS pickup_hour,
+  COUNT(*) AS trip_count
+FROM taxi_trips
+WHERE tpep_pickup_datetime IS NOT NULL
+GROUP BY 1
+ORDER BY 1;`,key:"hourly_demand",x:"pickup_hour",y:"trip_count"},
+zones:{title:"Where are pickups concentrated?",why:"PULocationID identifies a TLC taxi zone. GROUP BY measures pickup frequency and AVG summarizes reported mileage for trips with positive distance.",take:"Rank zones for geographic coverage planning. Zone names require the official TLC lookup table.",sql:`SELECT
+  PULocationID AS pickup_zone_id,
+  COUNT(*) AS trip_count,
+  ROUND(AVG(trip_distance), 2) AS avg_trip_miles
+FROM taxi_trips
+WHERE PULocationID IS NOT NULL AND trip_distance > 0
+GROUP BY 1
+ORDER BY trip_count DESC
+LIMIT 20;`,key:"top_pickup_zones",x:"pickup_zone_id",y:"trip_count"},
+quality:{title:"Can we trust the raw records?",why:"FILTER counts specific exception classes while preserving the original denominator. This separates missing timestamps, nonpositive trip duration and invalid mileage.",take:"Document data-quality exceptions before excluding records from business KPIs.",sql:`SELECT
+  COUNT(*) AS total_rows,
+  COUNT(*) FILTER (WHERE tpep_pickup_datetime IS NULL) AS missing_pickup_time,
+  COUNT(*) FILTER (WHERE tpep_dropoff_datetime <= tpep_pickup_datetime) AS nonpositive_duration,
+  COUNT(*) FILTER (WHERE trip_distance IS NULL OR trip_distance <= 0) AS invalid_distance,
+  COUNT(*) FILTER (WHERE PULocationID IS NULL) AS missing_pickup_zone
+FROM taxi_trips;`,key:"quality_audit"}};
+let metrics=null;const fmt=n=>Number(n).toLocaleString();const $=id=>document.getElementById(id);
+function render(id){const a=analyses[id];document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.id===id)));$("question").textContent=a.title;$("explanation").textContent=a.why;$("sql").textContent=a.sql;$("interpretation").textContent=a.take;$("chart").replaceChildren();const data=metrics?.[a.key];const rows=id==="quality"&&data?Object.entries(data).map(([name,value])=>({name,value})):data;if(!rows?.length){$("chart").style.display="none";$("empty").style.display="block";return}$("chart").style.display="flex";$("empty").style.display="none";const max=Math.max(...rows.map(r=>Number(r[a.y||"value"])||0),1);rows.forEach(r=>{const v=Number(r[a.y||"value"])||0;const bar=document.createElement("div");bar.className="bar";bar.style.height=Math.max(2,v/max*100)+"%";bar.title=(r[a.x||"name"]??"")+": "+fmt(v);$("chart").append(bar)})}
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>render(b.dataset.id)));
+fetch("./output/metrics.json").then(r=>{if(!r.ok)throw Error("No metrics artifact");return r.json()}).then(data=>{if(!data.month||!data.quality_audit||!Array.isArray(data.hourly_demand))throw Error("Incomplete metrics");metrics=data;$("records").textContent=fmt(data.quality_audit.total_rows);$("missing").textContent=fmt(data.quality_audit.missing_pickup_time);$("invalid").textContent=fmt(data.quality_audit.invalid_distance);$("status").textContent="Verified SQL export loaded · "+data.month+" · "+data.source;render("hourly")}).catch(()=>$("status").textContent="Pipeline not run yet. Source code and methodology are available; verified results will appear after SQL metrics are generated and published.");render("hourly");
+</script></body></html>
