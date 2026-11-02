@@ -149,3 +149,19 @@ test('six teams reject double booking and release at completion',()=>{
  for(let n=0;n<3;n++)E.advance(state,first.id);
  assert.ok(E.eligibleProviders(state,second.id).some(p=>p.id==='P-01'));
 });
+
+test('synthetic health and shift handoff are reproducible and show open work',()=>{
+ const a=E.initialState(),b=E.initialState();
+ assert.deepEqual(a.vehicles,b.vehicles);
+ assert.equal(a.vehicles.length,100);
+ assert.equal(a.providers.length,6);
+ assert.deepEqual(E.vehicleHealth(a.vehicles[0]),E.vehicleHealth(b.vehicles[0]));
+ const incident=E.createIncident(a,'AV-101','immobilized');
+ const report=E.shiftHandoff(a);
+ assert.equal(report.active,1);
+ assert.equal(report.unavailable,1);
+ assert.equal(report.items[0].id,incident.id);
+ assert.equal(report.availableTeams,6);
+ E.assign(a,incident.id,'P-02');
+ assert.equal(E.shiftHandoff(a).availableTeams,5);
+});
