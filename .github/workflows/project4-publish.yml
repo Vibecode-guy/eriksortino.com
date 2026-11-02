@@ -1,0 +1,35 @@
+name: Project 4 Publish Verified Metrics
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/project-4-sql-intelligence
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install duckdb==1.4.1
+      - name: Run official TLC data through SQL
+        run: python project4/scripts/build_metrics.py 2025-01
+      - name: Verify and publish metrics only
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('project4/output/metrics.json').read_text())
+          assert d['quality_audit']['total_rows'] > 100000
+          assert len(d['hourly_demand']) == 24
+          assert len(d['top_pickup_zones']) > 0
+          Path('project4/data').mkdir(exist_ok=True)
+          Path('project4/data/metrics.json').write_text(json.dumps(d, indent=2)+'\n')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add project4/data/metrics.json
+          git diff --cached --quiet || (git commit -m "Publish verified January 2025 TLC metrics" && git push origin HEAD:feature/project-4-sql-intelligence)
