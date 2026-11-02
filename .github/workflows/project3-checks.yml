@@ -6,7 +6,9 @@ on:
       - index.html
       - scripts/project3-engine.js
       - scripts/project3-analytics.js
+      - scripts/project3-planning.js
       - scripts/test-project3-analytics.cjs
+      - scripts/test-project3-planning.cjs
       - scripts/test-project3-engine.cjs
       - PROJECT3_ROADMAP.md
       - .github/workflows/project3-checks.yml
@@ -23,9 +25,11 @@ jobs:
         run: |
           node --check scripts/project3-engine.js
           node --check scripts/project3-analytics.js
+          node --check scripts/project3-planning.js
+          node --check scripts/test-project3-planning.cjs
           node --check scripts/test-project3-analytics.cjs
           node --check scripts/test-project3-engine.cjs
-          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs
+          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs scripts/test-project3-planning.cjs
       - name: Validate static integration, disclosure and inline JS
         run: |
           node - <<'NODE'
@@ -35,8 +39,10 @@ jobs:
           assert(home.includes('href="project3-av-command-center.html"'),'Portfolio navigation missing');
           assert(page.includes('src="scripts/project3-engine.js"'),'Engine script missing');
           assert(page.includes('src="scripts/project3-analytics.js"'),'Analytics script missing');
+          assert(page.includes('src="scripts/project3-planning.js"'),'Planning script missing');
           for(const id of ['vehicleMarkers','vehicleSelect','incidentType','createIncident','queue','providerSelect','assignProvider','advanceIncident','kAvail','kP90','kCost','announcer'])assert(page.includes('id="'+id+'"'),'Missing UI control: '+id);
           for(const id of ['aProviders','aTypes','aAreas','aStages','aReady','aSla'])assert(page.includes('id="'+id+'"'),'Missing analytics panel: '+id);
+          for(const id of ['planning','planFleet','planRate','planBudget','planTable','planRecommendation','planExamples','planMethod'])assert(page.includes('id="'+id+'"'),'Missing planning control: '+id);
           assert(page.includes('Synthetic scenario')&&page.includes('No actual company or partner data'),'Synthetic disclosures missing');
           const inline=page.match(/<script>\s*([\s\S]*?)<\/script><\/body>/);
           assert(inline,'Inline UI script missing');
