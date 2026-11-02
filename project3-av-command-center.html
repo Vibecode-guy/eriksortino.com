@@ -97,7 +97,21 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 <script>
 (function(){'use strict';
 const E=window.AVCommand;if(!E){document.getElementById('announcer').textContent='Simulator failed to load.';return;}
-let state=E.demoState(),chosen=state.incidents.find(i=>i.status==='queued')?.id||null;const $=id=>document.getElementById(id);
+function buildDemo(){
+ const s=E.initialState();
+ for(const [id,type] of [['AV-102','door_ajar'],['AV-107','flatbed'],['AV-112','depot']]){
+  const i=E.createIncident(s,id,type);
+  E.assign(s,i.id,E.eligibleProviders(s,i.id)[0].id);
+  E.advance(s,i.id);E.advance(s,i.id);E.advance(s,i.id);
+ }
+ const active=E.createIncident(s,'AV-105','immobilized');
+ E.assign(s,active.id,E.eligibleProviders(s,active.id)[0].id);
+ E.advance(s,active.id);
+ E.createIncident(s,'AV-110','flatbed');
+ s.selected='AV-101';
+ return s;
+}
+let state=buildDemo(),chosen=state.incidents.find(i=>i.status==='queued')?.id||null;const $=id=>document.getElementById(id);
 function say(t){$('announcer').textContent=t;}
 function selectedVehicle(){return state.vehicles.find(v=>v.id===state.selected);}
 function selectedIncident(){return state.incidents.find(i=>i.id===chosen);}
@@ -139,7 +153,7 @@ $('assignProvider').addEventListener('click',()=>{try{E.assign(state,chosen,$('p
 $('advanceIncident').addEventListener('click',()=>{try{const i=E.advance(state,chosen);render();say(i.id+' moved to '+i.status);}catch(e){say(e.message);}});
 $('escalateIncident').addEventListener('click',()=>{try{E.escalate(state,chosen);render();say('Incident escalated');}catch(e){say(e.message);}});
 $('tickClock').addEventListener('click',()=>{E.tick(state);render();say('Simulation clock advanced five minutes');});
-$('resetSim').addEventListener('click',()=>{state=E.demoState();chosen=state.incidents.find(i=>i.status==='queued')?.id||null;render();say('Demo scenario restored');});
+$('resetSim').addEventListener('click',()=>{state=buildDemo();chosen=state.incidents.find(i=>i.status==='queued')?.id||null;render();say('Demo scenario restored');});
 render();
 })();
 </script></body></html>
