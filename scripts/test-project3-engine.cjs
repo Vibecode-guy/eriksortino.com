@@ -184,3 +184,24 @@ test('response breakdown distinguishes first assistance, replacement, transfer a
  assert.equal(aggregate.length,4);
  assert.ok(aggregate.every(row=>row.samples===1&&row.meanMinutes!==null));
 });
+
+test('dispatcher ownership, acknowledgment, notes and pending actions survive shift handoff',()=>{
+ const s=E.initialState(),i=E.createIncident(s,'AV-105','immobilized');
+ assert.equal(E.shiftHandoff(s).unowned,1);
+ E.assignIncidentOwner(s,i.id,'Day Shift Dispatcher');
+ assert.equal(E.shiftHandoff(s).unacknowledged,1);
+ E.acknowledgeIncident(s,i.id,'Day Shift Dispatcher');
+ assert.equal(E.shiftHandoff(s).unacknowledged,0);
+ assert.throws(()=>E.addIncidentNote(s,i.id,'Unknown','test'),/Unknown note author/);
+ E.addIncidentNote(s,i.id,'Day Shift Dispatcher','Awaiting replacement AV');
+ const action=E.addPendingAction(s,i.id,'Confirm passenger transfer');
+ assert.equal(E.shiftHandoff(s).openActions,1);
+ assert.match(E.shiftHandoff(s).items[0].actions[0],/Confirm passenger transfer/);
+ E.assignIncidentOwner(s,i.id,'Swing Shift Dispatcher');
+ assert.equal(i.acknowledgedAt,null);
+ assert.equal(E.shiftHandoff(s).unacknowledged,1);
+ assert.equal(i.notes.length,1);
+ E.completePendingAction(s,i.id,action.id);
+ assert.equal(E.shiftHandoff(s).openActions,0);
+ assert.throws(()=>E.completePendingAction(s,i.id,action.id),/already completed/);
+});
