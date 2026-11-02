@@ -24,6 +24,24 @@ function render(){
    const mostLoaded=chosen.crewLoad[0],queueChange=chosen.queuedEvents-base.queuedEvents;
    stress.textContent='Modeled capacity pressure · '+chosen.queuedEvents+' of '+chosen.events+' incidents queued ('+fmt(chosen.queuedPercent)+'%); '+chosen.over30Queue+' waited over 30 min for a crew. Baseline queued '+base.queuedEvents+' incidents; recommended staging changes queued events by '+(queueChange>0?'+':'')+queueChange+'. Busiest fictional crew: '+(mostLoaded?mostLoaded.id+' ('+mostLoaded.count+' assignments)':'none')+'. This is a single-crew-per-provider workload model, not observed fleet performance.';
   }
+  const loadChart=$('providerLoadChart');
+  if(loadChart){
+   loadChart.replaceChildren();
+   const maxLoad=Math.max(1,...chosen.providerJobs.map(p=>p.count));
+   const names=new Map(E.initialState().providers.map(p=>[p.id,p.name]));
+   for(const p of chosen.providerJobs){
+    const row=document.createElement('div');row.className='scenario-chart-row';
+    const label=document.createElement('span');label.className='scenario-chart-label';
+    label.textContent=names.get(p.id)||(p.id==='P-05'?'Added staging crew':p.id);
+    const track=document.createElement('div');track.className='scenario-track';
+    const fill=document.createElement('div');fill.className='scenario-fill';
+    fill.style.width=(p.count/maxLoad*100)+'%';track.append(fill);
+    const value=document.createElement('span');value.className='scenario-chart-value';
+    value.textContent=p.count+' jobs';
+    row.append(label,track,value);loadChart.append(row);
+   }
+   loadChart.setAttribute('aria-label','Modeled assignments by provider: '+chosen.providerJobs.map(p=>(names.get(p.id)||p.id)+' '+p.count).join(', '));
+  }
   const cards=$('scenarioCards'),chart=$('scenarioChart');
   if(cards&&chart){
    cards.replaceChildren();chart.replaceChildren();
