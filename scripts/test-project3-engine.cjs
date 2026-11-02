@@ -270,3 +270,21 @@ test('provider quality tracks cancellation, additional charges and customer scor
  assert.equal(x.nps,0);
  assert.throws(()=>E.recordProviderSurvey(s,b.id,8),/already recorded/);
 });
+
+test('unified scorecard is transparent, denominator-safe and provisional for small samples',()=>{
+ const s=E.initialState(),empty=E.providerScorecard(s);
+ assert.equal(empty.length,s.providers.length);
+ assert.ok(empty.every(x=>x.score===null&&!x.eligibleForRanking&&x.coverageWeight===0));
+ const i=E.createIncident(s,'AV-105','immobilized');
+ E.recordProviderOffer(s,i.id,'P-02','accepted');
+ E.recordAdditionalCharge(s,i.id,20,'Extra mileage');
+ E.recordProviderSurvey(s,i.id,9);
+ const p=E.providerScorecard(s).find(x=>x.providerId==='P-02');
+ assert.equal(p.acceptance.rate,100);
+ assert.equal(p.experience.nps,100);
+ assert.equal(p.quality.averageAdditional,20);
+ assert.equal(p.coverageWeight,60);
+ assert.ok(p.score>=0&&p.score<=100);
+ assert.equal(p.eligibleForRanking,false);
+ assert.equal(p.dimensions.find(x=>x.name==='additionalCharges').value,90);
+});
