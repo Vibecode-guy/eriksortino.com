@@ -83,3 +83,19 @@ test('customer evacuation dispatches a second AV without resolving original reco
  assert.equal(E.kpis(s).available,11);
  assert.equal(s.vehicles.find(v=>v.id===candidate.id).status,'available');
 });
+
+test('critical customer danger is tracked separately from vehicle recovery',()=>{
+ const s=E.initialState(),i=E.createIncident(s,'AV-105','immobilized');
+ E.flagCustomerDanger(s,i.id,'exposed_roadway');
+ assert.equal(i.severity,'Critical');assert.equal(i.escalated,true);
+ assert.equal(i.customerSafety.safeAt,null);
+ E.escalateCustomerEmergency(s,i.id);
+ assert.notEqual(i.customerSafety.emergencyEscalatedAt,null);
+ const second=E.availableReplacementAVs(s,i.id)[0];
+ E.dispatchReplacement(s,i.id,second.id);
+ E.arriveReplacement(s,i.id);
+ assert.equal(i.customerSafety.safeAt,null);
+ E.completePassengerTransfer(s,i.id,true);
+ assert.ok(i.customerSafety.safeAt>=i.customerSafety.flaggedAt);
+ assert.equal(i.status,'queued');
+});
