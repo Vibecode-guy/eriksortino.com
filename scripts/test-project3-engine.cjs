@@ -298,3 +298,18 @@ test('synthetic provider history is deterministic, complete and isolated from li
  assert.equal(s.incidents.length,0);
  assert.ok(history.some(p=>p.recommendation==='Quality review'));
 });
+
+test('provider quality improvement plan requires ownership, tracks progress and closure',()=>{
+ const s=E.initialState();
+ assert.throws(()=>E.openQualityPlan(s,'P-02','','Review arrival SLA'),/Owner/);
+ const p=E.openQualityPlan(s,'P-02','Network manager','Coach provider on dispatch acceptance');
+ assert.equal(p.status,'open');
+ assert.throws(()=>E.openQualityPlan(s,'P-02','Manager','Duplicate'),/active quality plan/);
+ E.updateQualityPlan(s,p.id,'in_progress','Coaching session scheduled');
+ E.updateQualityPlan(s,p.id,'review_due','30-day review scheduled');
+ assert.throws(()=>E.updateQualityPlan(s,p.id,'closed','Completed'),/follow-up index/);
+ E.updateQualityPlan(s,p.id,'closed','Follow-up score reviewed',89);
+ assert.equal(E.providerQualityPlans(s)[0].improvement,89-p.baselineScore);
+ assert.throws(()=>E.updateQualityPlan(s,p.id,'in_progress','Reopen'),/Closed/);
+ assert.equal(E.openQualityPlan(s,'P-02','Manager','Second review').status,'open');
+});
