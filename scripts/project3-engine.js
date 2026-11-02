@@ -116,6 +116,32 @@ function providerQuality(s){
    chargeCount:charges.length,totalAdditional,averageAdditional:accepted?totalAdditional/accepted:null};
  });
 }
+// Illustrative management index, not a production vendor rating. Missing dimensions are excluded.
+function providerScorecard(s){
+ const acceptance=providerAcceptance(s),quality=providerQuality(s),experience=providerExperience(s);
+ const clamp=v=>Math.max(0,Math.min(100,v));
+ const weights={acceptance:25,onTime:30,cancellations:15,redispatch:10,additionalCharges:10,nps:10};
+ return s.providers.map(p=>{
+  const a=acceptance.find(x=>x.providerId===p.id),q=quality.find(x=>x.providerId===p.id),e=experience.find(x=>x.providerId===p.id);
+  const dispatched=s.incidents.filter(i=>i.providerId===p.id||i.arrivalProviderId===p.id||s.providerCancellations.some(x=>x.incidentId===i.id&&x.providerId===p.id));
+  const redispatch=dispatched.filter(i=>i.redispatchReason&&i.providerId===p.id).length;
+  const redispatchRate=dispatched.length?100*redispatch/dispatched.length:null;
+  const dimensions=[
+   {name:'acceptance',weight:weights.acceptance,value:a.rate,count:a.offers},
+   {name:'onTime',weight:weights.onTime,value:q.onTimeRate,count:q.arrivals},
+   {name:'cancellations',weight:weights.cancellations,value:q.cancellationRate===null?null:100-q.cancellationRate,count:a.accepted},
+   {name:'redispatch',weight:weights.redispatch,value:redispatchRate===null?null:100-redispatchRate,count:dispatched.length},
+   {name:'additionalCharges',weight:weights.additionalCharges,value:q.averageAdditional===null?null:clamp(100-q.averageAdditional/2),count:a.accepted},
+   {name:'nps',weight:weights.nps,value:e.nps===null?null:(e.nps+100)/2,count:e.responses}
+  ];
+  const observed=dimensions.filter(d=>d.value!==null);
+  const weight=observed.reduce((n,d)=>n+d.weight,0);
+  const score=weight?observed.reduce((n,d)=>n+d.weight*clamp(d.value),0)/weight:null;
+  const sufficient=a.offers>=5&&q.arrivals>=5&&e.responses>=5;
+  return {providerId:p.id,name:p.name,acceptance:a,quality:q,experience:e,redispatch,redispatchJobs:dispatched.length,redispatchRate,
+   score,coverageWeight:weight,dimensions,eligibleForRanking:sufficient&&weight===100};
+ }).sort((a,b)=>Number(b.eligibleForRanking)-Number(a.eligibleForRanking)||(b.score??-1)-(a.score??-1)||a.name.localeCompare(b.name));
+}
 function providerAcceptance(s){
  return s.providers.map(p=>{
   const offers=s.providerOffers.filter(o=>o.providerId===p.id);
@@ -285,5 +311,5 @@ function shiftHandoff(s){
    safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};
 }
 
-return {recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+return {providerScorecard,recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
