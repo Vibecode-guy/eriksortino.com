@@ -100,7 +100,18 @@ function completePassengerTransfer(s,id,clearance){
 }
 function escalate(s,id){const i=incident(s,id);if(i.status==='completed')throw Error('Cannot escalate completed incident');i.escalated=true;return i;}
 function tick(s,minutes=5){if(!Number.isInteger(minutes)||minutes<1||minutes>1440)throw Error('Invalid clock advance');s.minute+=minutes;}
+function safetyMetrics(s){
+ const flagged=s.incidents.filter(i=>i.customerSafety?.danger);
+ const awaiting=flagged.filter(i=>i.customerSafety.safeAt===null);
+ const safe=flagged.filter(i=>i.customerSafety.safeAt!==null);
+ const times=safe.map(i=>i.customerSafety.safeAt-i.customerSafety.flaggedAt);
+ return {flagged:flagged.length,awaiting:awaiting.length,safe:safe.length,emergencyEscalated:flagged.filter(i=>i.customerSafety.emergencyEscalatedAt!==null).length,meanTimeToSafety:times.length?times.reduce((a,b)=>a+b,0)/times.length:null};
+}
+function prioritizedIncidents(s){
+ const priority=i=>i.customerSafety?.danger&&i.customerSafety.safeAt===null?0:i.status!=='completed'?1:2;
+ return s.incidents.slice().sort((a,b)=>priority(a)-priority(b)||a.created-b.created||a.id.localeCompare(b.id));
+}
 function kpis(s){const total=s.vehicles.length,available=s.vehicles.filter(v=>v.status==='available').length,completed=s.incidents.filter(i=>i.completedAt!==null);const times=completed.map(i=>i.onSceneAt-i.created).sort((a,b)=>a-b);const mean=times.length?times.reduce((a,b)=>a+b,0)/times.length:null;const p90=times.length?times[Math.ceil(times.length*.9)-1]:null;const cost=completed.reduce((a,i)=>a+i.cost,0);return {total,available,availabilityPercent:total?100*available/total:0,active:s.incidents.filter(i=>i.status!=='completed').length,completed:completed.length,meanResponse:mean,p90Response:p90,totalCost:cost,breached:s.incidents.filter(i=>i.status!=='completed'&&s.minute-i.created>i.sla).length};}
 function elapsed(s,i){return (i.completedAt===null?s.minute:i.completedAt)-i.created;}
-return {DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,elapsed,estimateTravel};
+return {DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,prioritizedIncidents,elapsed,estimateTravel};
 });
