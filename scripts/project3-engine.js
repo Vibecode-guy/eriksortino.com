@@ -39,7 +39,7 @@ function demoState(){
 function vehicle(s,id){const v=s.vehicles.find(x=>x.id===id);if(!v)throw Error('Unknown vehicle');return v;}
 function incident(s,id){const i=s.incidents.find(x=>x.id===id);if(!i)throw Error('Unknown incident');return i;}
 function provider(s,id){const p=s.providers.find(x=>x.id===id);if(!p)throw Error('Unknown provider');return p;}
-function createIncident(s,vehicleId,type){const v=vehicle(s,vehicleId),t=TYPES[type];if(!t)throw Error('Unknown incident type');if(v.status!=='available')throw Error('Vehicle already unavailable');const i={id:'INC-'+String(s.nextId++).padStart(3,'0'),vehicleId,type,severity:t.severity,sla:t.sla,created:s.minute,status:'queued',providerId:null,assignedAt:null,enRouteAt:null,onSceneAt:null,completedAt:null,cost:0,tireResolution:null,recoveryProviderId:null,recoveryRequestedAt:null,recoveryOnSceneAt:null,redispatchReason:null,evacuation:null,escalated:false};s.incidents.unshift(i);v.status='incident';return i;}
+function createIncident(s,vehicleId,type){const v=vehicle(s,vehicleId),t=TYPES[type];if(!t)throw Error('Unknown incident type');if(v.status!=='available')throw Error('Vehicle already unavailable');const i={id:'INC-'+String(s.nextId++).padStart(3,'0'),vehicleId,type,severity:t.severity,sla:t.sla,created:s.minute,status:'queued',providerId:null,assignedAt:null,enRouteAt:null,onSceneAt:null,completedAt:null,cost:0,tireResolution:null,recoveryProviderId:null,recoveryRequestedAt:null,recoveryOnSceneAt:null,redispatchReason:null,evacuation:null,customerSafety:{danger:false,reason:null,flaggedAt:null,emergencyEscalatedAt:null,safeAt:null},escalated:false};s.incidents.unshift(i);v.status='incident';return i;}
 function eligibleProviders(s,incidentId){const i=incident(s,incidentId);return s.providers.filter(p=>p.capabilities.includes(TYPES[i.type].needs)).map(p=>({...p,estimatedMinutes:estimateTravel(vehicle(s,i.vehicleId),p)})).sort((a,b)=>a.estimatedMinutes-b.estimatedMinutes||a.id.localeCompare(b.id));}
 function estimateTravel(v,p){const dy=(v.lat-p.lat)*111,dx=(v.lon-p.lon)*92;return Math.max(6,Math.round(Math.hypot(dx,dy)/.52+5));} // synthetic effective speed ~31 km/h
 function assign(s,incidentId,providerId){const i=incident(s,incidentId),p=provider(s,providerId);if(i.status!=='queued')throw Error('Incident must be queued');if(!p.capabilities.includes(TYPES[i.type].needs))throw Error('Provider not equipped');i.providerId=p.id;i.assignedAt=s.minute;i.status='dispatched';return i;}
@@ -59,6 +59,18 @@ function requestRecovery(s,id,providerId,reason='change_of_service'){
  if(!p.capabilities.includes('flatbed'))throw Error('Recovery crew must have flatbed capability');
  if(p.id===i.providerId)throw Error('Select a separate recovery provider');
  i.tireResolution='flatbed';i.recoveryProviderId=p.id;i.recoveryRequestedAt=s.minute;i.redispatchReason=reason;i.status='recovery_dispatched';return i;
+}
+const DANGER_REASONS={exposed_roadway:'Exposed roadway',unsafe_location:'Unsafe location',immediate_risk:'Immediate customer risk'};
+function flagCustomerDanger(s,id,reason){
+ const i=incident(s,id);
+ if(i.status==='completed')throw Error('Cannot flag a completed incident');
+ if(!DANGER_REASONS[reason])throw Error('Choose a valid customer danger reason');
+ i.customerSafety.danger=true;i.customerSafety.reason=reason;i.customerSafety.flaggedAt=s.minute;i.severity='Critical';i.escalated=true;return i.customerSafety;
+}
+function escalateCustomerEmergency(s,id){
+ const i=incident(s,id);
+ if(!i.customerSafety.danger)throw Error('Flag customer danger first');
+ i.customerSafety.emergencyEscalatedAt=s.minute;return i.customerSafety;
 }
 function availableReplacementAVs(s,id){
  const i=incident(s,id),target=vehicle(s,i.vehicleId);
@@ -83,12 +95,12 @@ function completePassengerTransfer(s,id,clearance){
  const i=incident(s,id),e=i.evacuation;
  if(!e||e.status!=='awaiting_clearance')throw Error('Replacement must arrive before passenger transfer');
  if(clearance!==true)throw Error('Explicit passenger transfer clearance required');
- s.minute+=5;e.transferredAt=s.minute;e.status='transferred';
+ s.minute+=5;e.transferredAt=s.minute;e.status='transferred';if(i.customerSafety.danger)i.customerSafety.safeAt=s.minute;
  vehicle(s,e.replacementId).status='available';return e;
 }
 function escalate(s,id){const i=incident(s,id);if(i.status==='completed')throw Error('Cannot escalate completed incident');i.escalated=true;return i;}
 function tick(s,minutes=5){if(!Number.isInteger(minutes)||minutes<1||minutes>1440)throw Error('Invalid clock advance');s.minute+=minutes;}
 function kpis(s){const total=s.vehicles.length,available=s.vehicles.filter(v=>v.status==='available').length,completed=s.incidents.filter(i=>i.completedAt!==null);const times=completed.map(i=>i.onSceneAt-i.created).sort((a,b)=>a-b);const mean=times.length?times.reduce((a,b)=>a+b,0)/times.length:null;const p90=times.length?times[Math.ceil(times.length*.9)-1]:null;const cost=completed.reduce((a,i)=>a+i.cost,0);return {total,available,availabilityPercent:total?100*available/total:0,active:s.incidents.filter(i=>i.status!=='completed').length,completed:completed.length,meanResponse:mean,p90Response:p90,totalCost:cost,breached:s.incidents.filter(i=>i.status!=='completed'&&s.minute-i.created>i.sla).length};}
 function elapsed(s,i){return (i.completedAt===null?s.minute:i.completedAt)-i.created;}
-return {TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,elapsed,estimateTravel};
+return {DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,elapsed,estimateTravel};
 });
