@@ -1,0 +1,37 @@
+name: Project 4 SQL Validation
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'project4/**'
+      - '.github/workflows/project4-sql.yml'
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install duckdb==1.4.1
+      - name: Analyze January 2025 NYC TLC records
+        run: python project4/scripts/build_metrics.py 2025-01
+      - name: Validate output
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('project4/output/metrics.json').read_text())
+          assert d['month']=='2025-01'
+          assert d['quality_audit']['total_rows']>100000
+          assert len(d['hourly_demand'])==24
+          assert len(d['top_pickup_zones'])>0
+          assert sum(x['trip_count'] for x in d['hourly_demand']) <= d['quality_audit']['total_rows']
+          print('Validated',d['quality_audit']['total_rows'],'rows')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: project4-verified-metrics
+          path: project4/output/metrics.json
+          retention-days: 30
