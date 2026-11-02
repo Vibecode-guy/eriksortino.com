@@ -36,7 +36,7 @@ const TYPES={
  flatbed:{label:'Flatbed recovery',severity:'Critical',sla:45,needs:'flatbed',minutes:[8,16,35],impact:'Vehicle unavailable'},
  depot:{label:'Depot transport',severity:'Medium',sla:60,needs:'depot',minutes:[6,18,32],impact:'Vehicle unavailable'}
 };
-function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:FLEET.map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[],providerOffers:[],providerCancellations:[],additionalCharges:[]};}
+function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:FLEET.map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[],providerOffers:[],providerCancellations:[],additionalCharges:[],providerSurveys:[]};}
 
 // Deterministic showcase data, created through the same state transitions as manual dispatch.
 function demoState(){
@@ -86,6 +86,24 @@ function recordAdditionalCharge(s,id,amount,reason){
  if(!detail||detail.length>200)throw Error('Charge reason must be 1–200 characters');
  const charge={incidentId:i.id,providerId:i.providerId,amount:value,reason:detail,minute:s.minute};
  s.additionalCharges.push(charge);return charge;
+}
+function recordProviderSurvey(s,id,nps,sps){
+ const i=incident(s,id);
+ if(!i.providerId)throw Error('Provider assignment required for survey');
+ if(!Number.isInteger(nps)||nps<0||nps>10)throw Error('NPS response must be an integer from 0 to 10');
+ if(sps!==null&&(!Number.isFinite(sps)||sps<0||sps>100))throw Error('SPS must be between 0 and 100 or unspecified');
+ if(s.providerSurveys.some(x=>x.incidentId===id))throw Error('Survey already recorded for incident');
+ const survey={incidentId:id,providerId:i.providerId,nps,sps,minute:s.minute};s.providerSurveys.push(survey);return survey;
+}
+function providerExperience(s){
+ return s.providers.map(p=>{
+  const surveys=s.providerSurveys.filter(x=>x.providerId===p.id);
+  const promoters=surveys.filter(x=>x.nps>=9).length,detractors=surveys.filter(x=>x.nps<=6).length;
+  const spsSamples=surveys.filter(x=>x.sps!==null);
+  return {providerId:p.id,name:p.name,responses:surveys.length,
+   nps:surveys.length?100*(promoters-detractors)/surveys.length:null,
+   spsResponses:spsSamples.length,spsAverage:spsSamples.length?spsSamples.reduce((n,x)=>n+x.sps,0)/spsSamples.length:null};
+ });
 }
 function providerQuality(s){
  return s.providers.map(p=>{
@@ -270,5 +288,5 @@ function shiftHandoff(s){
    safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};
 }
 
-return {cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+return {recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
