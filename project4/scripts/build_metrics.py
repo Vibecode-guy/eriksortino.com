@@ -23,6 +23,8 @@ result = {
     "hourly_demand": run("01_hourly_demand.sql"),
     "top_pickup_zones": run("02_zone_demand.sql"),
     "quality_audit": run("03_quality_audit.sql")[0],
+    "weekday_demand": run("04_weekday_demand.sql"),
+    "trip_duration": run("05_trip_duration.sql")[0],
 }
 out = ROOT / "output" / "metrics.json"
 out.parent.mkdir(parents=True, exist_ok=True)
