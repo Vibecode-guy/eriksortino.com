@@ -9,8 +9,8 @@ const SITES=[
  {id:'valley',label:'Add San Fernando Valley staging',lat:34.1867,lon:-118.449},
  {id:'harbor',label:'Add San Pedro / Harbor staging',lat:33.739,lon:-118.289}
 ];
-const TYPE_ORDER=['door_ajar','immobilized','flatbed','depot'];
-const TYPE_WEIGHTS=[30,35,20,15]; // percent, synthetic assumptions
+const TYPE_ORDER=['door_ajar','flat_tire','immobilized','flatbed','depot'];
+const TYPE_WEIGHTS=[25,15,30,18,12]; // percent, synthetic assumptions
 function validate(config){
  const c={fleetSize:config?.fleetSize??24,incidentsPer100PerDay:config?.incidentsPer100PerDay??5,budget:config?.budget??5000,days:config?.days??DAYS};
  if(!Number.isInteger(c.fleetSize)||c.fleetSize<12||c.fleetSize>240||!Number.isInteger(c.incidentsPer100PerDay)||c.incidentsPer100PerDay<1||c.incidentsPer100PerDay>30||!Number.isInteger(c.budget)||c.budget<0||c.budget>100000||!Number.isInteger(c.days)||c.days<1||c.days>60)throw Error('Invalid scenario controls');
