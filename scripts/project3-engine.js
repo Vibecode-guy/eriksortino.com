@@ -87,22 +87,19 @@ function recordAdditionalCharge(s,id,amount,reason){
  const charge={incidentId:i.id,providerId:i.providerId,amount:value,reason:detail,minute:s.minute};
  s.additionalCharges.push(charge);return charge;
 }
-function recordProviderSurvey(s,id,nps,sps){
+function recordProviderSurvey(s,id,nps){
  const i=incident(s,id);
  if(!i.providerId)throw Error('Provider assignment required for survey');
  if(!Number.isInteger(nps)||nps<0||nps>10)throw Error('NPS response must be an integer from 0 to 10');
- if(sps!==null&&(!Number.isFinite(sps)||sps<0||sps>100))throw Error('SPS must be between 0 and 100 or unspecified');
  if(s.providerSurveys.some(x=>x.incidentId===id))throw Error('Survey already recorded for incident');
- const survey={incidentId:id,providerId:i.providerId,nps,sps,minute:s.minute};s.providerSurveys.push(survey);return survey;
+ const survey={incidentId:id,providerId:i.providerId,nps,minute:s.minute};s.providerSurveys.push(survey);return survey;
 }
 function providerExperience(s){
  return s.providers.map(p=>{
   const surveys=s.providerSurveys.filter(x=>x.providerId===p.id);
   const promoters=surveys.filter(x=>x.nps>=9).length,detractors=surveys.filter(x=>x.nps<=6).length;
-  const spsSamples=surveys.filter(x=>x.sps!==null);
   return {providerId:p.id,name:p.name,responses:surveys.length,
-   nps:surveys.length?100*(promoters-detractors)/surveys.length:null,
-   spsResponses:spsSamples.length,spsAverage:spsSamples.length?spsSamples.reduce((n,x)=>n+x.sps,0)/spsSamples.length:null};
+   nps:surveys.length?100*(promoters-detractors)/surveys.length:null};
  });
 }
 function providerQuality(s){
