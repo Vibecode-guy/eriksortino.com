@@ -118,3 +118,21 @@ test('customer danger takes queue priority and safety metrics exclude vehicle re
  assert.equal(E.prioritizedIncidents(s)[0].id,ordinary.id);
  assert.notEqual(danger.status,'completed');
 });
+
+test('customer safety timeline records ordered milestones and prevents duplicate flags',()=>{
+ const s=E.initialState(),i=E.createIncident(s,'AV-105','immobilized');
+ E.flagCustomerDanger(s,i.id,'exposed_roadway');
+ assert.throws(()=>E.flagCustomerDanger(s,i.id,'unsafe_location'),/already flagged/);
+ E.escalateCustomerEmergency(s,i.id);
+ assert.throws(()=>E.escalateCustomerEmergency(s,i.id),/already recorded/);
+ E.dispatchReplacement(s,i.id,'AV-102');
+ E.arriveReplacement(s,i.id);
+ E.completePassengerTransfer(s,i.id,true);
+ const events=E.customerSafetyTimeline(s,i.id);
+ assert.deepEqual(events.map(e=>e.label),[
+  'Customer danger flagged','Emergency escalation recorded','Replacement AV dispatched',
+  'Replacement AV arrived','Passenger transfer confirmed','Customer transfer time recorded'
+ ]);
+ assert.ok(events.every((e,index)=>index===0||e.minute>=events[index-1].minute));
+ assert.equal(i.status,'queued');
+});
