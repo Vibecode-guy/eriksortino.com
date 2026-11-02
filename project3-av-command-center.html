@@ -208,7 +208,38 @@ function renderAnalytics(){
  fill('aStages',a.stages.map(r=>[r.name,r.samples,mins(r.meanMinutes),mins(r.p90Minutes)]));
 }
 function renderHealthAndHandoff(){const rows=$('healthRows');rows.replaceChildren();const review=state.vehicles.filter(v=>E.vehicleHealth(v).readiness==='review');$('healthSummary').textContent=review.length+' of '+state.vehicles.length+' vehicles flagged for health review';for(const v of review.slice(0,20)){const h=E.vehicleHealth(v),tr=document.createElement('tr');for(const val of [v.id,h.batteryPercent+'%',h.connectivity,h.fault,h.readiness]){const td=document.createElement('td');td.textContent=val;tr.append(td);}rows.append(tr);}const h=E.shiftHandoff(state);$('handoffText').textContent=['SIMULATED AV OPERATIONS — SHIFT HANDOFF','T + '+h.minute+' min | Open '+h.active+' | Overdue '+h.overdue+' | Unavailable AVs '+h.unavailable+' | Health reviews '+h.healthReview+' | Available crews '+h.availableTeams+' | Unowned '+h.unowned+' | Unacknowledged '+h.unacknowledged+' | Pending actions '+h.openActions,...h.items.map(i=>i.id+' · '+i.vehicleId+' · '+i.type+' · '+i.status+' · '+i.elapsed+' min · '+i.provider+' · Owner: '+i.owner+' · '+(i.acknowledged?'Acknowledged':'Unacknowledged')+' · Pending: '+(i.actions.join('; ')||'none')+' · Notes: '+i.notes+' · '+i.safety)].join('\n');}
-function renderResources(){const quality=$('qualityRows');quality.replaceChildren();const experience=E.providerExperience(state);for(const p of E.providerQuality(state)){const x=experience.find(v=>v.providerId===p.providerId),tr=document.createElement('tr');for(const v of [p.name,p.onTime,p.late,p.cancellations,p.onTimeRate===null?'N/A':p.onTimeRate.toFixed(1)+'%',p.cancellationRate===null?'N/A':p.cancellationRate.toFixed(1)+'%',p.averageAdditional===null?'N/A':'const rates=$('acceptanceRows');rates.replaceChildren();for(const p of E.providerAcceptance(state)){const tr=document.createElement('tr');for(const v of [p.name,p.offers,p.accepted,p.declined,p.timedOut,p.rate===null?'N/A':p.rate.toFixed(1)+'%']){const td=document.createElement('td');td.textContent=v;tr.append(td);}rates.append(tr);}const body=$('resourceRows');body.replaceChildren();for(const p of E.providerBoard(state)){const tr=document.createElement('tr');for(const value of [p.name,p.area,p.capabilities.join(', '),p.busy?'Assigned':'Available',p.incidentId||'—']){const td=document.createElement('td');td.textContent=value;tr.append(td);}body.append(tr);}}
+function renderResources(){
+ const quality=$('qualityRows');quality.replaceChildren();
+ const experience=E.providerExperience(state);
+ for(const p of E.providerQuality(state)){
+  const x=experience.find(v=>v.providerId===p.providerId),tr=document.createElement('tr');
+  for(const v of [p.name,p.onTime,p.late,p.cancellations,
+   p.onTimeRate===null?'N/A':p.onTimeRate.toFixed(1)+'%',
+   p.cancellationRate===null?'N/A':p.cancellationRate.toFixed(1)+'%',
+   p.averageAdditional===null?'N/A':'$'+p.averageAdditional.toFixed(2),
+   x.nps===null?'N/A':x.nps.toFixed(0)+' ('+x.responses+')',
+   x.spsAverage===null?'N/A':x.spsAverage.toFixed(1)+' ('+x.spsResponses+')']){
+   const td=document.createElement('td');td.textContent=v;tr.append(td);
+  }
+  quality.append(tr);
+ }
+ const rates=$('acceptanceRows');rates.replaceChildren();
+ for(const p of E.providerAcceptance(state)){
+  const tr=document.createElement('tr');
+  for(const v of [p.name,p.offers,p.accepted,p.declined,p.timedOut,p.rate===null?'N/A':p.rate.toFixed(1)+'%']){
+   const td=document.createElement('td');td.textContent=v;tr.append(td);
+  }
+  rates.append(tr);
+ }
+ const body=$('resourceRows');body.replaceChildren();
+ for(const p of E.providerBoard(state)){
+  const tr=document.createElement('tr');
+  for(const value of [p.name,p.area,p.capabilities.join(', '),p.busy?'Assigned':'Available',p.incidentId||'—']){
+   const td=document.createElement('td');td.textContent=value;tr.append(td);
+  }
+  body.append(tr);
+ }
+}
 function render(){renderHealthAndHandoff();renderResources();const k=E.kpis(state);renderAnalytics();$('kAvail').textContent=k.available+'/'+k.total+' ('+k.availabilityPercent.toFixed(0)+'%)';$('kActive').textContent=k.active;$('kDone').textContent=k.completed;$('kMean').textContent=k.meanResponse===null?'—':k.meanResponse.toFixed(1);$('kP90').textContent=k.p90Response===null?'—':k.p90Response;$('kCost').textContent='$'+k.totalCost.toLocaleString();$('clock').textContent='T + '+String(state.minute).padStart(3,'0')+' min';$('queueCount').textContent=state.incidents.length+' total · '+k.breached+' active SLA breaches';
 const vs=$('vehicleSelect');vs.replaceChildren();for(const v of state.vehicles){const o=document.createElement('option');o.value=v.id;o.textContent=v.id+' · '+v.area+' · '+v.status;vs.append(o);}vs.value=state.selected;const v=selectedVehicle();$('selectedLabel').textContent=v.id;$('vehicleDetails').textContent=v.id+' · '+v.area+' · '+(v.status==='available'?'Available for service':'Unavailable during incident');$('createIncident').disabled=v.status!=='available';drawMap();
 const safety=E.safetyMetrics(state);$('customerSafetyMetrics').textContent=safety.awaiting+' critical customer safety open · '+safety.safe+' transfers completed · '+safety.emergencyEscalated+' emergency escalations recorded · mean time to transfer '+(safety.meanTimeToSafety===null?'—':safety.meanTimeToSafety.toFixed(1)+' min');$('customerSafetySummary').style.borderColor=safety.awaiting?'#f59a9a':'#416579';const sla=E.slaMonitoring(state);$('slaSummary').textContent=sla.critical+' critical safety open · '+sla.warning+' approaching deadline · '+sla.breached+' breached';const alerts=$('slaAlerts');alerts.replaceChildren();for(const item of sla.items.filter(x=>!x.closed&&(x.status!=='on_track'||x.safety)).sort((a,b)=>Number(b.safety)-Number(a.safety)||a.remaining-b.remaining)){const li=document.createElement('li');li.textContent=item.id+' · '+(item.safety?'CUSTOMER SAFETY · ':'')+item.status.toUpperCase().replace('_',' ')+' · '+(item.remaining>=0?item.remaining+' min remaining':Math.abs(item.remaining)+' min overdue');li.style.color=item.status==='breached'?'#ff9999':item.status==='warning'?'#ffd18c':'#d7edf5';alerts.append(li);}if(!alerts.children.length){const li=document.createElement('li');li.textContent='No active SLA alerts';alerts.append(li);}
