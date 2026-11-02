@@ -39,10 +39,10 @@ jobs:
           const page=fs.readFileSync('project3-av-command-center.html','utf8');
           const home=fs.readFileSync('index.html','utf8');
           assert(home.includes('href="project3-av-command-center.html"'),'Portfolio navigation missing');
-          assert(page.includes('src="scripts/project3-engine.js"'),'Engine script missing');
-          assert(page.includes('src="scripts/project3-analytics.js"'),'Analytics script missing');
-          assert(page.includes('src="scripts/project3-planning.js"'),'Planning script missing');
-          assert(page.includes('src="scripts/project3-planning-ui.js"'),'Planning UI script missing');
+          assert(page.includes('src="scripts/project3-engine.js'),'Engine script missing');
+          assert(page.includes('src="scripts/project3-analytics.js'),'Analytics script missing');
+          assert(page.includes('src="scripts/project3-planning.js'),'Planning script missing');
+          assert(page.includes('src="scripts/project3-planning-ui.js'),'Planning UI script missing');
           for(const id of ['vehicleMarkers','vehicleSelect','incidentType','createIncident','queue','providerSelect','assignProvider','advanceIncident','kAvail','kP90','kCost','announcer'])assert(page.includes('id="'+id+'"'),'Missing UI control: '+id);
           for(const id of ['aProviders','aTypes','aAreas','aStages','aReady','aSla'])assert(page.includes('id="'+id+'"'),'Missing analytics panel: '+id);
           for(const id of ['planning','planFleet','planRate','planBudget','planTable','planRecommendation','planExamples','planMethod'])assert(page.includes('id="'+id+'"'),'Missing planning control: '+id);
