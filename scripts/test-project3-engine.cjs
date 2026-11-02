@@ -66,3 +66,20 @@ test('roadside-only tire assessment hands off to a separate flatbed crew',()=>{
  assert.equal(i.cost,495);
  assert.equal(E.kpis(s).available,12);
 });
+
+test('customer evacuation dispatches a second AV without resolving original recovery',()=>{
+ const s=E.initialState(),i=E.createIncident(s,'AV-105','immobilized');
+ const candidate=E.availableReplacementAVs(s,i.id)[0];
+ const e=E.dispatchReplacement(s,i.id,candidate.id);
+ assert.equal(e.status,'en_route');
+ assert.equal(E.kpis(s).available,10);
+ assert.throws(()=>E.dispatchReplacement(s,i.id,'AV-101'),/already dispatched/);
+ assert.throws(()=>E.completePassengerTransfer(s,i.id,true),/must arrive/);
+ E.arriveReplacement(s,i.id);
+ assert.throws(()=>E.completePassengerTransfer(s,i.id,false),/clearance/);
+ E.completePassengerTransfer(s,i.id,true);
+ assert.equal(e.status,'transferred');
+ assert.equal(i.status,'queued');
+ assert.equal(E.kpis(s).available,11);
+ assert.equal(s.vehicles.find(v=>v.id===candidate.id).status,'available');
+});
