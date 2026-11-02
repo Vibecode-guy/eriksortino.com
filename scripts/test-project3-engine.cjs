@@ -37,3 +37,16 @@ test('invalid clock advances and completed state transitions fail closed',()=>{
  assert.throws(()=>E.advance(s,i.id),/already completed/);
  assert.throws(()=>E.assign(s,i.id,'P-02'),/queued/);
 });
+
+test('flat tire requires a service decision and flatbed-equipped provider for recovery',()=>{
+ const s=E.initialState(),i=E.createIncident(s,'AV-101','flat_tire');
+ E.assign(s,i.id,'P-02');E.advance(s,i.id);E.advance(s,i.id);
+ assert.throws(()=>E.advance(s,i.id),/Choose tire service/);
+ E.resolveTire(s,i.id,'flatbed');E.advance(s,i.id);
+ assert.equal(i.tireResolution,'flatbed');assert.equal(i.cost,400);
+ const t=E.createIncident(s,'AV-102','flat_tire');
+ E.assign(s,t.id,'P-01');E.advance(s,t.id);E.advance(s,t.id);
+ assert.throws(()=>E.resolveTire(s,t.id,'flatbed'),/lacks flatbed capability/);
+ E.resolveTire(s,t.id,'roadside');E.advance(s,t.id);
+ assert.equal(t.cost,150);
+});
