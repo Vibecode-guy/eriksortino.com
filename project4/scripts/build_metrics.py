@@ -10,7 +10,7 @@ if len(MONTH) != 7 or MONTH[4] != "-" or not (MONTH[:4] + MONTH[5:]).isdigit() o
     raise SystemExit("Month must be YYYY-MM")
 URL = f"https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{MONTH}.parquet"
 con = duckdb.connect()
-con.execute("CREATE VIEW taxi_trips AS SELECT * FROM read_parquet(?)", [URL])
+con.execute(f"CREATE VIEW taxi_trips AS SELECT * FROM read_parquet('{URL}')")
 def run(name):
     sql = (ROOT / "sql" / name).read_text()
     cur = con.execute(sql)
