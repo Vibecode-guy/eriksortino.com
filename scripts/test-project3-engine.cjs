@@ -205,3 +205,32 @@ test('dispatcher ownership, acknowledgment, notes and pending actions survive sh
  assert.equal(E.shiftHandoff(s).openActions,0);
  assert.throws(()=>E.completePendingAction(s,i.id,action.id),/already completed/);
 });
+
+test('SLA monitor warns, breaches and stops at first assistance',()=>{
+ const s=E.initialState(),i=E.createIncident(s,'AV-105','immobilized');
+ const limit=i.sla;
+ s.minute=limit-3;
+ assert.equal(E.incidentSla(s,i.id).status,'warning');
+ s.minute=limit+1;
+ assert.equal(E.incidentSla(s,i.id).status,'breached');
+ E.assign(s,i.id,E.eligibleProviders(s,i.id)[0].id);
+ E.advance(s,i.id);E.advance(s,i.id);
+ const result=E.incidentSla(s,i.id);
+ assert.equal(result.closed,true);
+ const snapshot=result.elapsed;
+ s.minute+=30;
+ assert.equal(E.incidentSla(s,i.id).elapsed,snapshot);
+});
+test('critical customer safety SLA measures time to transfer independently',()=>{
+ const s=E.initialState(),i=E.createIncident(s,'AV-105','immobilized');
+ E.flagCustomerDanger(s,i.id,'exposed_roadway');
+ assert.equal(E.incidentSla(s,i.id).limit,10);
+ s.minute=6;
+ assert.equal(E.incidentSla(s,i.id).status,'warning');
+ s.minute=11;
+ assert.equal(E.incidentSla(s,i.id).status,'breached');
+ E.dispatchReplacement(s,i.id,'AV-102');E.arriveReplacement(s,i.id);E.completePassengerTransfer(s,i.id,true);
+ assert.equal(E.incidentSla(s,i.id).closed,true);
+ assert.equal(E.incidentSla(s,i.id).status,'breached');
+ assert.equal(E.slaMonitoring(s).critical,0);
+});
