@@ -65,11 +65,13 @@ function flagCustomerDanger(s,id,reason){
  const i=incident(s,id);
  if(i.status==='completed')throw Error('Cannot flag a completed incident');
  if(!DANGER_REASONS[reason])throw Error('Choose a valid customer danger reason');
+ if(i.customerSafety.danger)throw Error('Customer danger already flagged');
  i.customerSafety.danger=true;i.customerSafety.reason=reason;i.customerSafety.flaggedAt=s.minute;i.severity='Critical';i.escalated=true;return i.customerSafety;
 }
 function escalateCustomerEmergency(s,id){
  const i=incident(s,id);
  if(!i.customerSafety.danger)throw Error('Flag customer danger first');
+ if(i.customerSafety.emergencyEscalatedAt!==null)throw Error('Emergency escalation already recorded');
  i.customerSafety.emergencyEscalatedAt=s.minute;return i.customerSafety;
 }
 function availableReplacementAVs(s,id){
@@ -100,6 +102,15 @@ function completePassengerTransfer(s,id,clearance){
 }
 function escalate(s,id){const i=incident(s,id);if(i.status==='completed')throw Error('Cannot escalate completed incident');i.escalated=true;return i;}
 function tick(s,minutes=5){if(!Number.isInteger(minutes)||minutes<1||minutes>1440)throw Error('Invalid clock advance');s.minute+=minutes;}
+function customerSafetyTimeline(s,id){
+ const i=incident(s,id),safety=i.customerSafety,e=i.evacuation;
+ const events=[];
+ if(safety?.flaggedAt!==null&&safety?.flaggedAt!==undefined)events.push({minute:safety.flaggedAt,label:'Customer danger flagged',detail:DANGER_REASONS[safety.reason]||'Customer safety'});
+ if(safety?.emergencyEscalatedAt!==null&&safety?.emergencyEscalatedAt!==undefined)events.push({minute:safety.emergencyEscalatedAt,label:'Emergency escalation recorded',detail:'Simulated operator escalation only'});
+ if(e){events.push({minute:e.requestedAt,label:'Replacement AV dispatched',detail:e.replacementId+' · ETA '+e.etaMinutes+' min'});if(e.arrivedAt!==null)events.push({minute:e.arrivedAt,label:'Replacement AV arrived',detail:e.replacementId});if(e.transferredAt!==null)events.push({minute:e.transferredAt,label:'Passenger transfer confirmed',detail:'Explicit simulated clearance recorded'});}
+ if(safety?.safeAt!==null&&safety?.safeAt!==undefined)events.push({minute:safety.safeAt,label:'Customer transfer time recorded',detail:'Time since danger flag: '+(safety.safeAt-safety.flaggedAt)+' min'});
+ return events.sort((a,b)=>a.minute-b.minute);
+}
 function safetyMetrics(s){
  const flagged=s.incidents.filter(i=>i.customerSafety?.danger);
  const awaiting=flagged.filter(i=>i.customerSafety.safeAt===null);
@@ -113,5 +124,5 @@ function prioritizedIncidents(s){
 }
 function kpis(s){const total=s.vehicles.length,available=s.vehicles.filter(v=>v.status==='available').length,completed=s.incidents.filter(i=>i.completedAt!==null);const times=completed.map(i=>i.onSceneAt-i.created).sort((a,b)=>a-b);const mean=times.length?times.reduce((a,b)=>a+b,0)/times.length:null;const p90=times.length?times[Math.ceil(times.length*.9)-1]:null;const cost=completed.reduce((a,i)=>a+i.cost,0);return {total,available,availabilityPercent:total?100*available/total:0,active:s.incidents.filter(i=>i.status!=='completed').length,completed:completed.length,meanResponse:mean,p90Response:p90,totalCost:cost,breached:s.incidents.filter(i=>i.status!=='completed'&&s.minute-i.created>i.sla).length};}
 function elapsed(s,i){return (i.completedAt===null?s.minute:i.completedAt)-i.created;}
-return {DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,prioritizedIncidents,elapsed,estimateTravel};
+return {DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
