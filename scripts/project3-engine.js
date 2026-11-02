@@ -142,6 +142,18 @@ function updateQualityPlan(s,id,status,note,followUpScore=null){
  return plan;
 }
 function providerQualityPlans(s){return s.qualityPlans.map(p=>({...p,notes:p.notes.map(n=>({...n})),improvement:p.followUpScore===null?null:p.followUpScore-p.baselineScore}));}
+function providerReviewQueue(s){
+ const history=providerHistory(s);
+ return history.map(p=>{
+  const active=s.qualityPlans.find(x=>x.providerId===p.providerId&&x.status!=='closed');
+  const flagged=p.delta<=-3||p.periods[1].score<75;
+  const reason=p.delta<=-3?'Performance declined by '+Math.abs(p.delta).toFixed(1)+' points':
+   p.periods[1].score<75?'Recent performance index below 75':'No automatic review trigger';
+  return {providerId:p.providerId,name:p.name,flagged,reason,score:p.periods[1].score,delta:p.delta,
+   activePlanId:active?active.id:null,planStatus:active?active.status:null,
+   action:active?'Plan active':flagged?'Review recommended':'Monitor'};
+ }).sort((a,b)=>Number(b.flagged)-Number(a.flagged)||a.score-b.score);
+}
 function providerHistory(s){
  const periods=['Prior 30 days','Recent 30 days'];
  return s.providers.map((p,index)=>{
@@ -360,5 +372,5 @@ function shiftHandoff(s){
    safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};
 }
 
-return {openQualityPlan,updateQualityPlan,providerQualityPlans,providerHistory,providerScorecard,recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+return {providerReviewQueue,openQualityPlan,updateQualityPlan,providerQualityPlans,providerHistory,providerScorecard,recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
