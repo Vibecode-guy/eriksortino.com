@@ -313,3 +313,15 @@ test('provider quality improvement plan requires ownership, tracks progress and 
  assert.throws(()=>E.updateQualityPlan(s,p.id,'in_progress','Reopen'),/Closed/);
  assert.equal(E.openQualityPlan(s,'P-02','Manager','Second review').status,'open');
 });
+
+test('automatic provider review queue flags deterioration without creating a plan',()=>{
+ const s=E.initialState(),queue=E.providerReviewQueue(s);
+ assert.equal(queue.length,s.providers.length);
+ assert.ok(queue.some(p=>p.flagged));
+ assert.equal(s.qualityPlans.length,0);
+ const target=queue.find(p=>p.flagged);
+ E.openQualityPlan(s,target.providerId,'Operations manager','Coach and review in 30 days');
+ const updated=E.providerReviewQueue(s).find(p=>p.providerId===target.providerId);
+ assert.equal(updated.action,'Plan active');
+ assert.ok(updated.activePlanId);
+});
