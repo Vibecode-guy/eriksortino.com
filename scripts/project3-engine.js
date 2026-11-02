@@ -117,6 +117,31 @@ function providerQuality(s){
  });
 }
 // Illustrative management index, not a production vendor rating. Missing dimensions are excluded.
+// Deterministic historical sample, deliberately isolated from live dispatch KPIs.
+function providerHistory(s){
+ const periods=['Prior 30 days','Recent 30 days'];
+ return s.providers.map((p,index)=>{
+  const rows=periods.map((period,periodIndex)=>{
+   const offers=36+index*7+periodIndex*6;
+   const accepted=Math.round(offers*Math.max(.52,.94-index*.055+(periodIndex===1?(index%2===0?.035:-.055):0)));
+   const arrivals=Math.max(1,accepted-2-index%3);
+   const onTime=Math.round(arrivals*Math.max(.48,.94-index*.052+(periodIndex===1?(index%2===0?.025:-.065):0)));
+   const cancellations=Math.max(0,accepted-arrivals);
+   const redispatch=Math.round(arrivals*(.035+index*.014+(periodIndex===1&&index%2===1?.045:0)));
+   const averageAdditional=+(9+index*7+(periodIndex===1?(index%2===0?-2:8):0)).toFixed(2);
+   const responses=Math.max(8,Math.round(arrivals*.45));
+   const promoters=Math.round(responses*Math.max(.35,.78-index*.055+(periodIndex===1?(index%2===0?.03:-.08):0)));
+   const detractors=Math.round(responses*(.06+index*.025+(periodIndex===1&&index%2===1?.04:0)));
+   const nps=100*(promoters-detractors)/responses;
+   const acceptanceRate=100*accepted/offers,onTimeRate=100*onTime/arrivals,cancellationRate=100*cancellations/accepted,redispatchRate=100*redispatch/arrivals;
+   const score=.25*acceptanceRate+.30*onTimeRate+.15*(100-cancellationRate)+.10*(100-redispatchRate)+.10*Math.max(0,100-averageAdditional/2)+.10*(nps+100)/2;
+   return {period,offers,accepted,arrivals,onTime,late:arrivals-onTime,cancellations,redispatch,averageAdditional,responses,nps,acceptanceRate,onTimeRate,cancellationRate,redispatchRate,score};
+  });
+  const delta=rows[1].score-rows[0].score;
+  return {providerId:p.id,name:p.name,periods:rows,delta,
+   recommendation:delta<=-3?'Quality review':rows[1].score>=85?'Consider more volume':'Monitor performance'};
+ }).sort((a,b)=>b.periods[1].score-a.periods[1].score);
+}
 function providerScorecard(s){
  const acceptance=providerAcceptance(s),quality=providerQuality(s),experience=providerExperience(s);
  const clamp=v=>Math.max(0,Math.min(100,v));
@@ -311,5 +336,5 @@ function shiftHandoff(s){
    safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};
 }
 
-return {providerScorecard,recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+return {providerHistory,providerScorecard,recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
