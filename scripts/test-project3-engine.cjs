@@ -165,3 +165,22 @@ test('synthetic health and shift handoff are reproducible and show open work',()
  E.assign(a,incident.id,'P-02');
  assert.equal(E.shiftHandoff(a).availableTeams,5);
 });
+
+test('response breakdown distinguishes first assistance, replacement, transfer and recovery',()=>{
+ const s=E.initialState(),i=E.createIncident(s,'AV-105','immobilized');
+ const before=E.responseBreakdown(s,i.id);
+ assert.ok(before.every(r=>r.minutes===null));
+ E.dispatchReplacement(s,i.id,'AV-102');
+ E.arriveReplacement(s,i.id);
+ E.completePassengerTransfer(s,i.id,true);
+ const mid=E.responseBreakdown(s,i.id);
+ assert.equal(mid[0].minutes,null);
+ assert.ok(mid[1].minutes>0&&mid[2].minutes>mid[1].minutes);
+ assert.equal(mid[3].minutes,null);
+ E.assign(s,i.id,'P-02');E.advance(s,i.id);E.advance(s,i.id);E.advance(s,i.id);
+ const after=E.responseBreakdown(s,i.id);
+ assert.ok(after[0].minutes>0&&after[3].minutes>=after[0].minutes);
+ const aggregate=E.responsePerformance(s);
+ assert.equal(aggregate.length,4);
+ assert.ok(aggregate.every(row=>row.samples===1&&row.meanMinutes!==null));
+});
