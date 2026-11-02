@@ -13,6 +13,22 @@ const PROVIDERS=[
  {id:'P-03',name:'Harbor Flatbed',area:'Harbor',lat:33.775,lon:-118.285,capabilities:['flatbed','depot','immobilized'],baseCost:195},
  {id:'P-04',name:'Valley Response',area:'Valley',lat:34.175,lon:-118.420,capabilities:['door_ajar','immobilized','flat_tire','flatbed'],baseCost:175}
 ];
+const ZONES=[['Central LA',34.049,-118.246],['Westside / Venice',33.994,-118.469],['San Fernando Valley',34.175,-118.420],['South LA / LAX',33.961,-118.353],['Harbor / San Pedro',33.739,-118.289]];
+function seededFleet(){
+ const out=VEHICLES.map(([id,area,lat,lon])=>({id,area,lat,lon,status:'available'}));
+ let seed=20261102;
+ const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ for(let n=113;n<=200;n++){
+  const zone=ZONES[(n-113)%ZONES.length];
+  out.push({id:'AV-'+n,area:zone[0],lat:+(zone[1]+(rand()-.5)*.055).toFixed(6),lon:+(zone[2]+(rand()-.5)*.075).toFixed(6),status:'available'});
+ }
+ return out;
+}
+const FLEET=seededFleet();
+PROVIDERS.push(
+ {id:'P-05',name:'LAX Field Response',area:'South LA / LAX',lat:33.959,lon:-118.402,capabilities:['door_ajar','immobilized','flat_tire'],baseCost:125},
+ {id:'P-06',name:'Harbor Recovery Two',area:'Harbor / San Pedro',lat:33.745,lon:-118.285,capabilities:['immobilized','flatbed','depot'],baseCost:205}
+);
 const TYPES={
  door_ajar:{label:'Door ajar',severity:'Low',sla:30,needs:'door_ajar',minutes:[4,8,6],impact:'Vehicle temporarily unavailable'},
  flat_tire:{label:'Flat tire · roadside assessment',severity:'Medium',sla:40,needs:'flat_tire',minutes:[5,12,24],impact:'Vehicle unavailable pending tire service or recovery assessment'},
@@ -20,7 +36,7 @@ const TYPES={
  flatbed:{label:'Flatbed recovery',severity:'Critical',sla:45,needs:'flatbed',minutes:[8,16,35],impact:'Vehicle unavailable'},
  depot:{label:'Depot transport',severity:'Medium',sla:60,needs:'depot',minutes:[6,18,32],impact:'Vehicle unavailable'}
 };
-function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:VEHICLES.map(([id,area,lat,lon])=>({id,area,lat,lon,status:'available'})),providers:PROVIDERS.map(p=>({...p})),incidents:[]};}
+function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:FLEET.map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[]};}
 
 // Deterministic showcase data, created through the same state transitions as manual dispatch.
 function demoState(){
