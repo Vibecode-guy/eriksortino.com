@@ -209,18 +209,31 @@ function renderAnalytics(){
  fill('aStages',a.stages.map(r=>[r.name,r.samples,mins(r.meanMinutes),mins(r.p90Minutes)]));
 }
 function renderHealthAndHandoff(){const rows=$('healthRows');rows.replaceChildren();const review=state.vehicles.filter(v=>E.vehicleHealth(v).readiness==='review');$('healthSummary').textContent=review.length+' of '+state.vehicles.length+' vehicles flagged for health review';for(const v of review.slice(0,20)){const h=E.vehicleHealth(v),tr=document.createElement('tr');for(const val of [v.id,h.batteryPercent+'%',h.connectivity,h.fault,h.readiness]){const td=document.createElement('td');td.textContent=val;tr.append(td);}rows.append(tr);}const h=E.shiftHandoff(state);$('handoffText').textContent=['SIMULATED AV OPERATIONS — SHIFT HANDOFF','T + '+h.minute+' min | Open '+h.active+' | Overdue '+h.overdue+' | Unavailable AVs '+h.unavailable+' | Health reviews '+h.healthReview+' | Available crews '+h.availableTeams+' | Unowned '+h.unowned+' | Unacknowledged '+h.unacknowledged+' | Pending actions '+h.openActions,...h.items.map(i=>i.id+' · '+i.vehicleId+' · '+i.type+' · '+i.status+' · '+i.elapsed+' min · '+i.provider+' · Owner: '+i.owner+' · '+(i.acknowledged?'Acknowledged':'Unacknowledged')+' · Pending: '+(i.actions.join('; ')||'none')+' · Notes: '+i.notes+' · '+i.safety)].join('\n');}
-function renderResources(){const unified=$('unifiedScoreRows');unified.replaceChildren();for(const p of E.providerScorecard(state)){const tr=document.createElement('tr'),a=p.acceptance,q=p.quality,e=p.experience;for(const v of [p.name,p.score===null?'N/A':p.score.toFixed(1)+'/100',p.eligibleForRanking?'Rank eligible': 'Provisional · '+p.coverageWeight+'% weight',a.rate===null?'N/A':a.rate.toFixed(1)+'% ('+a.offers+')',q.onTime+' / '+q.late+' ('+q.arrivals+')',q.cancellations+' ('+a.accepted+' accepted)',p.redispatch+' / '+p.redispatchJobs,q.averageAdditional===null?'N/A':'
+function renderResources(){
+ const unified=$('unifiedScoreRows');unified.replaceChildren();
+ for(const p of E.providerScorecard(state)){
+  const tr=document.createElement('tr'),a=p.acceptance,q=p.quality,e=p.experience;
+  const values=[p.name,p.score===null?'N/A':p.score.toFixed(1)+'/100',
+   p.eligibleForRanking?'Rank eligible':'Provisional · '+p.coverageWeight+'% weight',
+   a.rate===null?'N/A':a.rate.toFixed(1)+'% ('+a.offers+')',
+   q.onTime+' / '+q.late+' ('+q.arrivals+')',
+   q.cancellations+' ('+a.accepted+' accepted)',
+   p.redispatch+' / '+p.redispatchJobs,
+   q.averageAdditional===null?'N/A':'$'+q.averageAdditional.toFixed(2),
+   e.nps===null?'N/A':e.nps.toFixed(0)+' ('+e.responses+')'];
+  for(const v of values){const td=document.createElement('td');td.textContent=v;tr.append(td);}
+  unified.append(tr);
+ }
  const quality=$('qualityRows');quality.replaceChildren();
  const experience=E.providerExperience(state);
  for(const p of E.providerQuality(state)){
   const x=experience.find(v=>v.providerId===p.providerId),tr=document.createElement('tr');
-  for(const v of [p.name,p.onTime,p.late,p.cancellations,
+  const values=[p.name,p.onTime,p.late,p.cancellations,
    p.onTimeRate===null?'N/A':p.onTimeRate.toFixed(1)+'%',
    p.cancellationRate===null?'N/A':p.cancellationRate.toFixed(1)+'%',
    p.averageAdditional===null?'N/A':'$'+p.averageAdditional.toFixed(2),
-   x.nps===null?'N/A':x.nps.toFixed(0)+' ('+x.responses+')']){
-   const td=document.createElement('td');td.textContent=v;tr.append(td);
-  }
+   x.nps===null?'N/A':x.nps.toFixed(0)+' ('+x.responses+')'];
+  for(const v of values){const td=document.createElement('td');td.textContent=v;tr.append(td);}
   quality.append(tr);
  }
  const rates=$('acceptanceRows');rates.replaceChildren();
