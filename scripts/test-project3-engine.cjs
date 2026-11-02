@@ -99,3 +99,22 @@ test('critical customer danger is tracked separately from vehicle recovery',()=>
  assert.ok(i.customerSafety.safeAt>=i.customerSafety.flaggedAt);
  assert.equal(i.status,'queued');
 });
+
+test('customer danger takes queue priority and safety metrics exclude vehicle recovery',()=>{
+ const s=E.initialState();
+ const ordinary=E.createIncident(s,'AV-101','door_ajar');
+ const danger=E.createIncident(s,'AV-105','immobilized');
+ E.flagCustomerDanger(s,danger.id,'unsafe_location');
+ assert.equal(E.prioritizedIncidents(s)[0].id,danger.id);
+ assert.equal(E.safetyMetrics(s).awaiting,1);
+ assert.equal(E.safetyMetrics(s).meanTimeToSafety,null);
+ E.dispatchReplacement(s,danger.id,'AV-102');
+ E.arriveReplacement(s,danger.id);
+ assert.equal(E.safetyMetrics(s).awaiting,1);
+ E.completePassengerTransfer(s,danger.id,true);
+ assert.equal(E.safetyMetrics(s).awaiting,0);
+ assert.equal(E.safetyMetrics(s).safe,1);
+ assert.ok(E.safetyMetrics(s).meanTimeToSafety>0);
+ assert.equal(E.prioritizedIncidents(s)[0].id,ordinary.id);
+ assert.notEqual(danger.status,'completed');
+});
