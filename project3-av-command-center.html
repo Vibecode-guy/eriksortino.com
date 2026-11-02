@@ -39,6 +39,13 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 .map .corridor{fill:none;stroke-width:4;stroke-linecap:round;stroke-dasharray:10 9;opacity:.55}
 .hub-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .hub-legend span{font-size:11px;color:#c0d6e1;background:#0b2636;border:1px solid #345669;border-radius:6px;padding:5px 8px}
+
+.coverage-decision{margin-top:12px;border-left:3px solid var(--cyan);background:#0a2835;padding:10px 12px;border-radius:4px;color:#d9eef3;font-size:12px;line-height:1.5}
+#coverageLayer .coverage,#coverageLayer .corridor{transition:opacity .2s,stroke-width .2s}
+#coverageLayer[data-focus="west"] .coverage,#coverageLayer[data-focus="valley"] .coverage,#coverageLayer[data-focus="harbor"] .coverage{opacity:.14}
+#coverageLayer[data-focus="west"] .corridor,#coverageLayer[data-focus="valley"] .corridor,#coverageLayer[data-focus="harbor"] .corridor{opacity:.18}
+#coverageLayer[data-focus="west"] .central-coverage,#coverageLayer[data-focus="valley"] .valley-coverage,#coverageLayer[data-focus="harbor"] .south-coverage{opacity:.95;stroke-width:5}
+#coverageLayer[data-focus="west"] .west-corridor,#coverageLayer[data-focus="harbor"] .harbor-corridor{opacity:1;stroke-width:6}
 </style></head><body><div class="shell">
 <header><a class="brand" href="index.html">ES <span>/ OPERATIONS LAB</span></a><span class="tag">Populated demo · synthetic data only</span></header>
 <main><div class="hero"><div class="hero-copy"><div class="context-line">Operations lab / Los Angeles / Dispatch simulation</div><h1>AV Fleet <span style="color:var(--cyan)">Command Center</span></h1><p class="intro">Explore a populated fictional LA fleet: active incidents, completed recoveries, response performance, and coverage decisions. Synthetic scenario: all vehicles, incidents, partners, times, and costs are illustrative.</p></div><nav class="hero-actions" aria-label="Dashboard shortcuts"><a href="#fleetHeading">Launch dispatch ↓</a><a href="#planning">Scenario planner ↓</a></nav></div>
@@ -50,12 +57,12 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 <path class="coast" d="M0 0H900V610H170L180 548 210 486 186 427 228 365 199 300 255 234 270 170 307 95 330 0Z"/>
 <path class="road" d="M220 185L780 190M180 300L840 312M235 420L780 415M380 0L450 610M650 0L630 610M210 490L780 90"/>
 <text x="480" y="80">SAN FERNANDO VALLEY</text><text x="470" y="230">CENTRAL LA</text><text x="330" y="370">WESTSIDE</text><text x="590" y="460">SOUTH LA</text><text x="320" y="570">HARBOR</text>
-<g aria-label="Illustrative proposed response hub coverage">
-<ellipse class="coverage" cx="513" cy="224" rx="238" ry="135" stroke="#55d9cf"/>
-<ellipse class="coverage" cx="279" cy="115" rx="175" ry="100" stroke="#f3bd71"/>
-<ellipse class="coverage" cx="474" cy="305" rx="215" ry="255" stroke="#9bb8ff"/>
-<path class="corridor" d="M513 224L340 265L200 288" stroke="#55d9cf"/>
-<path class="corridor" d="M474 305L310 320M474 305L480 530" stroke="#9bb8ff"/>
+<g id="coverageLayer" aria-label="Illustrative proposed response hub coverage">
+<ellipse class="coverage central-coverage" cx="513" cy="224" rx="238" ry="135" stroke="#55d9cf"/>
+<ellipse class="coverage valley-coverage" cx="279" cy="115" rx="175" ry="100" stroke="#f3bd71"/>
+<ellipse class="coverage south-coverage" cx="474" cy="305" rx="215" ry="255" stroke="#9bb8ff"/>
+<path class="corridor west-corridor" d="M513 224L340 265L200 288" stroke="#55d9cf"/>
+<path class="corridor harbor-corridor" d="M474 305L310 320M474 305L480 530" stroke="#9bb8ff"/>
 <g><path class="hub" d="M513 209l15 15-15 15-15-15Z" fill="#55d9cf"/><text class="hub-label" x="538" y="215" fill="#55d9cf">CENTRAL HUB</text></g>
 <g><path class="hub" d="M279 100l15 15-15 15-15-15Z" fill="#f3bd71"/><text class="hub-label" x="300" y="109" fill="#f3bd71">VALLEY HUB</text></g>
 <g><path class="hub" d="M474 290l15 15-15 15-15-15Z" fill="#9bb8ff"/><text class="hub-label" x="495" y="295" fill="#9bb8ff">SOUTH LA HUB</text></g>
@@ -64,7 +71,8 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 <text class="hub-label" x="492" y="550" fill="#9bb8ff">SAN PEDRO</text>
 </g>
 <g id="vehicleMarkers"></g></svg>
-<div class="legend"><span><b>●</b> Available</span><span><b class="offline">●</b> Incident / recovery</span><span>Map is approximate; positions are synthetic</span></div><div class="hub-legend" aria-label="Proposed response coverage legend"><span>◆ Teal · Central LA → West LA / Venice</span><span>◆ Gold · Valley</span><span>◆ Blue · South LA → LAX / San Pedro</span></div><p class="analytics-note">Dashed outlines and corridors are hypothetical service-planning illustrations, not measured travel-time catchments or routing recommendations.</p>
+<div class="legend"><span><b>●</b> Available</span><span><b class="offline">●</b> Incident / recovery</span><span>Map is approximate; positions are synthetic</span></div><div class="hub-legend" aria-label="Proposed response coverage legend"><span>◆ Teal · Central LA → West LA / Venice</span><span>◆ Gold · Valley</span><span>◆ Blue · South LA → LAX / San Pedro</span></div><p class="analytics-note">Dashed outlines and corridors are hypothetical service-planning illustrations, not measured travel-time catchments or routing recommendations. Planner selections highlight an illustrative corridor; they do not change the 12 tabletop vehicle markers.</p>
+<div id="coverageDecision" class="coverage-decision" role="status" aria-live="polite">Planning overlay: calculating modeled staging recommendation…</div>
 <div class="panelhead" style="margin-top:18px"><h2>Vehicle controls</h2><span class="clock" id="selectedLabel">AV-101</span></div>
 <div class="controls"><div><label for="vehicleSelect">Select vehicle</label><select id="vehicleSelect"></select></div><div><label for="incidentType">Incident type</label><select id="incidentType"><option value="immobilized">Immobilized AV</option><option value="door_ajar">Door ajar</option><option value="flatbed">Flatbed recovery</option><option value="depot">Depot transport</option></select></div></div>
 <div class="rowbuttons"><button id="createIncident" class="primary">Generate incident</button><button id="tickClock">Advance clock +5 min</button><button id="resetSim">Restore demo</button></div>
