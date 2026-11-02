@@ -135,7 +135,7 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 <div id="scenarioCards" class="scenario-cards" aria-label="Scenario comparison cards"></div>
 <div id="scenarioChart" class="scenario-chart" role="img" aria-label="Modeled p90 response time for each staging option"></div>
 </div>
-<div class="analytics-table-wrap"><table class="analytics-table"><caption>30-day comparison: identical seeded incident demand; response includes modeled crew queue and travel. Changes are relative to the four-provider baseline.</caption><thead><tr><th scope="col">Staging option</th><th scope="col">Mean response</th><th scope="col">p90 response</th><th scope="col">p90 change</th><th scope="col">SLA met</th><th scope="col">Mean crew queue</th><th scope="col">Total cost</th><th scope="col">Cost change</th></tr></thead><tbody id="planTable"></tbody></table></div>
+<div class="analytics-table-wrap"><table class="analytics-table"><caption>30-day comparison: identical seeded incident demand; response includes modeled crew queue and travel. Changes are relative to the six-provider baseline.</caption><thead><tr><th scope="col">Staging option</th><th scope="col">Mean response</th><th scope="col">p90 response</th><th scope="col">p90 change</th><th scope="col">SLA met</th><th scope="col">Mean crew queue</th><th scope="col">Total cost</th><th scope="col">Cost change</th></tr></thead><tbody id="planTable"></tbody></table></div>
 <h3 style="margin-top:20px">Explainable dispatch examples · recommended option</h3><ul id="planExamples" class="planning-method"><li>Waiting for planning model.</li></ul>
 <p id="planMethod" class="planning-method">Planning assumptions will appear here.</p>
 </section>
@@ -162,8 +162,8 @@ window.addEventListener('load',function(){setTimeout(function(){var n=document.g
 </script>
 <script src="scripts/project3-engine.js?v=20261102-healthhandoff"></script>
 <script src="scripts/project3-analytics.js?v=20261102-boot2"></script>
-<script src="scripts/project3-planning.js?v=20261102-boot2"></script>
-<script src="scripts/project3-planning-ui.js?v=20261102-boot2"></script>
+<script src="scripts/project3-planning.js?v=20261102-sixbase"></script>
+<script src="scripts/project3-planning-ui.js?v=20261102-sixbase"></script>
 <script>
 (function(){'use strict';
 const E=window.AVCommand;if(!E){document.getElementById('announcer').textContent='Simulator failed to load.';return;}
