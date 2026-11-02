@@ -39,7 +39,7 @@ function demoState(){
 function vehicle(s,id){const v=s.vehicles.find(x=>x.id===id);if(!v)throw Error('Unknown vehicle');return v;}
 function incident(s,id){const i=s.incidents.find(x=>x.id===id);if(!i)throw Error('Unknown incident');return i;}
 function provider(s,id){const p=s.providers.find(x=>x.id===id);if(!p)throw Error('Unknown provider');return p;}
-function createIncident(s,vehicleId,type){const v=vehicle(s,vehicleId),t=TYPES[type];if(!t)throw Error('Unknown incident type');if(v.status!=='available')throw Error('Vehicle already unavailable');const i={id:'INC-'+String(s.nextId++).padStart(3,'0'),vehicleId,type,severity:t.severity,sla:t.sla,created:s.minute,status:'queued',providerId:null,assignedAt:null,enRouteAt:null,onSceneAt:null,completedAt:null,cost:0,tireResolution:null,recoveryProviderId:null,recoveryRequestedAt:null,recoveryOnSceneAt:null,escalated:false};s.incidents.unshift(i);v.status='incident';return i;}
+function createIncident(s,vehicleId,type){const v=vehicle(s,vehicleId),t=TYPES[type];if(!t)throw Error('Unknown incident type');if(v.status!=='available')throw Error('Vehicle already unavailable');const i={id:'INC-'+String(s.nextId++).padStart(3,'0'),vehicleId,type,severity:t.severity,sla:t.sla,created:s.minute,status:'queued',providerId:null,assignedAt:null,enRouteAt:null,onSceneAt:null,completedAt:null,cost:0,tireResolution:null,recoveryProviderId:null,recoveryRequestedAt:null,recoveryOnSceneAt:null,redispatchReason:null,escalated:false};s.incidents.unshift(i);v.status='incident';return i;}
 function eligibleProviders(s,incidentId){const i=incident(s,incidentId);return s.providers.filter(p=>p.capabilities.includes(TYPES[i.type].needs)).map(p=>({...p,estimatedMinutes:estimateTravel(vehicle(s,i.vehicleId),p)})).sort((a,b)=>a.estimatedMinutes-b.estimatedMinutes||a.id.localeCompare(b.id));}
 function estimateTravel(v,p){const dy=(v.lat-p.lat)*111,dx=(v.lon-p.lon)*92;return Math.max(6,Math.round(Math.hypot(dx,dy)/.52+5));} // synthetic effective speed ~31 km/h
 function assign(s,incidentId,providerId){const i=incident(s,incidentId),p=provider(s,providerId);if(i.status!=='queued')throw Error('Incident must be queued');if(!p.capabilities.includes(TYPES[i.type].needs))throw Error('Provider not equipped');i.providerId=p.id;i.assignedAt=s.minute;i.status='dispatched';return i;}
@@ -52,12 +52,13 @@ function resolveTire(s,id,outcome){
  if(outcome==='flatbed'&&!p.capabilities.includes('flatbed'))throw Error('Current provider lacks flatbed capability; assign a flatbed-equipped provider before on-scene arrival');
  i.tireResolution=outcome;return i;
 }
-function requestRecovery(s,id,providerId){
+function requestRecovery(s,id,providerId,reason='change_of_service'){
  const i=incident(s,id),p=provider(s,providerId);
  if(i.type!=='flat_tire'||i.status!=='on_scene'||i.tireResolution)throw Error('Recovery handoff requires unresolved on-scene flat tire');
+ if(!['change_of_service','incorrect_equipment'].includes(reason))throw Error('Invalid re-dispatch reason');
  if(!p.capabilities.includes('flatbed'))throw Error('Recovery crew must have flatbed capability');
  if(p.id===i.providerId)throw Error('Select a separate recovery provider');
- i.tireResolution='flatbed';i.recoveryProviderId=p.id;i.recoveryRequestedAt=s.minute;i.status='recovery_dispatched';return i;
+ i.tireResolution='flatbed';i.recoveryProviderId=p.id;i.recoveryRequestedAt=s.minute;i.redispatchReason=reason;i.status='recovery_dispatched';return i;
 }
 function escalate(s,id){const i=incident(s,id);if(i.status==='completed')throw Error('Cannot escalate completed incident');i.escalated=true;return i;}
 function tick(s,minutes=5){if(!Number.isInteger(minutes)||minutes<1||minutes>1440)throw Error('Invalid clock advance');s.minute+=minutes;}
