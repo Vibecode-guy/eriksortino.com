@@ -11,6 +11,13 @@ function render(){
   const c={fleetSize:Number($('planFleet').value),incidentsPer100PerDay:Number($('planRate').value),budget:Number($('planBudget').value)};
   const x=P.compare(c),base=x.baseline,chosen=x.recommendation;
   $('planStatus').textContent=x.assumptions.events+' synthetic incidents across '+x.assumptions.horizonDays+' days; '+c.fleetSize+' modeled AVs; '+c.incidentsPer100PerDay+' incidents per 100 AVs/day. Every option uses the same seeded events.';
+  // The planner and tabletop are separate models: visualize the planning result without moving AV markers.
+  const layer=$('coverageLayer'),decision=$('coverageDecision');
+  if(layer)layer.dataset.focus=chosen.id;
+  if(decision){
+   const improvement=base.p90Response===null||chosen.p90Response===null?null:base.p90Response-chosen.p90Response;
+   decision.textContent='30-day modeled staging: '+chosen.label+' · p90 '+fmt(chosen.p90Response)+' min'+(improvement===null?'':(' · '+(improvement>=0?fmt(improvement)+' min faster':fmt(-improvement)+' min slower')+' than baseline'))+' · SLA met '+fmt(chosen.slaPercent)+'% · incremental cost '+cash(chosen.totalCost-base.totalCost)+'. Map highlight is illustrative, not a measured coverage boundary.';
+  }
   $('planRecommendation').textContent='Modeled recommendation: '+chosen.label+'. p90 '+fmt(chosen.p90Response)+' min ('+delta(chosen.p90Response===null||base.p90Response===null?null:chosen.p90Response-base.p90Response,' min')+' versus baseline); incremental 30-day cost '+cash(chosen.totalCost-base.totalCost)+' against '+cash(c.budget)+' ceiling. Rule: lowest modeled p90 within budget, then mean response and total cost. Not real-world dispatch advice.';
   const body=$('planTable');body.replaceChildren();
   for(const r of x.scenarios){
