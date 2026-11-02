@@ -32,7 +32,7 @@ function render(){
    for(const p of chosen.providerJobs){
     const row=document.createElement('div');row.className='scenario-chart-row';
     const label=document.createElement('span');label.className='scenario-chart-label';
-    label.textContent=names.get(p.id)||(p.id==='P-05'?'Added staging crew':p.id);
+    label.textContent=names.get(p.id)||(p.id==='P-07'?'Added staging crew':p.id);
     const track=document.createElement('div');track.className='scenario-track';
     const fill=document.createElement('div');fill.className='scenario-fill';
     fill.style.width=(p.count/maxLoad*100)+'%';track.append(fill);
