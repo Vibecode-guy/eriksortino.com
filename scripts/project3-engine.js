@@ -36,7 +36,7 @@ const TYPES={
  flatbed:{label:'Flatbed recovery',severity:'Critical',sla:45,needs:'flatbed',minutes:[8,16,35],impact:'Vehicle unavailable'},
  depot:{label:'Depot transport',severity:'Medium',sla:60,needs:'depot',minutes:[6,18,32],impact:'Vehicle unavailable'}
 };
-function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:FLEET.map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[]};}
+function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:FLEET.map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[],providerOffers:[]};}
 
 // Deterministic showcase data, created through the same state transitions as manual dispatch.
 function demoState(){
@@ -60,6 +60,24 @@ function providerBusy(s,id,excludeId){return s.incidents.some(i=>i.id!==excludeI
 function providerBoard(s){return s.providers.map(p=>{const current=s.incidents.find(i=>i.status!=='completed'&&(i.providerId===p.id||i.recoveryProviderId===p.id));return {...p,busy:!!current,incidentId:current?.id||null};});}
 function eligibleProviders(s,incidentId){const i=incident(s,incidentId);return s.providers.filter(p=>!providerBusy(s,p.id,i.id)&&p.capabilities.includes(TYPES[i.type].needs)).map(p=>({...p,estimatedMinutes:estimateTravel(vehicle(s,i.vehicleId),p)})).sort((a,b)=>a.estimatedMinutes-b.estimatedMinutes||a.id.localeCompare(b.id));}
 function estimateTravel(v,p){const dy=(v.lat-p.lat)*111,dx=(v.lon-p.lon)*92;return Math.max(6,Math.round(Math.hypot(dx,dy)/.52+5));} // synthetic effective speed ~31 km/h
+function recordProviderOffer(s,incidentId,providerId,outcome){
+ const i=incident(s,incidentId),p=provider(s,providerId);
+ if(i.status!=='queued')throw Error('Offers require a queued incident');
+ if(!p.capabilities.includes(TYPES[i.type].needs))throw Error('Provider not equipped');
+ if(!['accepted','declined','timed_out'].includes(outcome))throw Error('Invalid offer outcome');
+ if(outcome==='accepted'&&providerBusy(s,p.id,i.id))throw Error('Provider already busy');
+ if(s.providerOffers.some(o=>o.incidentId===i.id&&o.providerId===p.id))throw Error('Provider already offered this incident');
+ const offer={incidentId:i.id,providerId:p.id,outcome,minute:s.minute};s.providerOffers.push(offer);
+ if(outcome==='accepted')assign(s,i.id,p.id);
+ return offer;
+}
+function providerAcceptance(s){
+ return s.providers.map(p=>{
+  const offers=s.providerOffers.filter(o=>o.providerId===p.id);
+  const accepted=offers.filter(o=>o.outcome==='accepted').length,declined=offers.filter(o=>o.outcome==='declined').length,timedOut=offers.filter(o=>o.outcome==='timed_out').length;
+  return {providerId:p.id,name:p.name,offers:offers.length,accepted,declined,timedOut,rate:offers.length?100*accepted/offers.length:null};
+ });
+}
 function assign(s,incidentId,providerId){const i=incident(s,incidentId),p=provider(s,providerId);if(i.status!=='queued')throw Error('Incident must be queued');if(!p.capabilities.includes(TYPES[i.type].needs))throw Error('Provider not equipped');if(providerBusy(s,p.id,i.id))throw Error('Provider already assigned to active incident');i.providerId=p.id;i.assignedAt=s.minute;i.status='dispatched';return i;}
 function advance(s,incidentId){const i=incident(s,incidentId),t=TYPES[i.type];if(i.status==='queued')throw Error('Assign provider first');if(i.status==='completed')throw Error('Incident already completed');if(i.type==='flat_tire'&&i.status==='on_scene'&&!i.tireResolution)throw Error('Choose tire service or flatbed recovery before completing');const next={dispatched:'en_route',en_route:'on_scene',on_scene:'completed',recovery_dispatched:'recovery_en_route',recovery_en_route:'recovery_on_scene',recovery_on_scene:'completed'}[i.status];if(!next)throw Error('Invalid state');const mins=i.status==='recovery_dispatched'?8:i.status==='recovery_en_route'?estimateTravel(vehicle(s,i.vehicleId),provider(s,i.recoveryProviderId)):i.status==='recovery_on_scene'?45:i.status==='dispatched'?t.minutes[0]:i.status==='en_route'?estimateTravel(vehicle(s,i.vehicleId),provider(s,i.providerId)):i.type==='flat_tire'&&i.tireResolution==='flatbed'?45:t.minutes[2];s.minute+=mins;i.status=next;if(next==='en_route')i.enRouteAt=s.minute;if(next==='recovery_on_scene')i.recoveryOnSceneAt=s.minute;if(next==='on_scene')i.onSceneAt=s.minute;if(next==='completed'){i.completedAt=s.minute;i.cost=provider(s,i.providerId).baseCost+(i.recoveryProviderId?provider(s,i.recoveryProviderId).baseCost:0)+(i.type==='flatbed'?125:i.type==='depot'?95:i.type==='flat_tire'&&i.tireResolution==='flatbed'?175:i.type==='flat_tire'?55:0);vehicle(s,i.vehicleId).status='available';}return i;}
 function resolveTire(s,id,outcome){
@@ -222,5 +240,5 @@ function shiftHandoff(s){
    safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};
 }
 
-return {incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+return {recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
