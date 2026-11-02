@@ -36,7 +36,7 @@ const TYPES={
  flatbed:{label:'Flatbed recovery',severity:'Critical',sla:45,needs:'flatbed',minutes:[8,16,35],impact:'Vehicle unavailable'},
  depot:{label:'Depot transport',severity:'Medium',sla:60,needs:'depot',minutes:[6,18,32],impact:'Vehicle unavailable'}
 };
-function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:FLEET.map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[],providerOffers:[],providerCancellations:[],additionalCharges:[],providerSurveys:[]};}
+function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:FLEET.map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[],providerOffers:[],providerCancellations:[],additionalCharges:[],providerSurveys:[],qualityPlans:[]};}
 
 // Deterministic showcase data, created through the same state transitions as manual dispatch.
 function demoState(){
@@ -118,6 +118,30 @@ function providerQuality(s){
 }
 // Illustrative management index, not a production vendor rating. Missing dimensions are excluded.
 // Deterministic historical sample, deliberately isolated from live dispatch KPIs.
+const QUALITY_STATUSES=['open','in_progress','review_due','closed'];
+function openQualityPlan(s,providerId,owner,action){
+ provider(s,providerId);
+ if(!owner||!owner.trim()||!action||!action.trim())throw Error('Owner and corrective action are required');
+ if(s.qualityPlans.some(p=>p.providerId===providerId&&p.status!=='closed'))throw Error('Provider already has an active quality plan');
+ const history=providerHistory(s).find(p=>p.providerId===providerId);
+ const plan={id:'QP-'+String(s.qualityPlans.length+1).padStart(3,'0'),providerId,owner:owner.trim().slice(0,100),
+  action:action.trim().slice(0,500),status:'open',baselineScore:history.periods[1].score,
+  reviewAfterDays:30,reviewDay:null,followUpScore:null,notes:[],createdAt:'Synthetic period end'};
+ s.qualityPlans.push(plan);return plan;
+}
+function updateQualityPlan(s,id,status,note,followUpScore=null){
+ const plan=s.qualityPlans.find(p=>p.id===id);if(!plan)throw Error('Unknown quality plan');
+ if(!QUALITY_STATUSES.includes(status))throw Error('Invalid quality plan status');
+ if(plan.status==='closed')throw Error('Closed quality plan cannot be changed');
+ if(!note||!note.trim())throw Error('A progress note is required');
+ if(status==='closed'&&(!Number.isFinite(followUpScore)||followUpScore<0||followUpScore>100))throw Error('Closing requires a follow-up index from 0 to 100');
+ plan.notes.push({status,text:note.trim().slice(0,500),at:'Simulation'});
+ plan.status=status;
+ if(status==='review_due')plan.reviewDay=30;
+ if(status==='closed')plan.followUpScore=followUpScore;
+ return plan;
+}
+function providerQualityPlans(s){return s.qualityPlans.map(p=>({...p,notes:p.notes.map(n=>({...n})),improvement:p.followUpScore===null?null:p.followUpScore-p.baselineScore}));}
 function providerHistory(s){
  const periods=['Prior 30 days','Recent 30 days'];
  return s.providers.map((p,index)=>{
@@ -336,5 +360,5 @@ function shiftHandoff(s){
    safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};
 }
 
-return {providerHistory,providerScorecard,recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+return {openQualityPlan,updateQualityPlan,providerQualityPlans,providerHistory,providerScorecard,recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
