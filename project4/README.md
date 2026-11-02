@@ -29,3 +29,19 @@ This generates `project4/output/metrics.json` locally (not committed). Do not la
 - Operational implications and reproducibility notes
 
 Project 1–3 remain unchanged. This is an isolated project scaffold on a feature branch.
+
+## Verified execution
+The January 2025 GitHub Actions validation run succeeded with **3,475,226 records**. Subsequent workflow runs also passed after weekday and trip-duration queries were added. See [SQL validation runs](https://github.com/Vibecode-guy/eriksortino.com/actions/workflows/project4-sql.yml).
+
+## Publishing the dashboard
+The analysis workflow stores the generated `metrics.json` as a GitHub Actions artifact. The separate manual [Publish Verified Metrics](https://github.com/Vibecode-guy/eriksortino.com/actions/workflows/project4-publish.yml) workflow writes `project4/data/metrics.json` to this feature branch. The static dashboard at `project4/index.html` reads that JSON. Publishing the metrics is distinct from deploying the website; do not claim the page is live until the site deployment is verified.
+
+## Analyst skills demonstrated
+- SQL aggregation and grouping for hourly, weekday and zone demand
+- CTEs and percentile statistics for trip-duration distributions
+- Conditional aggregation for transparent data-quality auditing
+- Python and DuckDB reproducible ETL with CI validation
+- Business interpretation and explicit limitations of observational data
+
+## Scope and integrity
+Observed pickup counts are not a direct measure of unmet demand or fleet availability. Duration is derived from recorded trip timestamps and does not represent dispatch response time. Avoid committing large raw Parquet datasets.
