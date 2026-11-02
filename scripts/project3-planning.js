@@ -4,7 +4,7 @@
 if(!E)throw Error('AV engine required');
 const DAYS=30, FIXED_SITE_COST=3200, KM_RATE=.65;
 const SITES=[
- {id:'baseline',label:'Existing four fictional providers',lat:null,lon:null},
+ {id:'baseline',label:'Existing six fictional providers',lat:null,lon:null},
  {id:'west',label:'Add LAX / Westside staging',lat:33.959,lon:-118.402},
  {id:'valley',label:'Add San Fernando Valley staging',lat:34.1867,lon:-118.449},
  {id:'harbor',label:'Add San Pedro / Harbor staging',lat:33.739,lon:-118.289}
@@ -40,7 +40,7 @@ function simulate(config,siteId,events){
  const c=validate(config),site=SITES.find(x=>x.id===siteId);if(!site)throw Error('Unknown staging site');
  const fleet=E.initialState(),vehicles=new Map(fleet.vehicles.map(v=>[v.id,v]));
  const providers=fleet.providers.map(p=>({...p}));
- if(site.id!=='baseline')providers.push({id:'P-05',name:'Additional staged crew ('+site.label+')',lat:site.lat,lon:site.lon,capabilities:TYPE_ORDER.slice(),baseCost:205});
+ if(site.id!=='baseline')providers.push({id:'P-07',name:'Additional staged crew ('+site.label+')',lat:site.lat,lon:site.lon,capabilities:TYPE_ORDER.slice(),baseCost:205});
  const ready=new Map(providers.map(p=>[p.id,0])),jobs=new Map(providers.map(p=>[p.id,0]));
  const responses=[],waits=[],examples=[];let met=0,variableCost=0,queuedEvents=0,over30Queue=0;
  for(const event of events){
@@ -64,7 +64,7 @@ function compare(config){
  const eligible=scenarios.filter(s=>s.totalCost-baseline.totalCost<=c.budget);
  eligible.sort((a,b)=>(a.p90Response??Infinity)-(b.p90Response??Infinity)||(a.meanResponse??Infinity)-(b.meanResponse??Infinity)||a.totalCost-b.totalCost||a.id.localeCompare(b.id));
  const recommendation=eligible[0]||baseline;
- return {config:c,baseline,recommendation,scenarios,assumptions:{horizonDays:c.days,events:events.length,siteFixedCost:FIXED_SITE_COST,perKmCost:KM_RATE,providerCrewCapacity:'One concurrent response per fictional provider; additional site adds one crew',eventGeneration:'Seeded synthetic incidents across 12 LA vehicle-area proxies; fleet size scales event volume, not map markers',dispatchRule:'Earliest modeled on-scene arrival among capability-compatible crews, then lowest variable cost, then provider ID',recommendationRule:'Among staging options with incremental total cost at most the selected budget, choose lowest p90 response; tie by mean response, total cost, then site ID'},notes:['All locations, event frequencies, cost rates, SLA thresholds and travel estimates are invented, not calibrated to a real operator.','Same seeded incidents are used across all four staging options within a comparison.','One fictional crew per provider; queue time includes any crew busy with prior incidents.','This is a 30-day incident-response workload model, not passenger-trip utilization or a live fleet feed.','Straight-line travel and constant effective speed omit real traffic, routing, availability and safety requirements.']};
+ return {config:c,baseline,recommendation,scenarios,assumptions:{horizonDays:c.days,events:events.length,siteFixedCost:FIXED_SITE_COST,perKmCost:KM_RATE,providerCrewCapacity:'Six baseline fictional crews, one concurrent response each; optional staging adds a seventh crew',eventGeneration:'Seeded synthetic incidents sampled from 100 LA vehicle-area proxies; planner fleet size scales event volume independently of the 100-vehicle interactive map',dispatchRule:'Earliest modeled on-scene arrival among capability-compatible crews, then lowest variable cost, then provider ID',recommendationRule:'Among staging options with incremental total cost at most the selected budget, choose lowest p90 response; tie by mean response, total cost, then site ID'},notes:['All locations, event frequencies, cost rates, SLA thresholds and travel estimates are invented, not calibrated to a real operator.','Same seeded incidents are used across all four staging options within a comparison.','One fictional crew per provider; queue time includes any crew busy with prior incidents.','This is a 30-day incident-response workload model, not passenger-trip utilization or a live fleet feed.','Straight-line travel and constant effective speed omit real traffic, routing, availability and safety requirements.']};
 }
 return {DAYS,SITES,validate,eventsFor,simulate,compare,mean,percentile};
 });
