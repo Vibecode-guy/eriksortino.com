@@ -37,6 +37,18 @@
 - [ ] Publish executive summary and methodology.
 - [ ] Verify production deployment and key workflow.
 
+## Phase 6 — Scale the simulation (next active milestone)
+- [ ] Inspect existing state initialization and test fixtures before changing fleet size.
+- [ ] Introduce a fixed-seed generator for 100 fictional vehicles across Central LA, Westside/Venice, Valley, South LA/LAX, and Harbor/San Pedro; record seed and assumptions.
+- [ ] Expand from four to six fictional recovery teams, with documented equipment/capabilities and one-active-assignment-per-team capacity.
+- [ ] Add filters/clustering or a visible subset strategy so 100 vehicle markers remain readable and keyboard accessible.
+- [ ] Ensure vehicle selectors, incident creation, provider eligibility, response metrics, reset, and the separate 30-day scenario planner remain consistent.
+- [ ] Add regression tests for 100 unique vehicle IDs, deterministic reset, six unique providers, incompatible assignment, capacity, and unchanged KPI formulas.
+- [ ] Document how 100 live-style simulated vehicles differ from the existing planning fleet-size slider; neither represents real operator telemetry.
+- [ ] Verify GitHub Actions and deployment; do not mark complete based only on source changes.
+
+**Exit criteria:** A fixed seed reliably creates 100 selectable vehicles and six recovery teams; a user can dispatch and complete an incident; KPIs update; existing tests pass; and the page remains usable on mobile.
+
 ## Phase 4 planning methodology (explicitly fictional)
 
 - **30-day demand:** Round(fleet size × synthetic incidents per 100 AVs/day × 30 / 100). A seeded generator distributes incidents across the existing 12 synthetic LA area proxies and the four incident categories (30% door ajar, 35% immobilized, 20% flatbed, 15% depot transport). These percentages are invented for demonstration.
