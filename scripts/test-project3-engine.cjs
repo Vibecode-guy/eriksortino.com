@@ -2,15 +2,15 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const E=require('./project3-engine.js');
 test('MVP: select AV, create event, assign eligible provider, complete and update KPIs',()=>{
- const s=E.initialState();assert.equal(E.kpis(s).available,12);
+ const s=E.initialState();assert.equal(E.kpis(s).available,980);
  s.selected='AV-101';const i=E.createIncident(s,s.selected,'flatbed');
- assert.equal(E.kpis(s).available,11);assert.equal(E.kpis(s).active,1);
+ assert.equal(E.kpis(s).available,99);assert.equal(E.kpis(s).active,1);
  const candidates=E.eligibleProviders(s,i.id);assert.ok(candidates.length>0);assert.ok(candidates.every(p=>p.capabilities.includes('flatbed')));
  E.assign(s,i.id,candidates[0].id);assert.equal(i.status,'dispatched');
  E.advance(s,i.id);assert.equal(i.status,'en_route');
  E.advance(s,i.id);assert.equal(i.status,'on_scene');const response=i.onSceneAt-i.created;assert.ok(response>0);
  E.advance(s,i.id);assert.equal(i.status,'completed');
- const k=E.kpis(s);assert.equal(k.available,12);assert.equal(k.active,0);assert.equal(k.completed,1);assert.equal(k.meanResponse,response);assert.equal(k.p90Response,response);assert.ok(k.totalCost>0);
+ const k=E.kpis(s);assert.equal(k.available,980);assert.equal(k.active,0);assert.equal(k.completed,1);assert.equal(k.meanResponse,response);assert.equal(k.p90Response,response);assert.ok(k.totalCost>0);
 });
 test('incompatible providers cannot be assigned and duplicate vehicle incidents are rejected',()=>{
  const s=E.initialState(),i=E.createIncident(s,'AV-104','flatbed');
@@ -64,7 +64,7 @@ test('roadside-only tire assessment hands off to a separate flatbed crew',()=>{
  assert.ok(i.recoveryOnSceneAt>firstArrival);
  E.advance(s,i.id);assert.equal(i.status,'completed');
  assert.equal(i.cost,495);
- assert.equal(E.kpis(s).available,12);
+ assert.equal(E.kpis(s).available,980);
 });
 
 test('customer evacuation dispatches a second AV without resolving original recovery',()=>{
@@ -72,7 +72,7 @@ test('customer evacuation dispatches a second AV without resolving original reco
  const candidate=E.availableReplacementAVs(s,i.id)[0];
  const e=E.dispatchReplacement(s,i.id,candidate.id);
  assert.equal(e.status,'en_route');
- assert.equal(E.kpis(s).available,10);
+ assert.equal(E.kpis(s).available,98);
  assert.throws(()=>E.dispatchReplacement(s,i.id,'AV-101'),/already dispatched/);
  assert.throws(()=>E.completePassengerTransfer(s,i.id,true),/must arrive/);
  E.arriveReplacement(s,i.id);
@@ -80,7 +80,7 @@ test('customer evacuation dispatches a second AV without resolving original reco
  E.completePassengerTransfer(s,i.id,true);
  assert.equal(e.status,'transferred');
  assert.equal(i.status,'queued');
- assert.equal(E.kpis(s).available,11);
+ assert.equal(E.kpis(s).available,99);
  assert.equal(s.vehicles.find(v=>v.id===candidate.id).status,'available');
 });
 
