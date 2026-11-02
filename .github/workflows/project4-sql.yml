@@ -27,6 +27,8 @@ jobs:
           assert d['quality_audit']['total_rows']>100000
           assert len(d['hourly_demand'])==24
           assert len(d['top_pickup_zones'])>0
+          assert len(d['borough_demand'])>0
+          assert len(d['named_pickup_zones'])>0
           assert sum(x['trip_count'] for x in d['hourly_demand']) <= d['quality_audit']['total_rows']
           print('Validated',d['quality_audit']['total_rows'],'rows')
           PY
