@@ -43,7 +43,7 @@
 - [ ] Expand from four to six fictional recovery teams, with documented equipment/capabilities and one-active-assignment-per-team capacity.
 - [ ] Add filters/clustering or a visible subset strategy so 100 vehicle markers remain readable and keyboard accessible.
 - [ ] Ensure vehicle selectors, incident creation, provider eligibility, response metrics, reset, and the separate 30-day scenario planner remain consistent.
-- [ ] Add regression tests for 100 unique vehicle IDs, deterministic reset, six unique providers, incompatible assignment, capacity, and unchanged KPI formulas.
+- [ ] Add/verify regression tests for 100 unique vehicle IDs, deterministic reset, six unique providers, incompatible assignment, capacity, and unchanged KPI formulas (capacity test added, execution unverified).
 - [ ] Document how 100 live-style simulated vehicles differ from the existing planning fleet-size slider; neither represents real operator telemetry.
 - [ ] Verify GitHub Actions and deployment; do not mark complete based only on source changes.
 
@@ -66,3 +66,5 @@
 - 2026-11-02: Phase 5 executive briefing and guided 60-second walkthrough added to `project3-av-command-center.html` at commit `a4ef186bb57fcf57cb221efab24a5dc0a5b2ac82`. Source change committed to `main`; production deployment, visual/mobile QA and automated browser testing remain unverified. Project 1 files were not modified in this commit.
 
 - 2026-11-02: Fleet engine expanded to 100 deterministic synthetic AVs and six providers (commits `c3751908`, `aa212fc7`). Added map search/status filters and fixed an uninitialized variable in customer-safety rendering (commit `1016de5b`). Existing planning model still has four-provider baseline assumptions; end-to-end browser QA and CI not yet verified. Next: six-team capacity enforcement, planner reconciliation, vehicle health, shift handoff, and real geographic basemap.
+
+- 2026-11-02: Added `providerBoard` and active-assignment capacity checks in `scripts/project3-engine.js` (commit `68cc63c2`); added six-team resource table and disabled empty eligible-provider selection in `project3-av-command-center.html` (commit `2f1198e4`); added a double-booking regression test (commit `a13cbb6`). Corrected earlier malformed 100-vehicle assertions (commit `827ec2b4`). CI and live deployment have not been verified. Planning scenarios still require reconciliation with six-team dispatch baseline.
