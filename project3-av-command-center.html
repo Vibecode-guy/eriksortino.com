@@ -99,7 +99,7 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 <div class="legend"><span><b>●</b> Available</span><span><b class="offline">●</b> Incident / recovery</span><span>Map is approximate; positions are synthetic</span></div><div class="hub-legend" aria-label="Proposed response coverage legend"><span>◆ Teal · Central LA → West LA / Venice</span><span>◆ Gold · Valley</span><span>◆ Blue · South LA → LAX / San Pedro</span></div><p class="analytics-note">Dashed outlines and corridors are hypothetical service-planning illustrations, not measured travel-time catchments or routing recommendations. Planner selections highlight an illustrative corridor; they do not change the 12 tabletop vehicle markers.</p>
 <div id="coverageDecision" class="coverage-decision" role="status" aria-live="polite">Planning overlay: calculating modeled staging recommendation…</div>
 <div class="panelhead" style="margin-top:18px"><h2>Vehicle controls</h2><span class="clock" id="selectedLabel">AV-101</span></div>
-<div class="controls"><div><label for="vehicleSelect">Select vehicle</label><select id="vehicleSelect"></select></div><div><label for="incidentType">Incident type</label><select id="incidentType"><option value="immobilized">Immobilized AV</option><option value="door_ajar">Door ajar</option><option value="flatbed">Flatbed recovery</option><option value="depot">Depot transport</option></select></div></div>
+<div class="controls"><div><label for="vehicleSelect">Select vehicle</label><select id="vehicleSelect"></select></div><div><label for="incidentType">Incident type</label><select id="incidentType"><option value="immobilized">Immobilized AV</option><option value="door_ajar">Door ajar</option><option value="flat_tire">Flat tire · roadside assessment</option><option value="flatbed">Flatbed recovery</option><option value="depot">Depot transport</option></select></div></div>
 <div class="rowbuttons"><button id="createIncident" class="primary">Generate incident</button><button id="tickClock">Advance clock +5 min</button><button id="resetSim">Restore demo</button></div>
 <p id="vehicleDetails" aria-live="polite"></p></section>
 <section class="panel" aria-labelledby="queueHeading"><div class="panelhead"><h2 id="queueHeading">Incident queue</h2><span class="clock" id="queueCount">0 incidents</span></div><div class="queue" id="queue" aria-label="Simulated incident queue"><div class="empty">No incidents yet. Generate one from the fleet controls.</div></div>
@@ -124,7 +124,7 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 </div>
 <div class="stress-presets" role="group" aria-label="Demand stress test presets"><button type="button" data-stress="normal">Normal operations</button><button type="button" data-stress="surge">Demand surge</button><button type="button" data-stress="extreme">Network stress</button></div>
 <div class="rowbuttons"><button id="planReset" type="button">Restore planning defaults</button></div>
-<div id="stressSummary" class="stress-summary" role="status" aria-live="polite">Calculating crew workload and incident queue pressure…</div>
+<h3>Provider assignment workload</h3><p class="analytics-note">Share of modeled assignments for each fictional crew under the recommended staging scenario.</p><div id="providerLoadChart" class="scenario-chart" role="img" aria-label="Modeled provider assignment counts"></div><div id="stressSummary" class="stress-summary" role="status" aria-live="polite">Calculating crew workload and incident queue pressure…</div>
 <div class="planning-output" aria-live="polite"><p id="planStatus" class="analytics-note">Loading synthetic planning comparison…</p><p id="planRecommendation" class="planning-summary">No recommendation calculated yet.</p></div>
 <div class="scenario-visual" aria-labelledby="scenarioVisualHeading">
 <h3 id="scenarioVisualHeading">Response-time comparison · 30-day modeled p90</h3>
@@ -152,10 +152,10 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 <div class="notice"><strong>Methodology &amp; limitations.</strong> Synthetic deterministic workflow, not a dispatch recommendation for real vehicles. Simulated travel uses straight-line distance and a fixed effective speed; no traffic, permits, service contracts, real SLAs, real rates, safety clearance, or operational telemetry. The clock advances only when you press controls. Response time is incident creation to on-scene; p90 uses nearest-rank among completed incidents with an on-scene timestamp. Averages and p90 display “—” before any completed incidents. No actual company or partner data.</div>
 <p id="announcer" role="status" aria-live="polite" class="sr-only"></p></main>
 <footer class="foot"><a href="index.html">← Portfolio home</a><a href="PROJECT3_ROADMAP.md">Development roadmap</a><span>Project 3 · illustrative simulation only · © 2026 Erik Sortino</span></footer></div>
-<script src="scripts/project3-engine.js?v=20261102-demo2"></script>
+<script src="scripts/project3-engine.js?v=20261102-tire2"></script>
 <script src="scripts/project3-analytics.js?v=20261102-demo2"></script>
-<script src="scripts/project3-planning.js?v=20261102-stress1"></script>
-<script src="scripts/project3-planning-ui.js?v=20261102-stress1"></script>
+<script src="scripts/project3-planning.js?v=20261102-tire2"></script>
+<script src="scripts/project3-planning-ui.js?v=20261102-tire2"></script>
 <script>
 (function(){'use strict';
 const E=window.AVCommand;if(!E){document.getElementById('announcer').textContent='Simulator failed to load.';return;}
