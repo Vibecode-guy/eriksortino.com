@@ -46,6 +46,24 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 #coverageLayer[data-focus="west"] .corridor,#coverageLayer[data-focus="valley"] .corridor,#coverageLayer[data-focus="harbor"] .corridor{opacity:.18}
 #coverageLayer[data-focus="west"] .central-coverage,#coverageLayer[data-focus="valley"] .valley-coverage,#coverageLayer[data-focus="harbor"] .south-coverage{opacity:.95;stroke-width:5}
 #coverageLayer[data-focus="west"] .west-corridor,#coverageLayer[data-focus="harbor"] .harbor-corridor{opacity:1;stroke-width:6}
+
+.scenario-visual{margin:16px 0 20px;padding:16px;border:1px solid #335466;border-radius:12px;background:#0c2130}
+.scenario-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0 18px}
+.scenario-card{border:1px solid #35556a;background:#112a3b;border-radius:10px;padding:12px;min-width:0}
+.scenario-card.recommended{border-color:var(--cyan);box-shadow:inset 0 3px var(--cyan)}
+.scenario-card h4{font-size:12px;margin:0 0 8px;line-height:1.3;color:#d5eaf3}
+.scenario-card strong{display:block;font-size:24px;line-height:1.1}
+.scenario-card small{display:block;color:var(--muted);margin-top:5px;font-size:11px}
+.scenario-card .scenario-status{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--cyan)}
+.scenario-chart{display:grid;gap:11px}
+.scenario-chart-row{display:grid;grid-template-columns:minmax(115px,190px) 1fr auto;gap:10px;align-items:center;font-size:12px}
+.scenario-chart-label{color:#d2e8f1}
+.scenario-track{height:15px;border-radius:999px;background:#193447;overflow:hidden}
+.scenario-fill{height:100%;background:#668fa8;border-radius:999px;min-width:2px}
+.scenario-fill.recommended{background:var(--cyan)}
+.scenario-chart-value{font-variant-numeric:tabular-nums;color:#e9f7ff;min-width:60px;text-align:right}
+@media(max-width:900px){.scenario-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:570px){.scenario-visual{padding:11px}.scenario-card{padding:10px}.scenario-card strong{font-size:20px}.scenario-chart-row{grid-template-columns:90px 1fr 56px;gap:6px;font-size:10px}.scenario-chart-value{min-width:0}}
 </style></head><body><div class="shell">
 <header><a class="brand" href="index.html">ES <span>/ OPERATIONS LAB</span></a><span class="tag">Populated demo · synthetic data only</span></header>
 <main><div class="hero"><div class="hero-copy"><div class="context-line">Operations lab / Los Angeles / Dispatch simulation</div><h1>AV Fleet <span style="color:var(--cyan)">Command Center</span></h1><p class="intro">Explore a populated fictional LA fleet: active incidents, completed recoveries, response performance, and coverage decisions. Synthetic scenario: all vehicles, incidents, partners, times, and costs are illustrative.</p></div><nav class="hero-actions" aria-label="Dashboard shortcuts"><a href="#fleetHeading">Launch dispatch ↓</a><a href="#planning">Scenario planner ↓</a></nav></div>
@@ -99,6 +117,12 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 </div>
 <div class="rowbuttons"><button id="planReset" type="button">Restore planning defaults</button></div>
 <div class="planning-output" aria-live="polite"><p id="planStatus" class="analytics-note">Loading synthetic planning comparison…</p><p id="planRecommendation" class="planning-summary">No recommendation calculated yet.</p></div>
+<div class="scenario-visual" aria-labelledby="scenarioVisualHeading">
+<h3 id="scenarioVisualHeading">Response-time comparison · 30-day modeled p90</h3>
+<p class="analytics-note">Shorter bars indicate faster modeled p90 on-scene response. The recommended option must also satisfy the selected incremental-cost ceiling.</p>
+<div id="scenarioCards" class="scenario-cards" aria-label="Scenario comparison cards"></div>
+<div id="scenarioChart" class="scenario-chart" role="img" aria-label="Modeled p90 response time for each staging option"></div>
+</div>
 <div class="analytics-table-wrap"><table class="analytics-table"><caption>30-day comparison: identical seeded incident demand; response includes modeled crew queue and travel. Changes are relative to the four-provider baseline.</caption><thead><tr><th scope="col">Staging option</th><th scope="col">Mean response</th><th scope="col">p90 response</th><th scope="col">p90 change</th><th scope="col">SLA met</th><th scope="col">Mean crew queue</th><th scope="col">Total cost</th><th scope="col">Cost change</th></tr></thead><tbody id="planTable"></tbody></table></div>
 <h3 style="margin-top:20px">Explainable dispatch examples · recommended option</h3><ul id="planExamples" class="planning-method"><li>Waiting for planning model.</li></ul>
 <p id="planMethod" class="planning-method">Planning assumptions will appear here.</p>
