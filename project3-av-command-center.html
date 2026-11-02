@@ -160,7 +160,7 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 window.addEventListener('error',function(e){var n=document.getElementById('startupHealth');if(n){n.textContent='Simulator startup error: '+(e.message||'script load failed')+' · '+(e.filename||'unknown file');n.style.borderColor='#f59a9a';}});
 window.addEventListener('load',function(){setTimeout(function(){var n=document.getElementById('startupHealth');if(n&&n.textContent.includes('initializing')){n.textContent='Simulator did not initialize. Check network script loading or JavaScript errors.';n.style.borderColor='#f59a9a';}},1200);});
 </script>
-<script src="scripts/project3-engine.js?v=20261102-healthhandoff"></script>
+<script src="scripts/project3-engine.js?v=20261102-startupfix"></script>
 <script src="scripts/project3-analytics.js?v=20261102-boot2"></script>
 <script src="scripts/project3-planning.js?v=20261102-sixbase"></script>
 <script src="scripts/project3-planning-ui.js?v=20261102-sixbase"></script>
@@ -228,7 +228,7 @@ function renderSafetyTimeline(i){
 function renderEvacuation(i){
  const select=$('replacementAV');select.replaceChildren();
  const active=!!i&&i.status!=='completed',e=i?.evacuation;
- $('flagDanger').disabled=!active||!!i.customerSafety.danger;$('emergencyEscalation').disabled=!active||!i.customerSafety.danger||i.customerSafety.emergencyEscalatedAt!==null;
+ $('flagDanger').disabled=!active||!!i?.customerSafety?.danger;$('emergencyEscalation').disabled=!active||!i?.customerSafety?.danger||i.customerSafety.emergencyEscalatedAt!==null;
  for(const v of active&&!e?E.availableReplacementAVs(state,i.id):[]){const o=document.createElement('option');o.value=v.id;o.textContent=v.id+' · '+v.area+' · ETA '+v.estimatedMinutes+' min';select.append(o);}
  select.disabled=!active||!!e||!select.options.length;
  $('dispatchReplacement').disabled=select.disabled;
