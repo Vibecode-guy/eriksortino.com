@@ -64,6 +64,13 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 .scenario-chart-value{font-variant-numeric:tabular-nums;color:#e9f7ff;min-width:60px;text-align:right}
 @media(max-width:900px){.scenario-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:570px){.scenario-visual{padding:11px}.scenario-card{padding:10px}.scenario-card strong{font-size:20px}.scenario-chart-row{grid-template-columns:90px 1fr 56px;gap:6px;font-size:10px}.scenario-chart-value{min-width:0}}
+
+.stress-presets{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.stress-presets button{border:1px solid #416579;background:#102d3d;color:#d9eef4;border-radius:8px;padding:10px 13px;cursor:pointer;font-size:12px;font-weight:700}
+.stress-presets button[aria-pressed="true"]{background:#42d4c8;color:#09232b;border-color:#42d4c8}
+.stress-summary{background:#0b2636;border:1px solid #36596c;border-radius:10px;padding:13px 15px;color:#d5e9f1;font-size:12px;line-height:1.6;margin:12px 0}
+.stress-summary strong{color:#55ddd1}
+@media(max-width:570px){.stress-presets button{flex:1;padding:9px 6px;font-size:11px}}
 </style></head><body><div class="shell">
 <header><a class="brand" href="index.html">ES <span>/ OPERATIONS LAB</span></a><span class="tag">Populated demo · synthetic data only</span></header>
 <main><div class="hero"><div class="hero-copy"><div class="context-line">Operations lab / Los Angeles / Dispatch simulation</div><h1>AV Fleet <span style="color:var(--cyan)">Command Center</span></h1><p class="intro">Explore a populated fictional LA fleet: active incidents, completed recoveries, response performance, and coverage decisions. Synthetic scenario: all vehicles, incidents, partners, times, and costs are illustrative.</p></div><nav class="hero-actions" aria-label="Dashboard shortcuts"><a href="#fleetHeading">Launch dispatch ↓</a><a href="#planning">Scenario planner ↓</a></nav></div>
@@ -115,7 +122,9 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 <div><label for="planRate">Incidents per 100 AVs per day</label><select id="planRate"><option value="2">2 (low)</option><option value="5" selected>5 (moderate)</option><option value="10">10 (high)</option><option value="20">20 (stress)</option><option value="30">30 (extreme)</option></select></div>
 <div><label for="planBudget">Maximum incremental 30-day cost</label><select id="planBudget"><option value="0">$0</option><option value="2000">$2,000</option><option value="5000" selected>$5,000</option><option value="10000">$10,000</option><option value="25000">$25,000</option></select></div>
 </div>
+<div class="stress-presets" role="group" aria-label="Demand stress test presets"><button type="button" data-stress="normal">Normal operations</button><button type="button" data-stress="surge">Demand surge</button><button type="button" data-stress="extreme">Network stress</button></div>
 <div class="rowbuttons"><button id="planReset" type="button">Restore planning defaults</button></div>
+<div id="stressSummary" class="stress-summary" role="status" aria-live="polite">Calculating crew workload and incident queue pressure…</div>
 <div class="planning-output" aria-live="polite"><p id="planStatus" class="analytics-note">Loading synthetic planning comparison…</p><p id="planRecommendation" class="planning-summary">No recommendation calculated yet.</p></div>
 <div class="scenario-visual" aria-labelledby="scenarioVisualHeading">
 <h3 id="scenarioVisualHeading">Response-time comparison · 30-day modeled p90</h3>
@@ -145,8 +154,8 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 <footer class="foot"><a href="index.html">← Portfolio home</a><a href="PROJECT3_ROADMAP.md">Development roadmap</a><span>Project 3 · illustrative simulation only · © 2026 Erik Sortino</span></footer></div>
 <script src="scripts/project3-engine.js?v=20261102-demo2"></script>
 <script src="scripts/project3-analytics.js?v=20261102-demo2"></script>
-<script src="scripts/project3-planning.js?v=20261102-demo2"></script>
-<script src="scripts/project3-planning-ui.js?v=20261102-chart1"></script>
+<script src="scripts/project3-planning.js?v=20261102-stress1"></script>
+<script src="scripts/project3-planning-ui.js?v=20261102-stress1"></script>
 <script>
 (function(){'use strict';
 const E=window.AVCommand;if(!E){document.getElementById('announcer').textContent='Simulator failed to load.';return;}
