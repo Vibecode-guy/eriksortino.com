@@ -20,6 +20,21 @@ const TYPES={
  depot:{label:'Depot transport',severity:'Medium',sla:60,needs:'depot',minutes:[6,18,32],impact:'Vehicle unavailable'}
 };
 function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:VEHICLES.map(([id,area,lat,lon])=>({id,area,lat,lon,status:'available'})),providers:PROVIDERS.map(p=>({...p})),incidents:[]};}
+
+// Deterministic showcase data, created through the same state transitions as manual dispatch.
+function demoState(){
+ const s=initialState();
+ const complete=(id,type)=>{const i=createIncident(s,id,type);const options=eligibleProviders(s,i.id);assign(s,i.id,options[0].id);advance(s,i.id);advance(s,i.id);advance(s,i.id);return i;};
+ complete('AV-102','door_ajar');
+ complete('AV-107','flatbed');
+ complete('AV-112','depot');
+ const active=createIncident(s,'AV-105','immobilized');
+ assign(s,active.id,eligibleProviders(s,active.id)[0].id);
+ advance(s,active.id);
+ const queued=createIncident(s,'AV-110','flatbed');
+ s.selected='AV-101';
+ return s;
+}
 function vehicle(s,id){const v=s.vehicles.find(x=>x.id===id);if(!v)throw Error('Unknown vehicle');return v;}
 function incident(s,id){const i=s.incidents.find(x=>x.id===id);if(!i)throw Error('Unknown incident');return i;}
 function provider(s,id){const p=s.providers.find(x=>x.id===id);if(!p)throw Error('Unknown provider');return p;}
@@ -32,5 +47,5 @@ function escalate(s,id){const i=incident(s,id);if(i.status==='completed')throw E
 function tick(s,minutes=5){if(!Number.isInteger(minutes)||minutes<1||minutes>1440)throw Error('Invalid clock advance');s.minute+=minutes;}
 function kpis(s){const total=s.vehicles.length,available=s.vehicles.filter(v=>v.status==='available').length,completed=s.incidents.filter(i=>i.completedAt!==null);const times=completed.map(i=>i.onSceneAt-i.created).sort((a,b)=>a-b);const mean=times.length?times.reduce((a,b)=>a+b,0)/times.length:null;const p90=times.length?times[Math.ceil(times.length*.9)-1]:null;const cost=completed.reduce((a,i)=>a+i.cost,0);return {total,available,availabilityPercent:total?100*available/total:0,active:s.incidents.filter(i=>i.status!=='completed').length,completed:completed.length,meanResponse:mean,p90Response:p90,totalCost:cost,breached:s.incidents.filter(i=>i.status!=='completed'&&s.minute-i.created>i.sla).length};}
 function elapsed(s,i){return (i.completedAt===null?s.minute:i.completedAt)-i.created;}
-return {TYPES,initialState,createIncident,eligibleProviders,assign,advance,escalate,tick,kpis,elapsed,estimateTravel};
+return {TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,escalate,tick,kpis,elapsed,estimateTravel};
 });
