@@ -19,6 +19,31 @@ function render(){
    decision.textContent='30-day modeled staging: '+chosen.label+' · p90 '+fmt(chosen.p90Response)+' min'+(improvement===null?'':(' · '+(improvement>=0?fmt(improvement)+' min faster':fmt(-improvement)+' min slower')+' than baseline'))+' · SLA met '+fmt(chosen.slaPercent)+'% · incremental cost '+cash(chosen.totalCost-base.totalCost)+'. Map highlight is illustrative, not a measured coverage boundary.';
   }
   $('planRecommendation').textContent='Modeled recommendation: '+chosen.label+'. p90 '+fmt(chosen.p90Response)+' min ('+delta(chosen.p90Response===null||base.p90Response===null?null:chosen.p90Response-base.p90Response,' min')+' versus baseline); incremental 30-day cost '+cash(chosen.totalCost-base.totalCost)+' against '+cash(c.budget)+' ceiling. Rule: lowest modeled p90 within budget, then mean response and total cost. Not real-world dispatch advice.';
+  const cards=$('scenarioCards'),chart=$('scenarioChart');
+  if(cards&&chart){
+   cards.replaceChildren();chart.replaceChildren();
+   const maxP90=Math.max(1,...x.scenarios.map(r=>r.p90Response??0));
+   const chartLabels=[];
+   for(const r of x.scenarios){
+    const recommended=r.id===chosen.id,increment=r.totalCost-base.totalCost,within=increment<=c.budget;
+    const card=document.createElement('article');card.className='scenario-card'+(recommended?' recommended':'');
+    const heading=document.createElement('h4');heading.textContent=r.label;
+    const value=document.createElement('strong');value.textContent=fmt(r.p90Response)+' min';
+    const status=document.createElement('div');status.className='scenario-status';status.textContent=recommended?'Recommended':within?'Within budget':'Over budget';
+    const sla=document.createElement('small');sla.textContent='SLA met '+fmt(r.slaPercent)+'% · queue '+fmt(r.meanQueue)+' min';
+    const cost=document.createElement('small');cost.textContent='Incremental cost '+cash(increment);
+    card.append(heading,value,status,sla,cost);cards.append(card);
+    const row=document.createElement('div');row.className='scenario-chart-row';
+    const label=document.createElement('span');label.className='scenario-chart-label';label.textContent=r.id==='baseline'?'Existing crews':r.id==='west'?'LAX / Westside':r.id==='valley'?'Valley':'San Pedro';
+    const track=document.createElement('div');track.className='scenario-track';
+    const bar=document.createElement('div');bar.className='scenario-fill'+(recommended?' recommended':'');bar.style.width=((r.p90Response??0)/maxP90*100)+'%';
+    track.append(bar);
+    const number=document.createElement('span');number.className='scenario-chart-value';number.textContent=fmt(r.p90Response)+' min';
+    row.append(label,track,number);chart.append(row);
+    chartLabels.push(label.textContent+': '+fmt(r.p90Response)+' minutes'+(recommended?', recommended':''));
+   }
+   chart.setAttribute('aria-label','Modeled 30-day p90 response times. '+chartLabels.join('; ')+'. Lower is better.');
+  }
   const body=$('planTable');body.replaceChildren();
   for(const r of x.scenarios){
    const tr=document.createElement('tr');
