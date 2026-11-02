@@ -7,6 +7,7 @@ on:
       - scripts/project3-engine.js
       - scripts/project3-analytics.js
       - scripts/project3-planning.js
+      - scripts/project3-planning-ui.js
       - scripts/test-project3-analytics.cjs
       - scripts/test-project3-planning.cjs
       - scripts/test-project3-engine.cjs
@@ -26,6 +27,7 @@ jobs:
           node --check scripts/project3-engine.js
           node --check scripts/project3-analytics.js
           node --check scripts/project3-planning.js
+          node --check scripts/project3-planning-ui.js
           node --check scripts/test-project3-planning.cjs
           node --check scripts/test-project3-analytics.cjs
           node --check scripts/test-project3-engine.cjs
@@ -40,6 +42,7 @@ jobs:
           assert(page.includes('src="scripts/project3-engine.js"'),'Engine script missing');
           assert(page.includes('src="scripts/project3-analytics.js"'),'Analytics script missing');
           assert(page.includes('src="scripts/project3-planning.js"'),'Planning script missing');
+          assert(page.includes('src="scripts/project3-planning-ui.js"'),'Planning UI script missing');
           for(const id of ['vehicleMarkers','vehicleSelect','incidentType','createIncident','queue','providerSelect','assignProvider','advanceIncident','kAvail','kP90','kCost','announcer'])assert(page.includes('id="'+id+'"'),'Missing UI control: '+id);
           for(const id of ['aProviders','aTypes','aAreas','aStages','aReady','aSla'])assert(page.includes('id="'+id+'"'),'Missing analytics panel: '+id);
           for(const id of ['planning','planFleet','planRate','planBudget','planTable','planRecommendation','planExamples','planMethod'])assert(page.includes('id="'+id+'"'),'Missing planning control: '+id);
