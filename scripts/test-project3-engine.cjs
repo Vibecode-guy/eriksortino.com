@@ -136,3 +136,16 @@ test('customer safety timeline records ordered milestones and prevents duplicate
  assert.ok(events.every((e,index)=>index===0||e.minute>=events[index-1].minute));
  assert.equal(i.status,'queued');
 });
+
+test('six teams reject double booking and release at completion',()=>{
+ const state=E.initialState();
+ assert.equal(state.vehicles.length,100);
+ assert.equal(E.providerBoard(state).length,6);
+ const first=E.createIncident(state,'AV-101','door_ajar');
+ E.assign(state,first.id,'P-01');
+ const second=E.createIncident(state,'AV-103','door_ajar');
+ assert.throws(()=>E.assign(state,second.id,'P-01'),/already assigned/);
+ assert.ok(!E.eligibleProviders(state,second.id).some(p=>p.id==='P-01'));
+ for(let n=0;n<3;n++)E.advance(state,first.id);
+ assert.ok(E.eligibleProviders(state,second.id).some(p=>p.id==='P-01'));
+});
