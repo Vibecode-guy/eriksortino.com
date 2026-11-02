@@ -120,6 +120,24 @@ function completePassengerTransfer(s,id,clearance){
 }
 function escalate(s,id){const i=incident(s,id);if(i.status==='completed')throw Error('Cannot escalate completed incident');i.escalated=true;return i;}
 function tick(s,minutes=5){if(!Number.isInteger(minutes)||minutes<1||minutes>1440)throw Error('Invalid clock advance');s.minute+=minutes;}
+function responseBreakdown(s,id){
+ const i=incident(s,id),e=i.evacuation;
+ const elapsedAt=t=>t===null||t===undefined?null:t-i.created;
+ return [
+  {key:'first_assistance',label:'First assistance',minutes:elapsedAt(i.onSceneAt),note:'Original provider on scene'},
+  {key:'replacement_arrival',label:'Replacement AV arrival',minutes:elapsedAt(e?.arrivedAt),note:e?'Second AV '+e.replacementId:'No replacement requested'},
+  {key:'passenger_transfer',label:'Passenger transfer',minutes:elapsedAt(e?.transferredAt),note:'Requires simulated clearance'},
+  {key:'vehicle_recovery',label:'Vehicle recovery',minutes:elapsedAt(i.completedAt),note:'Original incident completion'}
+ ];
+}
+function responsePerformance(s){
+ const keys=['first_assistance','replacement_arrival','passenger_transfer','vehicle_recovery'];
+ return keys.map(key=>{
+  const rows=s.incidents.map(i=>responseBreakdown(s,i.id).find(r=>r.key===key));
+  const samples=rows.filter(r=>r.minutes!==null).map(r=>r.minutes).sort((a,b)=>a-b);
+  return {key,label:rows[0]?.label||key,samples:samples.length,meanMinutes:samples.length?samples.reduce((a,b)=>a+b,0)/samples.length:null,p90Minutes:samples.length?samples[Math.ceil(samples.length*.9)-1]:null};
+ });
+}
 function customerSafetyTimeline(s,id){
  const i=incident(s,id),safety=i.customerSafety,e=i.evacuation;
  const events=[];
@@ -144,5 +162,5 @@ function kpis(s){const total=s.vehicles.length,available=s.vehicles.filter(v=>v.
 function elapsed(s,i){return (i.completedAt===null?s.minute:i.completedAt)-i.created;}
 function vehicleHealth(v){const n=Number(v.id.split('-')[1]);const batteryPercent=22+(n*37%77);const connectivity=n%17===0?'intermittent':'online';const fault=n%23===0?'inspection_required':n%31===0?'sensor_review':'none';return {batteryPercent,connectivity,fault,readiness:v.status!=='available'?'unavailable':batteryPercent<30||connectivity!=='online'||fault!=='none'?'review':'ready'};}
 function shiftHandoff(s){const active=prioritizedIncidents(s).filter(i=>i.status!=='completed');return {minute:s.minute,active:active.length,overdue:active.filter(i=>s.minute-i.created>i.sla).length,unavailable:s.vehicles.filter(v=>v.status!=='available').length,healthReview:s.vehicles.filter(v=>vehicleHealth(v).readiness==='review').length,availableTeams:providerBoard(s).filter(p=>!p.busy).length,items:active.map(i=>({id:i.id,vehicleId:i.vehicleId,type:i.type,status:i.status,elapsed:s.minute-i.created,provider:i.providerId||'Unassigned',safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};}
-return {vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+return {vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
