@@ -8,13 +8,14 @@ const VEHICLES=[
  ['AV-110','South LA',33.990,-118.293],['AV-111','Inglewood',33.961,-118.353],['AV-112','San Pedro',33.739,-118.289]
 ];
 const PROVIDERS=[
- {id:'P-01',name:'Westside Roadside',area:'West LA',lat:34.010,lon:-118.420,capabilities:['door_ajar','immobilized'],baseCost:95},
- {id:'P-02',name:'Central Recovery',area:'Central LA',lat:34.045,lon:-118.300,capabilities:['door_ajar','immobilized','flatbed','depot'],baseCost:225},
+ {id:'P-01',name:'Westside Roadside',area:'West LA',lat:34.010,lon:-118.420,capabilities:['door_ajar','immobilized','flat_tire'],baseCost:95},
+ {id:'P-02',name:'Central Recovery',area:'Central LA',lat:34.045,lon:-118.300,capabilities:['door_ajar','immobilized','flat_tire','flatbed','depot'],baseCost:225},
  {id:'P-03',name:'Harbor Flatbed',area:'Harbor',lat:33.775,lon:-118.285,capabilities:['flatbed','depot','immobilized'],baseCost:195},
- {id:'P-04',name:'Valley Response',area:'Valley',lat:34.175,lon:-118.420,capabilities:['door_ajar','immobilized','flatbed'],baseCost:175}
+ {id:'P-04',name:'Valley Response',area:'Valley',lat:34.175,lon:-118.420,capabilities:['door_ajar','immobilized','flat_tire','flatbed'],baseCost:175}
 ];
 const TYPES={
  door_ajar:{label:'Door ajar',severity:'Low',sla:30,needs:'door_ajar',minutes:[4,8,6],impact:'Vehicle temporarily unavailable'},
+ flat_tire:{label:'Flat tire · roadside assessment',severity:'Medium',sla:40,needs:'flat_tire',minutes:[5,12,24],impact:'Vehicle unavailable pending tire service or recovery assessment'},
  immobilized:{label:'Immobilized AV',severity:'High',sla:35,needs:'immobilized',minutes:[5,12,15],impact:'Vehicle unavailable'},
  flatbed:{label:'Flatbed recovery',severity:'Critical',sla:45,needs:'flatbed',minutes:[8,16,35],impact:'Vehicle unavailable'},
  depot:{label:'Depot transport',severity:'Medium',sla:60,needs:'depot',minutes:[6,18,32],impact:'Vehicle unavailable'}
