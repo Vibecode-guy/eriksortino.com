@@ -7,6 +7,8 @@ test('all staging scenarios share the same deterministic seeded incidents',()=>{
  assert.deepEqual(a,b);
  assert.equal(a.assumptions.events,180);
  assert.equal(a.scenarios.length,4);
+ assert.equal(a.baseline.providerJobs.length,6);
+ assert.ok(a.scenarios.slice(1).every(x=>x.providerJobs.length===7));
  assert.ok(a.scenarios.every(x=>x.events===180));
  assert.equal(a.baseline.id,'baseline');
 });
