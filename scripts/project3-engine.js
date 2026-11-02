@@ -36,7 +36,7 @@ const TYPES={
  flatbed:{label:'Flatbed recovery',severity:'Critical',sla:45,needs:'flatbed',minutes:[8,16,35],impact:'Vehicle unavailable'},
  depot:{label:'Depot transport',severity:'Medium',sla:60,needs:'depot',minutes:[6,18,32],impact:'Vehicle unavailable'}
 };
-function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:FLEET.map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[],providerOffers:[]};}
+function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:FLEET.map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[],providerOffers:[],providerCancellations:[],additionalCharges:[]};}
 
 // Deterministic showcase data, created through the same state transitions as manual dispatch.
 function demoState(){
@@ -71,6 +71,36 @@ function recordProviderOffer(s,incidentId,providerId,outcome){
  if(outcome==='accepted')assign(s,i.id,p.id);
  return offer;
 }
+function cancelProviderAssignment(s,id,reason){
+ const i=incident(s,id);
+ if(!['dispatched','en_route'].includes(i.status))throw Error('Cancellation requires an assigned provider before arrival');
+ const detail=String(reason||'').trim();
+ if(!detail||detail.length>200)throw Error('Cancellation reason must be 1–200 characters');
+ s.providerCancellations.push({incidentId:i.id,providerId:i.providerId,minute:s.minute,reason:detail});
+ i.providerId=null;i.assignedAt=null;i.enRouteAt=null;i.status='queued';return i;
+}
+function recordAdditionalCharge(s,id,amount,reason){
+ const i=incident(s,id),value=Number(amount),detail=String(reason||'').trim();
+ if(!i.providerId)throw Error('Assign a provider before recording additional charges');
+ if(!Number.isFinite(value)||value<=0||value>10000||Math.round(value*100)!==value*100)throw Error('Charge must be a positive amount up to $10,000 with two decimal places');
+ if(!detail||detail.length>200)throw Error('Charge reason must be 1–200 characters');
+ const charge={incidentId:i.id,providerId:i.providerId,amount:value,reason:detail,minute:s.minute};
+ s.additionalCharges.push(charge);return charge;
+}
+function providerQuality(s){
+ return s.providers.map(p=>{
+  const arrivals=s.incidents.filter(i=>i.arrivalProviderId===p.id&&i.onSceneAt!==null);
+  const onTime=arrivals.filter(i=>i.onSceneAt-i.created<=i.sla).length,late=arrivals.length-onTime;
+  const cancellations=s.providerCancellations.filter(x=>x.providerId===p.id).length;
+  const accepted=s.providerOffers.filter(o=>o.providerId===p.id&&o.outcome==='accepted').length;
+  const charges=s.additionalCharges.filter(x=>x.providerId===p.id);
+  const totalAdditional=charges.reduce((sum,x)=>sum+x.amount,0);
+  return {providerId:p.id,name:p.name,arrivals:arrivals.length,onTime,late,cancellations,
+   onTimeRate:arrivals.length?100*onTime/arrivals.length:null,
+   cancellationRate:accepted?100*cancellations/accepted:null,
+   chargeCount:charges.length,totalAdditional,averageAdditional:accepted?totalAdditional/accepted:null};
+ });
+}
 function providerAcceptance(s){
  return s.providers.map(p=>{
   const offers=s.providerOffers.filter(o=>o.providerId===p.id);
@@ -79,7 +109,7 @@ function providerAcceptance(s){
  });
 }
 function assign(s,incidentId,providerId){const i=incident(s,incidentId),p=provider(s,providerId);if(i.status!=='queued')throw Error('Incident must be queued');if(!p.capabilities.includes(TYPES[i.type].needs))throw Error('Provider not equipped');if(providerBusy(s,p.id,i.id))throw Error('Provider already assigned to active incident');i.providerId=p.id;i.assignedAt=s.minute;i.status='dispatched';return i;}
-function advance(s,incidentId){const i=incident(s,incidentId),t=TYPES[i.type];if(i.status==='queued')throw Error('Assign provider first');if(i.status==='completed')throw Error('Incident already completed');if(i.type==='flat_tire'&&i.status==='on_scene'&&!i.tireResolution)throw Error('Choose tire service or flatbed recovery before completing');const next={dispatched:'en_route',en_route:'on_scene',on_scene:'completed',recovery_dispatched:'recovery_en_route',recovery_en_route:'recovery_on_scene',recovery_on_scene:'completed'}[i.status];if(!next)throw Error('Invalid state');const mins=i.status==='recovery_dispatched'?8:i.status==='recovery_en_route'?estimateTravel(vehicle(s,i.vehicleId),provider(s,i.recoveryProviderId)):i.status==='recovery_on_scene'?45:i.status==='dispatched'?t.minutes[0]:i.status==='en_route'?estimateTravel(vehicle(s,i.vehicleId),provider(s,i.providerId)):i.type==='flat_tire'&&i.tireResolution==='flatbed'?45:t.minutes[2];s.minute+=mins;i.status=next;if(next==='en_route')i.enRouteAt=s.minute;if(next==='recovery_on_scene')i.recoveryOnSceneAt=s.minute;if(next==='on_scene')i.onSceneAt=s.minute;if(next==='completed'){i.completedAt=s.minute;i.cost=provider(s,i.providerId).baseCost+(i.recoveryProviderId?provider(s,i.recoveryProviderId).baseCost:0)+(i.type==='flatbed'?125:i.type==='depot'?95:i.type==='flat_tire'&&i.tireResolution==='flatbed'?175:i.type==='flat_tire'?55:0);vehicle(s,i.vehicleId).status='available';}return i;}
+function advance(s,incidentId){const i=incident(s,incidentId),t=TYPES[i.type];if(i.status==='queued')throw Error('Assign provider first');if(i.status==='completed')throw Error('Incident already completed');if(i.type==='flat_tire'&&i.status==='on_scene'&&!i.tireResolution)throw Error('Choose tire service or flatbed recovery before completing');const next={dispatched:'en_route',en_route:'on_scene',on_scene:'completed',recovery_dispatched:'recovery_en_route',recovery_en_route:'recovery_on_scene',recovery_on_scene:'completed'}[i.status];if(!next)throw Error('Invalid state');const mins=i.status==='recovery_dispatched'?8:i.status==='recovery_en_route'?estimateTravel(vehicle(s,i.vehicleId),provider(s,i.recoveryProviderId)):i.status==='recovery_on_scene'?45:i.status==='dispatched'?t.minutes[0]:i.status==='en_route'?estimateTravel(vehicle(s,i.vehicleId),provider(s,i.providerId)):i.type==='flat_tire'&&i.tireResolution==='flatbed'?45:t.minutes[2];s.minute+=mins;i.status=next;if(next==='en_route')i.enRouteAt=s.minute;if(next==='recovery_on_scene')i.recoveryOnSceneAt=s.minute;if(next==='on_scene'){i.onSceneAt=s.minute;i.arrivalProviderId=i.providerId;}if(next==='completed'){i.completedAt=s.minute;i.cost=provider(s,i.providerId).baseCost+(i.recoveryProviderId?provider(s,i.recoveryProviderId).baseCost:0)+(i.type==='flatbed'?125:i.type==='depot'?95:i.type==='flat_tire'&&i.tireResolution==='flatbed'?175:i.type==='flat_tire'?55:0);vehicle(s,i.vehicleId).status='available';}return i;}
 function resolveTire(s,id,outcome){
  const i=incident(s,id);
  if(i.type!=='flat_tire'||i.status!=='on_scene')throw Error('Tire decision requires an on-scene flat tire incident');
@@ -240,5 +270,5 @@ function shiftHandoff(s){
    safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};
 }
 
-return {recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+return {cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
