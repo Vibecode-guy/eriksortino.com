@@ -249,3 +249,25 @@ test('provider offer acceptance rate counts accepted declined and timed out offe
  assert.deepEqual([p.offers,p.accepted,p.declined,p.timedOut,p.rate],[3,1,1,1,100/3]);
  assert.equal(E.providerAcceptance(s).find(p=>p.offers===0).rate,null);
 });
+
+test('provider quality tracks cancellation, additional charges and customer scores',()=>{
+ const s=E.initialState();
+ const a=E.createIncident(s,'AV-105','immobilized');
+ E.recordProviderOffer(s,a.id,'P-02','accepted');
+ E.recordAdditionalCharge(s,a.id,25,'Extra labor');
+ E.recordProviderSurvey(s,a.id,10,88);
+ E.cancelProviderAssignment(s,a.id,'Unable to service');
+ assert.equal(a.status,'queued');
+ const b=E.createIncident(s,'AV-106','immobilized');
+ E.recordProviderOffer(s,b.id,'P-02','accepted');
+ E.recordAdditionalCharge(s,b.id,15,'Extra labor');
+ E.recordProviderSurvey(s,b.id,4,72);
+ const q=E.providerQuality(s).find(x=>x.providerId==='P-02');
+ assert.equal(q.cancellations,1);
+ assert.equal(q.averageAdditional,20);
+ assert.equal(q.cancellationRate,50);
+ const x=E.providerExperience(s).find(x=>x.providerId==='P-02');
+ assert.equal(x.nps,0);
+ assert.equal(x.spsAverage,80);
+ assert.throws(()=>E.recordProviderSurvey(s,b.id,8,70),/already recorded/);
+});
