@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python -m pip install duckdb==1.4.1
+      - run: python -m pip install duckdb==1.4.1 openpyxl==3.1.5
       - name: Analyze January 2025 NYC TLC records
         run: python project4/scripts/build_metrics.py 2025-01
       - name: Validate output
@@ -57,6 +57,32 @@ jobs:
           else:
               print('Published metrics not yet committed; pipeline artifact verified separately')
           PY
+      - name: Verify downloadable Excel workbook and formulas
+        run: |
+          python project4/scripts/build_excel.py
+          python - <<'PY'
+          from pathlib import Path
+          from openpyxl import load_workbook
+          p=Path("project4/NYC_Transportation_Intelligence_Excel_Model.xlsx")
+          assert p.exists() and p.stat().st_size>10000
+          w=load_workbook(p)
+          assert len(w.sheetnames)==8,w.sheetnames
+          assert w["Executive Summary"]["B4"].value>100000
+          assert w["Capacity Scenario"]["C7"].data_type=="f"
+          assert len(w["Hourly Demand"]._charts)>0
+          assert w["Monthly Trends"]["D3"].value is not None
+          print("Verified downloadable Excel workbook",p.stat().st_size,"bytes")
+          PY
+      - name: Verify dashboard JavaScript syntax
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const html=fs.readFileSync('project4/index.html','utf8');
+          const match=html.match(/<script>([\s\S]*?)<\/script>/);
+          if(!match)throw Error('Dashboard script missing');
+          new Function(match[1]);
+          console.log('Dashboard JavaScript syntax verified');
+          NODE
       - uses: actions/upload-artifact@v4
         with:
           name: project4-verified-metrics
