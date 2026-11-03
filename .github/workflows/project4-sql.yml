@@ -1,0 +1,90 @@
+name: Project 4 SQL Validation
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'project4/**'
+      - '.github/workflows/project4-sql.yml'
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install duckdb==1.4.1 openpyxl==3.1.5
+      - name: Analyze January 2025 NYC TLC records
+        run: python project4/scripts/build_metrics.py 2025-01
+      - name: Validate output
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('project4/output/metrics.json').read_text())
+          assert d['month']=='2025-01'
+          assert d['quality_audit']['total_rows']>100000
+          assert len(d['hourly_demand'])==24
+          assert len(d['top_pickup_zones'])>0
+          assert len(d['borough_demand'])>0
+          assert len(d['named_pickup_zones'])>0
+          assert len(d['monthly_trends']) == 4
+          assert len(d['borough_demand']) > 0
+          assert len(d['named_pickup_zones']) == 25
+          assert d['monthly_trends'][0]['previous_month_trips'] is None
+          assert all(row['trip_count'] > 0 for row in d['monthly_trends'])
+          assert sum(x['trip_count'] for x in d['hourly_demand']) <= d['quality_audit']['total_rows']
+          print('Validated',d['quality_audit']['total_rows'],'rows')
+          PY
+      - name: Verify portfolio integration and published metrics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          home=Path('index.html').read_text()
+          dashboard=Path('project4/index.html').read_text()
+          assert 'href="project4/index.html"' in home
+          assert 'AI-assisted' in dashboard
+          assert 'fetch("./data/metrics.json")' in dashboard
+          published=Path('project4/data/metrics.json')
+          if published.exists():
+              d=json.loads(published.read_text())
+              assert d['quality_audit']['total_rows']>100000
+              assert len(d['monthly_trends'])==4
+              assert len(d['named_pickup_zones'])>0
+              print('Published dashboard data verified')
+          else:
+              print('Published metrics not yet committed; pipeline artifact verified separately')
+          PY
+      - name: Verify downloadable Excel workbook and formulas
+        run: |
+          python project4/scripts/build_excel.py
+          python - <<'PY'
+          from pathlib import Path
+          from openpyxl import load_workbook
+          p=Path("project4/NYC_Transportation_Intelligence_Excel_Model.xlsx")
+          assert p.exists() and p.stat().st_size>10000
+          w=load_workbook(p)
+          assert len(w.sheetnames)==8,w.sheetnames
+          assert w["Executive Summary"]["B4"].value>100000
+          assert w["Capacity Scenario"]["C7"].data_type=="f"
+          assert len(w["Hourly Demand"]._charts)>0
+          assert w["Monthly Trends"]["D3"].value is not None
+          print("Verified downloadable Excel workbook",p.stat().st_size,"bytes")
+          PY
+      - name: Verify dashboard JavaScript syntax
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const html=fs.readFileSync('project4/index.html','utf8');
+          const match=html.match(/<script>([\s\S]*?)<\/script>/);
+          if(!match)throw Error('Dashboard script missing');
+          new Function(match[1]);
+          console.log('Dashboard JavaScript syntax verified');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: project4-verified-metrics
+          path: project4/output/metrics.json
+          retention-days: 30

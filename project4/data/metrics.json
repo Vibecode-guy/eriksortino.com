@@ -1,0 +1,460 @@
+{
+  "source": "NYC Taxi and Limousine Commission",
+  "month": "2025-01",
+  "source_url": "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-01.parquet",
+  "hourly_demand": [
+    {
+      "pickup_hour": 0,
+      "trip_count": 93417
+    },
+    {
+      "pickup_hour": 1,
+      "trip_count": 64484
+    },
+    {
+      "pickup_hour": 2,
+      "trip_count": 43929
+    },
+    {
+      "pickup_hour": 3,
+      "trip_count": 28492
+    },
+    {
+      "pickup_hour": 4,
+      "trip_count": 20033
+    },
+    {
+      "pickup_hour": 5,
+      "trip_count": 22551
+    },
+    {
+      "pickup_hour": 6,
+      "trip_count": 50026
+    },
+    {
+      "pickup_hour": 7,
+      "trip_count": 102581
+    },
+    {
+      "pickup_hour": 8,
+      "trip_count": 141305
+    },
+    {
+      "pickup_hour": 9,
+      "trip_count": 142877
+    },
+    {
+      "pickup_hour": 10,
+      "trip_count": 148316
+    },
+    {
+      "pickup_hour": 11,
+      "trip_count": 160076
+    },
+    {
+      "pickup_hour": 12,
+      "trip_count": 175432
+    },
+    {
+      "pickup_hour": 13,
+      "trip_count": 186144
+    },
+    {
+      "pickup_hour": 14,
+      "trip_count": 202289
+    },
+    {
+      "pickup_hour": 15,
+      "trip_count": 213694
+    },
+    {
+      "pickup_hour": 16,
+      "trip_count": 217051
+    },
+    {
+      "pickup_hour": 17,
+      "trip_count": 253518
+    },
+    {
+      "pickup_hour": 18,
+      "trip_count": 267951
+    },
+    {
+      "pickup_hour": 19,
+      "trip_count": 221055
+    },
+    {
+      "pickup_hour": 20,
+      "trip_count": 195001
+    },
+    {
+      "pickup_hour": 21,
+      "trip_count": 205978
+    },
+    {
+      "pickup_hour": 22,
+      "trip_count": 182214
+    },
+    {
+      "pickup_hour": 23,
+      "trip_count": 136812
+    }
+  ],
+  "top_pickup_zones": [
+    {
+      "pickup_zone_id": 161,
+      "trip_count": 166661,
+      "avg_trip_miles": 3.87
+    },
+    {
+      "pickup_zone_id": 237,
+      "trip_count": 161561,
+      "avg_trip_miles": 1.7
+    },
+    {
+      "pickup_zone_id": 236,
+      "trip_count": 153306,
+      "avg_trip_miles": 2.49
+    },
+    {
+      "pickup_zone_id": 132,
+      "trip_count": 142826,
+      "avg_trip_miles": 15.46
+    },
+    {
+      "pickup_zone_id": 230,
+      "trip_count": 123656,
+      "avg_trip_miles": 2.82
+    },
+    {
+      "pickup_zone_id": 186,
+      "trip_count": 117588,
+      "avg_trip_miles": 3.74
+    },
+    {
+      "pickup_zone_id": 162,
+      "trip_count": 115705,
+      "avg_trip_miles": 2.2
+    },
+    {
+      "pickup_zone_id": 142,
+      "trip_count": 109101,
+      "avg_trip_miles": 2.72
+    },
+    {
+      "pickup_zone_id": 239,
+      "trip_count": 94875,
+      "avg_trip_miles": 4.99
+    },
+    {
+      "pickup_zone_id": 163,
+      "trip_count": 94407,
+      "avg_trip_miles": 2.3
+    },
+    {
+      "pickup_zone_id": 234,
+      "trip_count": 93547,
+      "avg_trip_miles": 4.13
+    },
+    {
+      "pickup_zone_id": 170,
+      "trip_count": 93020,
+      "avg_trip_miles": 4.5
+    },
+    {
+      "pickup_zone_id": 68,
+      "trip_count": 88953,
+      "avg_trip_miles": 3.37
+    },
+    {
+      "pickup_zone_id": 138,
+      "trip_count": 88590,
+      "avg_trip_miles": 9.6
+    },
+    {
+      "pickup_zone_id": 48,
+      "trip_count": 82502,
+      "avg_trip_miles": 5.9
+    },
+    {
+      "pickup_zone_id": 141,
+      "trip_count": 80196,
+      "avg_trip_miles": 3.38
+    },
+    {
+      "pickup_zone_id": 79,
+      "trip_count": 80037,
+      "avg_trip_miles": 4.44
+    },
+    {
+      "pickup_zone_id": 249,
+      "trip_count": 75973,
+      "avg_trip_miles": 2.17
+    },
+    {
+      "pickup_zone_id": 164,
+      "trip_count": 73873,
+      "avg_trip_miles": 3.5
+    },
+    {
+      "pickup_zone_id": 140,
+      "trip_count": 73225,
+      "avg_trip_miles": 4.49
+    }
+  ],
+  "quality_audit": {
+    "total_rows": 3475226,
+    "missing_pickup_time": 0,
+    "nonpositive_duration": 2051,
+    "invalid_distance": 90893,
+    "missing_pickup_zone": 0
+  },
+  "weekday_demand": [
+    {
+      "weekday_iso": 1,
+      "trip_count": 363772
+    },
+    {
+      "weekday_iso": 2,
+      "trip_count": 453993
+    },
+    {
+      "weekday_iso": 3,
+      "trip_count": 577375
+    },
+    {
+      "weekday_iso": 4,
+      "trip_count": 614230
+    },
+    {
+      "weekday_iso": 5,
+      "trip_count": 586863
+    },
+    {
+      "weekday_iso": 6,
+      "trip_count": 476399
+    },
+    {
+      "weekday_iso": 7,
+      "trip_count": 402594
+    }
+  ],
+  "trip_duration": {
+    "valid_trip_count": 3445616,
+    "avg_duration_minutes": 14.71,
+    "median_duration_minutes": 12.0,
+    "p90_duration_minutes": 28.0
+  },
+  "named_pickup_zones": [
+    {
+      "borough": "Manhattan",
+      "zone_name": "Midtown Center",
+      "pickup_zone_id": 161,
+      "trip_count": 166661
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Upper East Side South",
+      "pickup_zone_id": 237,
+      "trip_count": 161561
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Upper East Side North",
+      "pickup_zone_id": 236,
+      "trip_count": 153306
+    },
+    {
+      "borough": "Queens",
+      "zone_name": "JFK Airport",
+      "pickup_zone_id": 132,
+      "trip_count": 142826
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Times Sq/Theatre District",
+      "pickup_zone_id": 230,
+      "trip_count": 123656
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Penn Station/Madison Sq West",
+      "pickup_zone_id": 186,
+      "trip_count": 117588
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Midtown East",
+      "pickup_zone_id": 162,
+      "trip_count": 115705
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Lincoln Square East",
+      "pickup_zone_id": 142,
+      "trip_count": 109101
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Upper West Side South",
+      "pickup_zone_id": 239,
+      "trip_count": 94875
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Midtown North",
+      "pickup_zone_id": 163,
+      "trip_count": 94407
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Union Sq",
+      "pickup_zone_id": 234,
+      "trip_count": 93547
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Murray Hill",
+      "pickup_zone_id": 170,
+      "trip_count": 93020
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "East Chelsea",
+      "pickup_zone_id": 68,
+      "trip_count": 88953
+    },
+    {
+      "borough": "Queens",
+      "zone_name": "LaGuardia Airport",
+      "pickup_zone_id": 138,
+      "trip_count": 88590
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Clinton East",
+      "pickup_zone_id": 48,
+      "trip_count": 82502
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Lenox Hill West",
+      "pickup_zone_id": 141,
+      "trip_count": 80196
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "East Village",
+      "pickup_zone_id": 79,
+      "trip_count": 80037
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "West Village",
+      "pickup_zone_id": 249,
+      "trip_count": 75973
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Midtown South",
+      "pickup_zone_id": 164,
+      "trip_count": 73873
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Lenox Hill East",
+      "pickup_zone_id": 140,
+      "trip_count": 73225
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Upper West Side North",
+      "pickup_zone_id": 238,
+      "trip_count": 67159
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Gramercy",
+      "pickup_zone_id": 107,
+      "trip_count": 66653
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Yorkville West",
+      "pickup_zone_id": 263,
+      "trip_count": 66199
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "West Chelsea/Hudson Yards",
+      "pickup_zone_id": 246,
+      "trip_count": 62634
+    },
+    {
+      "borough": "Manhattan",
+      "zone_name": "Sutton Place/Turtle Bay North",
+      "pickup_zone_id": 229,
+      "trip_count": 56566
+    }
+  ],
+  "borough_demand": [
+    {
+      "borough": "Manhattan",
+      "trip_count": 3089275
+    },
+    {
+      "borough": "Queens",
+      "trip_count": 294986
+    },
+    {
+      "borough": "Brooklyn",
+      "trip_count": 66070
+    },
+    {
+      "borough": "Bronx",
+      "trip_count": 14741
+    },
+    {
+      "borough": "Unknown",
+      "trip_count": 8141
+    },
+    {
+      "borough": "N/A",
+      "trip_count": 1380
+    },
+    {
+      "borough": "EWR",
+      "trip_count": 377
+    },
+    {
+      "borough": "Staten Island",
+      "trip_count": 256
+    }
+  ],
+  "monthly_trends": [
+    {
+      "month": "2024-12",
+      "trip_count": 3668358,
+      "previous_month_trips": null,
+      "month_over_month_pct": null
+    },
+    {
+      "month": "2025-01",
+      "trip_count": 3475236,
+      "previous_month_trips": 3668358,
+      "month_over_month_pct": -5.26
+    },
+    {
+      "month": "2025-02",
+      "trip_count": 3577543,
+      "previous_month_trips": 3475236,
+      "month_over_month_pct": 2.94
+    },
+    {
+      "month": "2025-03",
+      "trip_count": 4145227,
+      "previous_month_trips": 3577543,
+      "month_over_month_pct": 15.87
+    }
+  ]
+}
