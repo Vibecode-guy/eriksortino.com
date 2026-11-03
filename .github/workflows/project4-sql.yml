@@ -30,10 +30,32 @@ jobs:
           assert len(d['borough_demand'])>0
           assert len(d['named_pickup_zones'])>0
           assert len(d['monthly_trends']) == 4
+          assert len(d['borough_demand']) > 0
+          assert len(d['named_pickup_zones']) == 25
           assert d['monthly_trends'][0]['previous_month_trips'] is None
           assert all(row['trip_count'] > 0 for row in d['monthly_trends'])
           assert sum(x['trip_count'] for x in d['hourly_demand']) <= d['quality_audit']['total_rows']
           print('Validated',d['quality_audit']['total_rows'],'rows')
+          PY
+      - name: Verify portfolio integration and published metrics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          home=Path('index.html').read_text()
+          dashboard=Path('project4/index.html').read_text()
+          assert 'href="project4/index.html"' in home
+          assert 'AI-assisted' in dashboard
+          assert 'fetch("./data/metrics.json")' in dashboard
+          published=Path('project4/data/metrics.json')
+          if published.exists():
+              d=json.loads(published.read_text())
+              assert d['quality_audit']['total_rows']>100000
+              assert len(d['monthly_trends'])==4
+              assert len(d['named_pickup_zones'])>0
+              print('Published dashboard data verified')
+          else:
+              print('Published metrics not yet committed; pipeline artifact verified separately')
           PY
       - uses: actions/upload-artifact@v4
         with:
