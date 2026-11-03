@@ -36,6 +36,10 @@ FROM taxi_trips t
 JOIN taxi_zones z ON t.PULocationID = z.LocationID
 GROUP BY 1 ORDER BY trip_count DESC
 """
+# Separate multi-month view for trend analysis; source months are explicitly bounded.
+MONTHS = ["2024-12", "2025-01", "2025-02", "2025-03"]
+MULTI_URLS = [f"https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{m}.parquet" for m in MONTHS]
+con.execute("CREATE VIEW taxi_trips_multi AS SELECT * FROM read_parquet(" + json.dumps(MULTI_URLS) + ")")
 result = {
     "source": "NYC Taxi and Limousine Commission",
     "month": MONTH,
@@ -47,6 +51,7 @@ result = {
     "trip_duration": run("05_trip_duration.sql")[0],
     "named_pickup_zones": [dict(zip(["borough", "zone_name", "pickup_zone_id", "trip_count"], row)) for row in con.execute(zone_sql).fetchall()],
     "borough_demand": [dict(zip(["borough", "trip_count"], row)) for row in con.execute(borough_sql).fetchall()],
+    "monthly_trends": run("07_monthly_trends.sql"),
 }
 out = ROOT / "output" / "metrics.json"
 out.parent.mkdir(parents=True, exist_ok=True)
