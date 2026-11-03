@@ -47,8 +47,8 @@ jobs:
           for(const id of ['aProviders','aTypes','aAreas','aStages','aReady','aSla'])assert(page.includes('id="'+id+'"'),'Missing analytics panel: '+id);
           for(const id of ['planning','planFleet','planRate','planBudget','planTable','planRecommendation','planExamples','planMethod'])assert(page.includes('id="'+id+'"'),'Missing planning control: '+id);
           assert(page.includes('Synthetic scenario')&&page.includes('No actual company or partner data'),'Synthetic disclosures missing');
-          const inline=page.match(/<script>\s*([\s\S]*?)<\/script><\/body>/);
-          assert(inline,'Inline UI script missing');
-          new Function(inline[1]);
+          const inline=[...page.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)].filter(m=>!/<script[^>]*\\bsrc=/.test(m[0]));
+          assert(inline.length,'Inline UI script missing');
+          for(const block of inline)new Function(block[1]);
           console.log('Project 3 static integration validated');
           NODE
