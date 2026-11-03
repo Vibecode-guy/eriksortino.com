@@ -3,12 +3,12 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const E=require('./project3-engine.js'),A=require('./project3-analytics.js');
 function finish(s,id,p){E.assign(s,id,p);for(let n=0;n<3;n++)E.advance(s,id);}
 test('empty state has explicit null denominator-based rates, not fabricated zeros',()=>{
- const a=A.summarize(E.initialState());assert.equal(a.fleet.total,12);assert.equal(a.fleet.instantAvailabilityPercent,100);assert.equal(a.fleet.serviceReadyPercent,null);assert.equal(a.fleet.tripUtilizationPercent,null);assert.equal(a.incidents.meanResponse,null);assert.equal(a.incidents.responseSamples,0);assert.equal(a.providers[0].slaMetPercent,null);assert.equal(a.bottleneck,null);
+ const a=A.summarize(E.initialState());assert.equal(a.fleet.total,100);assert.equal(a.fleet.instantAvailabilityPercent,100);assert.equal(a.fleet.serviceReadyPercent,null);assert.equal(a.fleet.tripUtilizationPercent,null);assert.equal(a.incidents.meanResponse,null);assert.equal(a.incidents.responseSamples,0);assert.equal(a.providers[0].slaMetPercent,null);assert.equal(a.bottleneck,null);
 });
 test('fleet-minute incident downtime counts both completed and active incidents',()=>{
  const s=E.initialState(),i=E.createIncident(s,'AV-101','door_ajar');E.tick(s,12);
- let a=A.summarize(s);assert.equal(a.fleet.fleetMinutes,144);assert.equal(a.fleet.incidentDowntimeMinutes,12);assert.equal(a.fleet.serviceReadyPercent,91.7);assert.equal(a.fleet.instantAvailabilityPercent,91.7);
- finish(s,i.id,'P-01');const stop=s.minute;E.tick(s,8);a=A.summarize(s);assert.equal(a.fleet.incidentDowntimeMinutes,i.completedAt-i.created);assert.equal(a.fleet.fleetMinutes,12*(stop+8));assert.equal(a.fleet.instantAvailabilityPercent,100);
+ let a=A.summarize(s);assert.equal(a.fleet.fleetMinutes,1200);assert.equal(a.fleet.incidentDowntimeMinutes,12);assert.equal(a.fleet.serviceReadyPercent,99);assert.equal(a.fleet.instantAvailabilityPercent,99);
+ finish(s,i.id,'P-01');const stop=s.minute;E.tick(s,8);a=A.summarize(s);assert.equal(a.fleet.incidentDowntimeMinutes,i.completedAt-i.created);assert.equal(a.fleet.fleetMinutes,100*(stop+8));assert.equal(a.fleet.instantAvailabilityPercent,100);
 });
 test('completed response, provider SLA, costs and type/area totals reconcile',()=>{
  const s=E.initialState(),a=E.createIncident(s,'AV-101','door_ajar');finish(s,a.id,'P-01');
