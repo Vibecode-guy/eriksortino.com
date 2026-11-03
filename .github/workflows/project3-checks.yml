@@ -49,6 +49,6 @@ jobs:
           assert(page.includes('Synthetic scenario')&&page.includes('No actual company or partner data'),'Synthetic disclosures missing');
           const inline=page.split('<script>').slice(1).map(block=>block.split('</script>')[0]);
           assert(inline.length,'Inline UI script missing');
-          for(const block of inline)new Function(block[1]);
+          for(const block of inline)new Function(block);
           console.log('Project 3 static integration validated');
           NODE
