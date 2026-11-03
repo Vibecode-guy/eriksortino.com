@@ -1,6 +1,12 @@
 name: Project 4 Publish Verified Metrics
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/project-4-sql-intelligence
+    paths:
+      - 'project4/**'
+      - '.github/workflows/project4-publish.yml'
 permissions:
   contents: write
 jobs:
