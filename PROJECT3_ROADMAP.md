@@ -38,12 +38,12 @@
 - [ ] Verify production deployment and key workflow.
 
 ## Phase 6 — Scale the simulation (next active milestone)
-- [ ] Inspect existing state initialization and test fixtures before changing fleet size.
-- [ ] Introduce a fixed-seed generator for 100 fictional vehicles across Central LA, Westside/Venice, Valley, South LA/LAX, and Harbor/San Pedro; record seed and assumptions.
-- [ ] Expand from four to six fictional recovery teams, with documented equipment/capabilities and one-active-assignment-per-team capacity.
+- [x] Inspect existing state initialization and test fixtures before changing fleet size.
+- [x] Introduce a fixed-seed generator for 100 fictional vehicles across Central LA, Westside/Venice, Valley, South LA/LAX, and Harbor/San Pedro; fixed internal seed `20261102`, LCG parameters `1664525`/`1013904223`, and approximate zone-coordinate jitter. Still synthetic and not street-snapped.
+- [x] Expand from four to six fictional recovery teams, with equipment/capabilities and one-active-assignment-per-team capacity.
 - [ ] Add filters/clustering or a visible subset strategy so 100 vehicle markers remain readable and keyboard accessible.
 - [ ] Ensure vehicle selectors, incident creation, provider eligibility, response metrics, reset, and the separate 30-day scenario planner remain consistent.
-- [ ] Add/verify regression tests for 100 unique vehicle IDs, deterministic reset, six unique providers, incompatible assignment, capacity, and unchanged KPI formulas (capacity test added, execution unverified).
+- [ ] Verify CI for added 100 unique vehicle IDs, deterministic reset, six unique providers, incompatible assignment, capacity, and unchanged KPI formulas (tests committed; latest run pending).
 - [ ] Document how 100 live-style simulated vehicles differ from the existing planning fleet-size slider; neither represents real operator telemetry.
 - [ ] Verify GitHub Actions and deployment; do not mark complete based only on source changes.
 
@@ -68,3 +68,5 @@
 - 2026-11-02: Fleet engine expanded to 100 deterministic synthetic AVs and six providers (commits `c3751908`, `aa212fc7`). Added map search/status filters and fixed an uninitialized variable in customer-safety rendering (commit `1016de5b`). Existing planning model still has four-provider baseline assumptions; end-to-end browser QA and CI not yet verified. Next: six-team capacity enforcement, planner reconciliation, vehicle health, shift handoff, and real geographic basemap.
 
 - 2026-11-02: Added `providerBoard` and active-assignment capacity checks in `scripts/project3-engine.js` (commit `68cc63c2`); added six-team resource table and disabled empty eligible-provider selection in `project3-av-command-center.html` (commit `2f1198e4`); added a double-booking regression test (commit `a13cbb6`). Corrected earlier malformed 100-vehicle assertions (commit `827ec2b4`). CI and live deployment have not been verified. Planning scenarios still require reconciliation with six-team dispatch baseline.
+
+- 2026-11-02 evening: Audited current 100-AV/6-team engine and existing regression suite. Added fixture identity/reset and six-concurrent-team capacity tests (`f0834528`). Prior Project 3 CI at `495bc58a` failed four tests: two stale 12-vehicle analytics expectations, one safety-SLA state bug after passenger transfer, and one outdated scorecard coverage expectation. Corrected the safety SLA (`43f7275e`) and test expectations (`6c24f9bc`, `2c8c8f15`). CI for final changes must be checked; no claim of successful deployment. Project 1 and 2 untouched. Next: confirm CI; align planning baseline with six teams; expose seeded configuration; replace schematic geography with a sourced public basemap and labeled modeled routing assumptions.
