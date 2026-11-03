@@ -29,6 +29,9 @@ jobs:
           assert len(d['top_pickup_zones'])>0
           assert len(d['borough_demand'])>0
           assert len(d['named_pickup_zones'])>0
+          assert len(d['monthly_trends']) == 4
+          assert d['monthly_trends'][0]['previous_month_trips'] is None
+          assert all(row['trip_count'] > 0 for row in d['monthly_trends'])
           assert sum(x['trip_count'] for x in d['hourly_demand']) <= d['quality_audit']['total_rows']
           print('Validated',d['quality_audit']['total_rows'],'rows')
           PY
