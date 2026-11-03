@@ -43,9 +43,9 @@
 - [x] Expand from four to six fictional recovery teams, with equipment/capabilities and one-active-assignment-per-team capacity.
 - [ ] Add filters/clustering or a visible subset strategy so 100 vehicle markers remain readable and keyboard accessible.
 - [ ] Ensure vehicle selectors, incident creation, provider eligibility, response metrics, reset, and the separate 30-day scenario planner remain consistent.
-- [ ] Verify CI for added 100 unique vehicle IDs, deterministic reset, six unique providers, incompatible assignment, capacity, and unchanged KPI formulas (tests committed; latest run pending).
+- [x] Verify engine/analytics/planning regression tests for 100 unique vehicles, deterministic reset, six providers, assignment capacity and KPI formulas: 38 tests passed in run `41570001039` (the separate static-integration step failed).
 - [ ] Document how 100 live-style simulated vehicles differ from the existing planning fleet-size slider; neither represents real operator telemetry.
-- [ ] Verify GitHub Actions and deployment; do not mark complete based only on source changes.
+- [ ] Verify complete GitHub Actions including repaired inline-script static integration and production deployment; do not mark complete based only on source changes.
 
 **Exit criteria:** A fixed seed reliably creates 100 selectable vehicles and six recovery teams; a user can dispatch and complete an incident; KPIs update; existing tests pass; and the page remains usable on mobile.
 
@@ -70,3 +70,5 @@
 - 2026-11-02: Added `providerBoard` and active-assignment capacity checks in `scripts/project3-engine.js` (commit `68cc63c2`); added six-team resource table and disabled empty eligible-provider selection in `project3-av-command-center.html` (commit `2f1198e4`); added a double-booking regression test (commit `a13cbb6`). Corrected earlier malformed 100-vehicle assertions (commit `827ec2b4`). CI and live deployment have not been verified. Planning scenarios still require reconciliation with six-team dispatch baseline.
 
 - 2026-11-02 evening: Audited current 100-AV/6-team engine and existing regression suite. Added fixture identity/reset and six-concurrent-team capacity tests (`f0834528`). Prior Project 3 CI at `495bc58a` failed four tests: two stale 12-vehicle analytics expectations, one safety-SLA state bug after passenger transfer, and one outdated scorecard coverage expectation. Corrected the safety SLA (`43f7275e`) and test expectations (`6c24f9bc`, `2c8c8f15`). CI for final changes must be checked; no claim of successful deployment. Project 1 and 2 untouched. Next: confirm CI; align planning baseline with six teams; expose seeded configuration; replace schematic geography with a sourced public basemap and labeled modeled routing assumptions.
+
+- 2026-11-03 morning: Reviewed failed CI run `41570001039`: all **38 engine, analytics, and planning tests passed**, but static integration failed because its greedy `<script>` regex captured external script tags and threw `SyntaxError: Unexpected token '<'`. Replaced with independent inline-script extraction in `.github/workflows/project3-checks.yml` (commit `bd8cea40`; follow-up `bba7528e` was a no-op content-wise). Awaiting new full CI result. Current planning source already uses six baseline providers and optional seventh crew; older Phase 4 roadmap wording is historical. No Project 1/2 changes.
