@@ -283,7 +283,7 @@ test('unified scorecard is transparent, denominator-safe and provisional for sma
  assert.equal(p.acceptance.rate,100);
  assert.equal(p.experience.nps,100);
  assert.equal(p.quality.averageAdditional,20);
- assert.equal(p.coverageWeight,60);
+ assert.equal(p.coverageWeight,70);
  assert.ok(p.score>=0&&p.score<=100);
  assert.equal(p.eligibleForRanking,false);
  assert.equal(p.dimensions.find(x=>x.name==='additionalCharges').value,90);
