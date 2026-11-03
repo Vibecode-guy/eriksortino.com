@@ -325,3 +325,37 @@ test('automatic provider review queue flags deterioration without creating a pla
  assert.equal(updated.action,'Plan active');
  assert.ok(updated.activePlanId);
 });
+
+
+test('100-vehicle six-team fixture has unique stable identities, valid geographic ranges and independent resets',()=>{
+ const a=E.initialState(),b=E.initialState();
+ assert.equal(a.vehicles.length,100);
+ assert.equal(a.providers.length,6);
+ assert.equal(new Set(a.vehicles.map(v=>v.id)).size,100);
+ assert.equal(new Set(a.providers.map(p=>p.id)).size,6);
+ assert.ok(a.vehicles.every(v=>Number.isFinite(v.lat)&&Number.isFinite(v.lon)&&v.lat>=33.65&&v.lat<=34.4&&v.lon>=-118.8&&v.lon<=-118.1));
+ assert.deepEqual(a.vehicles,b.vehicles);
+ assert.deepEqual(a.providers,b.providers);
+ const original=b.vehicles[0].status;
+ E.createIncident(a,a.vehicles[0].id,'immobilized');
+ assert.equal(b.vehicles[0].status,original);
+ assert.equal(E.initialState().vehicles[0].status,original);
+});
+test('six-provider capacity remains enforced across concurrent incidents and frees on completion',()=>{
+ const s=E.initialState();
+ const assignments=[];
+ for(const p of s.providers){
+  const v=s.vehicles.find(v=>v.status==='available'&&p.capabilities.includes('door_ajar'))||s.vehicles.find(v=>v.status==='available');
+  const type=p.capabilities.includes('door_ajar')?'door_ajar':p.capabilities.includes('flatbed')?'flatbed':'immobilized';
+  const i=E.createIncident(s,v.id,type);
+  E.assign(s,i.id,p.id);
+  assignments.push(i);
+ }
+ assert.equal(E.providerBoard(s).filter(p=>p.busy).length,6);
+ const waiting=E.createIncident(s,s.vehicles.find(v=>v.status==='available').id,'immobilized');
+ assert.equal(E.eligibleProviders(s,waiting.id).length,0);
+ assert.throws(()=>E.assign(s,waiting.id,'P-02'),/already assigned|busy/i);
+ for(let step=0;step<3;step++)E.advance(s,assignments[1].id);
+ assert.equal(E.providerBoard(s).filter(p=>p.busy).length,5);
+ assert.ok(E.eligibleProviders(s,waiting.id).some(p=>p.id==='P-02'));
+});
