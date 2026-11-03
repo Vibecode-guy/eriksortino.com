@@ -306,7 +306,7 @@ function safetyMetrics(s){
 }
 function incidentSla(s,id){
  const i=incident(s,id);
- const safety=i.customerSafety?.danger&&i.customerSafety.safeAt===null;
+ const safety=Boolean(i.customerSafety?.danger);
  const limit=safety?10:i.sla;
  const start=safety?i.customerSafety.flaggedAt:i.created;
  const stop=safety?i.customerSafety.safeAt:i.onSceneAt;
