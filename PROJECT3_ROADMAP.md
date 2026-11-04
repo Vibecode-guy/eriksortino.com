@@ -41,13 +41,20 @@
 - [x] Inspect existing state initialization and test fixtures before changing fleet size.
 - [x] Introduce a fixed-seed generator for 100 fictional vehicles across Central LA, Westside/Venice, Valley, South LA/LAX, and Harbor/San Pedro; fixed internal seed `20261102`, LCG parameters `1664525`/`1013904223`, and approximate zone-coordinate jitter. Still synthetic and not street-snapped.
 - [x] Expand from four to six fictional recovery teams, with equipment/capabilities and one-active-assignment-per-team capacity.
-- [ ] Add filters/clustering or a visible subset strategy so 100 vehicle markers remain readable and keyboard accessible.
+- [x] Add deterministic 24-marker representative view (selected and incident AVs always shown; search and unavailable-only view show all matches). The full fleet remains in the keyboard-accessible vehicle selector. This is visual density control, not geographic clustering or actual telemetry.
 - [ ] Ensure vehicle selectors, incident creation, provider eligibility, response metrics, reset, and the separate 30-day scenario planner remain consistent.
 - [x] Verify engine/analytics/planning regression tests for 100 unique vehicles, deterministic reset, six providers, assignment capacity and KPI formulas: 38 tests passed in run `41570001039` (the separate static-integration step failed).
 - [x] Document distinct simulation scales: interactive workbench defaults to 100 deterministic synthetic vehicles and six fictional teams (optional engine fixture count 12–240 and unsigned 32-bit seed); the separate planning slider controls a 30-day synthetic incident cohort and does not resize the workbench or imply real telemetry. The default seed is 20261102; LCG uses unsigned 32-bit state, multiplier 1664525, increment 1013904223, and five approximate LA area centers with jitter. The initial 12 demonstration points remain fixed; neither they nor generated points are road-snapped.\n- [ ] Expose seed and fixture-size controls in the UI only after confirming map/selector performance, reset semantics and keyboard behavior at 240 vehicles.
 - [x] Repaired inline-script CI static integration; GitHub Actions run 41658312327 passed and Pages deployment run 41658311783 succeeded at dd732645. Browser/mobile interaction verification still pending.\n- [x] Verify CI for configurable fixture commit `7ab836b8`: run `41764186668` passed both regression and static-integration steps.\n- [ ] Verify GitHub Pages deployment for latest roadmap commit and perform live browser/mobile acceptance checks.
 
 **Exit criteria:** A fixed seed reliably creates 100 selectable vehicles and six recovery teams; a user can dispatch and complete an incident; KPIs update; existing tests pass; and the page remains usable on mobile.
+
+## Current prioritized next steps (2026-11-04)
+1. Confirm Project 3 CI and Pages deployment for map-density changes; run actual mobile/keyboard browser checks when available.
+2. Source and attribute a public Los Angeles geographic basemap; keep synthetic AV coordinates and avoid claiming real telemetry or street-snapped points.
+3. Validate a road-network routing provider and its usage constraints; preserve clearly labeled deterministic straight-line fallback.
+4. Rank eligible, unoccupied crews by capability, modeled ETA, cost and deterministic tie-breaks; regression-test capacity and SLA implications.
+5. Reconcile scenario and operational denominators, add regression tests for accessibility and extreme workloads.
 
 ## Phase 4 planning methodology (explicitly fictional)
 
@@ -73,3 +80,4 @@
 
 - 2026-11-03 morning: Reviewed failed CI run `41570001039`: all **38 engine, analytics, and planning tests passed**, but static integration failed because its greedy `<script>` regex captured external script tags and threw `SyntaxError: Unexpected token '<'`. Replaced with independent inline-script extraction in `.github/workflows/project3-checks.yml` (commit `bd8cea40`; follow-up `bba7528e` was a no-op content-wise). Awaiting new full CI result. Current planning source already uses six baseline providers and optional seventh crew; older Phase 4 roadmap wording is historical. No Project 1/2 changes.
 \n- 2026-11-03 evening: Inspected Project 3 engine, workflow, roadmap and recent GitHub Actions. Previous CI `41658312327` and Pages `41658311783` succeeded at `dd732645`. Added optional validated seed/count configuration to `seededFleet` and `initialState` while preserving the existing 100-AV/6-team default (`9c309541`), plus reproducibility, bounds, identity and isolation regression test (`7ab836b8`). CI passed for `7ab836b8` in run `41764186668`; Pages for later commits pending. No changes to Project 1 or Project 2. Next: validate CI, introduce sourced geographic basemap with clear synthetic telemetry disclosure; preserve existing accessible list/filter controls.\n
+- 2026-11-04: Added deterministic representative map-marker density selection (`scripts/project3-map-density.js`), four regression tests, UI integration and CI wiring. All 100 default vehicles remain available in the full vehicle selector and explicit search; selected and incident markers are retained even above the 24-marker visual cap. This is not geographic clustering. Commits `d1d05a51`, `e87b7ab2`, `943b7dec`, `5de232ee`. CI and deployment status to be confirmed separately. No Project 1/2 modifications.
