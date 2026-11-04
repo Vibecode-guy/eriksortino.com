@@ -359,3 +359,19 @@ test('six-provider capacity remains enforced across concurrent incidents and fre
  assert.equal(E.providerBoard(s).filter(p=>p.busy).length,5);
  assert.ok(E.eligibleProviders(s,waiting.id).some(p=>p.id==='P-02'));
 });
+
+test('configurable fleet generation is deterministic, bounded and isolated from defaults',()=>{
+ const baseline=E.initialState();
+ const a=E.initialState({seed:42,count:100});
+ const b=E.initialState({seed:42,count:100});
+ const other=E.initialState({seed:43,count:100});
+ assert.deepEqual(a.vehicles,b.vehicles);
+ assert.notDeepEqual(a.vehicles,other.vehicles);
+ assert.equal(E.initialState({seed:0,count:12}).vehicles.length,12);
+ assert.equal(E.initialState({seed:4294967295,count:240}).vehicles.length,240);
+ assert.equal(new Set(E.initialState({seed:7,count:240}).vehicles.map(v=>v.id)).size,240);
+ assert.deepEqual(E.initialState().vehicles,baseline.vehicles);
+ assert.equal(a.providers.length,6);
+ for(const bad of [{seed:-1,count:100},{seed:2.5,count:100},{seed:1,count:11},{seed:1,count:241},{seed:1,count:100.5}])
+  assert.throws(()=>E.initialState(bad),/seed|size/i);
+});
