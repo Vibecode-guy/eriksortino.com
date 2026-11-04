@@ -4,6 +4,8 @@ on:
     paths:
       - project3-av-command-center.html
       - index.html
+      - scripts/project3-map-density.js
+      - scripts/test-project3-map-density.cjs
       - scripts/project3-engine.js
       - scripts/project3-analytics.js
       - scripts/project3-planning.js
@@ -24,6 +26,8 @@ jobs:
           node-version: '22'
       - name: Validate JavaScript syntax and dispatch acceptance tests
         run: |
+          node --check scripts/project3-map-density.js
+          node --check scripts/test-project3-map-density.cjs
           node --check scripts/project3-engine.js
           node --check scripts/project3-analytics.js
           node --check scripts/project3-planning.js
@@ -31,7 +35,7 @@ jobs:
           node --check scripts/test-project3-planning.cjs
           node --check scripts/test-project3-analytics.cjs
           node --check scripts/test-project3-engine.cjs
-          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs scripts/test-project3-planning.cjs
+          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs scripts/test-project3-planning.cjs scripts/test-project3-map-density.cjs
       - name: Validate static integration, disclosure and inline JS
         run: |
           node - <<'NODE'
@@ -39,6 +43,7 @@ jobs:
           const page=fs.readFileSync('project3-av-command-center.html','utf8');
           const home=fs.readFileSync('index.html','utf8');
           assert(home.includes('href="project3-av-command-center.html"'),'Portfolio navigation missing');
+          assert(page.includes('src="scripts/project3-map-density.js'),'Map density module missing');
           assert(page.includes('src="scripts/project3-engine.js'),'Engine script missing');
           assert(page.includes('src="scripts/project3-analytics.js'),'Analytics script missing');
           assert(page.includes('src="scripts/project3-planning.js'),'Planning script missing');
