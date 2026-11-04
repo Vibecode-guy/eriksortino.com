@@ -14,11 +14,15 @@ const PROVIDERS=[
  {id:'P-04',name:'Valley Response',area:'Valley',lat:34.175,lon:-118.420,capabilities:['door_ajar','immobilized','flat_tire','flatbed'],baseCost:175}
 ];
 const ZONES=[['Central LA',34.049,-118.246],['Westside / Venice',33.994,-118.469],['San Fernando Valley',34.175,-118.420],['South LA / LAX',33.961,-118.353],['Harbor / San Pedro',33.739,-118.289]];
-function seededFleet(){
+const DEFAULT_FLEET_CONFIG=Object.freeze({seed:20261102,count:100});
+function seededFleet(config=DEFAULT_FLEET_CONFIG){
+ const {seed:inputSeed=DEFAULT_FLEET_CONFIG.seed,count=DEFAULT_FLEET_CONFIG.count}=config;
+ if(!Number.isSafeInteger(inputSeed)||inputSeed<0||inputSeed>4294967295)throw Error('Fleet seed must be a 32-bit unsigned integer');
+ if(!Number.isSafeInteger(count)||count<12||count>240)throw Error('Fleet size must be 12–240');
  const out=VEHICLES.map(([id,area,lat,lon])=>({id,area,lat,lon,status:'available'}));
- let seed=20261102;
+ let seed=inputSeed;
  const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
- for(let n=113;n<=200;n++){
+ for(let n=113;n<101+count;n++){
   const zone=ZONES[(n-113)%ZONES.length];
   out.push({id:'AV-'+n,area:zone[0],lat:+(zone[1]+(rand()-.5)*.055).toFixed(6),lon:+(zone[2]+(rand()-.5)*.075).toFixed(6),status:'available'});
  }
@@ -36,7 +40,7 @@ const TYPES={
  flatbed:{label:'Flatbed recovery',severity:'Critical',sla:45,needs:'flatbed',minutes:[8,16,35],impact:'Vehicle unavailable'},
  depot:{label:'Depot transport',severity:'Medium',sla:60,needs:'depot',minutes:[6,18,32],impact:'Vehicle unavailable'}
 };
-function initialState(){return {minute:0,nextId:1,selected:'AV-101',vehicles:FLEET.map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[],providerOffers:[],providerCancellations:[],additionalCharges:[],providerSurveys:[],qualityPlans:[]};}
+function initialState(config){return {minute:0,nextId:1,selected:'AV-101',vehicles:(config?seededFleet(config):FLEET).map(v=>({...v})),providers:PROVIDERS.map(p=>({...p})),incidents:[],providerOffers:[],providerCancellations:[],additionalCharges:[],providerSurveys:[],qualityPlans:[]};}
 
 // Deterministic showcase data, created through the same state transitions as manual dispatch.
 function demoState(){
@@ -372,5 +376,5 @@ function shiftHandoff(s){
    safety:i.customerSafety?.danger&&i.customerSafety.safeAt===null?'CUSTOMER SAFETY PRIORITY':'standard'}))};
 }
 
-return {providerReviewQueue,openQualityPlan,updateQualityPlan,providerQualityPlans,providerHistory,providerScorecard,recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
+return {DEFAULT_FLEET_CONFIG,seededFleet,providerReviewQueue,openQualityPlan,updateQualityPlan,providerQualityPlans,providerHistory,providerScorecard,recordProviderSurvey,providerExperience,cancelProviderAssignment,recordAdditionalCharge,providerQuality,recordProviderOffer,providerAcceptance,incidentSla,slaMonitoring,DISPATCHERS,assignIncidentOwner,acknowledgeIncident,addIncidentNote,addPendingAction,completePendingAction,vehicleHealth,shiftHandoff,providerBoard,DANGER_REASONS,flagCustomerDanger,escalateCustomerEmergency,TYPES,initialState,demoState,createIncident,eligibleProviders,assign,advance,resolveTire,requestRecovery,availableReplacementAVs,dispatchReplacement,arriveReplacement,completePassengerTransfer,escalate,tick,kpis,safetyMetrics,responseBreakdown,responsePerformance,customerSafetyTimeline,prioritizedIncidents,elapsed,estimateTravel};
 });
