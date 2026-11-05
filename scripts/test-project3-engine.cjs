@@ -375,3 +375,21 @@ test('configurable fleet generation is deterministic, bounded and isolated from 
  for(const bad of [{seed:-1,count:100},{seed:2.5,count:100},{seed:1,count:11},{seed:1,count:241},{seed:1,count:100.5}])
   assert.throws(()=>E.initialState(bad),/seed|size/i);
 });
+
+
+test('crew ranking is deterministic, capability-safe, capacity-safe and explains modeled cost and ETA',()=>{
+ const state=E.initialState(),incident=E.createIncident(state,'AV-101','flatbed');
+ const offers=E.eligibleProviders(state,incident.id);
+ assert.ok(offers.length>=2);
+ assert.ok(offers.every(p=>p.capabilities.includes('flatbed')&&Number.isFinite(p.estimatedCost)&&p.estimatedCost===p.baseCost+125));
+ assert.ok(offers.every(p=>p.estimatedOnSceneMinutes===p.estimatedMinutes+E.TYPES.flatbed.minutes[0]));
+ assert.ok(offers.every(p=>p.estimateBasis.includes('no road routing')));
+ for(let n=1;n<offers.length;n++){
+  const a=offers[n-1],b=offers[n];
+  assert.ok(a.estimatedOnSceneMinutes<b.estimatedOnSceneMinutes||a.estimatedOnSceneMinutes===b.estimatedOnSceneMinutes&&(a.estimatedCost<b.estimatedCost||a.estimatedCost===b.estimatedCost&&a.id.localeCompare(b.id)<=0));
+ }
+ assert.deepEqual(E.eligibleProviders(state,incident.id),offers);
+ E.assign(state,incident.id,offers[0].id);
+ const second=E.createIncident(state,'AV-102','flatbed');
+ assert.ok(E.eligibleProviders(state,second.id).every(p=>p.id!==offers[0].id));
+});
