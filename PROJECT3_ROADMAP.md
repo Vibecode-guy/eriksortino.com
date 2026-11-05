@@ -51,10 +51,19 @@
 
 ## Current prioritized next steps (2026-11-04)
 1. Confirm Project 3 CI and Pages deployment for map-density changes; run actual mobile/keyboard browser checks when available.
-2. Source and attribute a public Los Angeles geographic basemap; keep synthetic AV coordinates and avoid claiming real telemetry or street-snapped points.
+2. Source and attribute a public Los Angeles geographic basemap. The existing schematic now uses explicit WGS84 bounds and tested coordinate projection; it is NOT a street map, real telemetry, or road-snapped geometry.
 3. Validate a road-network routing provider and its usage constraints; preserve clearly labeled deterministic straight-line fallback.
 4. Rank eligible, unoccupied crews by capability, modeled ETA, cost and deterministic tie-breaks; regression-test capacity and SLA implications.
 5. Reconcile scenario and operational denominators, add regression tests for accessibility and extreme workloads.
+
+
+### Geographic projection milestone (2026-11-04 evening)
+- [x] Inspect existing schematic SVG, 100-vehicle generator, map density filter and CI before editing.
+- [x] Add `scripts/project3-geo.js`: deterministic WGS84 latitude/longitude projection into the existing 900×610 schematic, declared bounds west −118.60/east −118.15/south 33.68/north 34.30, clipping with an explicit out-of-bounds flag, and a fleet coordinate audit. These are **illustrative service-area extents**, not official LA city boundaries.
+- [x] Integrate projection in existing vehicle-marker renderer without recreating the page or changing incident workflows. Clearly label the result a schematic with synthetic WGS84 positions, not live GPS or road-snapped positions.
+- [x] Add five geography regression cases (orientation, edge clipping, invalid coordinates, 100-vehicle/six-team audit, 240-vehicle seeded reproducibility) and include in CI.
+- [ ] Confirm full post-integration CI and latest GitHub Pages deployment; browser/mobile acceptance still pending.
+- [ ] Source an actual, attributed public LA basemap and determine a compatible accessible rendering strategy. **Not yet implemented:** real street geometry, routing, traffic or verified on-road travel times.
 
 ## Phase 4 planning methodology (explicitly fictional)
 
