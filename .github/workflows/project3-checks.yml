@@ -4,7 +4,9 @@ on:
     paths:
       - project3-av-command-center.html
       - index.html
-      - scripts/project3-street-map.js\n      - scripts/test-project3-street-map.cjs\n      - scripts/project3-geo.js
+      - scripts/project3-street-map.js
+      - scripts/test-project3-street-map.cjs
+      - scripts/project3-geo.js
       - scripts/test-project3-geo.cjs
       - scripts/project3-map-density.js
       - scripts/test-project3-map-density.cjs
@@ -28,7 +30,9 @@ jobs:
           node-version: '22'
       - name: Validate JavaScript syntax and dispatch acceptance tests
         run: |
-          node --check scripts/project3-street-map.js\n          node --check scripts/test-project3-street-map.cjs\n          node --check scripts/project3-geo.js
+          node --check scripts/project3-street-map.js
+          node --check scripts/test-project3-street-map.cjs
+          node --check scripts/project3-geo.js
           node --check scripts/test-project3-geo.cjs
           node --check scripts/project3-map-density.js
           node --check scripts/test-project3-map-density.cjs
