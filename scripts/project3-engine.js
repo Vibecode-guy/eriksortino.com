@@ -62,7 +62,17 @@ function provider(s,id){const p=s.providers.find(x=>x.id===id);if(!p)throw Error
 function createIncident(s,vehicleId,type){const v=vehicle(s,vehicleId),t=TYPES[type];if(!t)throw Error('Unknown incident type');if(v.status!=='available')throw Error('Vehicle already unavailable');const i={id:'INC-'+String(s.nextId++).padStart(3,'0'),vehicleId,type,severity:t.severity,sla:t.sla,created:s.minute,status:'queued',providerId:null,assignedAt:null,enRouteAt:null,onSceneAt:null,completedAt:null,cost:0,tireResolution:null,recoveryProviderId:null,recoveryRequestedAt:null,recoveryOnSceneAt:null,redispatchReason:null,owner:null,acknowledgedAt:null,notes:[],pendingActions:[],evacuation:null,customerSafety:{danger:false,reason:null,flaggedAt:null,emergencyEscalatedAt:null,safeAt:null},escalated:false};s.incidents.unshift(i);v.status='incident';return i;}
 function providerBusy(s,id,excludeId){return s.incidents.some(i=>i.id!==excludeId&&i.status!=='completed'&&(i.providerId===id||i.recoveryProviderId===id));}
 function providerBoard(s){return s.providers.map(p=>{const current=s.incidents.find(i=>i.status!=='completed'&&(i.providerId===p.id||i.recoveryProviderId===p.id));return {...p,busy:!!current,incidentId:current?.id||null};});}
-function eligibleProviders(s,incidentId){const i=incident(s,incidentId);return s.providers.filter(p=>!providerBusy(s,p.id,i.id)&&p.capabilities.includes(TYPES[i.type].needs)).map(p=>({...p,estimatedMinutes:estimateTravel(vehicle(s,i.vehicleId),p)})).sort((a,b)=>a.estimatedMinutes-b.estimatedMinutes||a.id.localeCompare(b.id));}
+function eligibleProviders(s,incidentId){
+ const i=incident(s,incidentId),v=vehicle(s,i.vehicleId),t=TYPES[i.type];
+ // Illustrative ranking, not real dispatch advice: available + equipped first,
+ // then minimum modeled on-scene ETA, lower estimated charge, stable ID.
+ // The cost matches the initial one-crew completion charge; optional tire
+ // recovery handoffs and later adjustments are excluded until selected.
+ const surcharge=i.type==='flatbed'?125:i.type==='depot'?95:i.type==='flat_tire'?55:0;
+ return s.providers.filter(p=>!providerBusy(s,p.id,i.id)&&p.capabilities.includes(t.needs))
+  .map(p=>({...p,estimatedMinutes:estimateTravel(v,p),estimatedOnSceneMinutes:t.minutes[0]+estimateTravel(v,p),estimatedCost:p.baseCost+surcharge,estimateBasis:'Synthetic straight-line distance / assumed 31 km/h; no road routing or traffic'}))
+  .sort((a,b)=>a.estimatedOnSceneMinutes-b.estimatedOnSceneMinutes||a.estimatedCost-b.estimatedCost||a.id.localeCompare(b.id));
+}
 function estimateTravel(v,p){const dy=(v.lat-p.lat)*111,dx=(v.lon-p.lon)*92;return Math.max(6,Math.round(Math.hypot(dx,dy)/.52+5));} // synthetic effective speed ~31 km/h
 function recordProviderOffer(s,incidentId,providerId,outcome){
  const i=incident(s,incidentId),p=provider(s,providerId);
