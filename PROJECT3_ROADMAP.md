@@ -105,3 +105,11 @@
 - [ ] Verify the Leaflet/OpenStreetMap tile availability, attribution and acceptable-use limits before treating the optional public basemap as a dependable production service. Synthetic coordinates are not road-snapped or real telemetry.
 - [ ] Add tested road-network travel estimates with an explicitly labeled deterministic fallback; do not imply real traffic or actual fleet dispatch ETAs.
 - [ ] Audit accessibility focus and announcement behavior; add tests for incident workflows at configurable 240-vehicle size and six simultaneously occupied teams.
+
+### 2026-11-06 — 240-vehicle stress regression
+- [x] Inspected current engine, existing engine tests, CI workflow, and recent commits before editing; Projects 1 and 2 remain unchanged.
+- [x] Added a 240-vehicle fixed-seed lifecycle regression exercising six simultaneous incidents, provider assignment/completion, fleet availability (240 → 234 → 235), active/completed denominators, response mean/p90, cost, queued incident count, and deterministic reset. Test commit: `36e0a860`.
+- [ ] Confirm new CI run `42229450844` passes, including static integration; test was queued/in progress at writing. Earlier roadmap commit `99f9ef48` passed CI run `42154161064` and Pages run `42154161719`.
+- [ ] Complete actual mobile/keyboard browser acceptance, live page navigation, and attribution checks. GitHub Pages deployment alone does not prove browser interactions work.
+- [ ] Validate a verifiable routing source, permissions/quotas and deterministic labeled fallback before replacing synthetic straight-line estimates.
+- [ ] Expose optional 240-vehicle fixture controls only after mobile selector and map density acceptance.
