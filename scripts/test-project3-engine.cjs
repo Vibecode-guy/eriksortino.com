@@ -393,3 +393,31 @@ test('crew ranking is deterministic, capability-safe, capacity-safe and explains
  const second=E.createIncident(state,'AV-102','flatbed');
  assert.ok(E.eligibleProviders(state,second.id).every(p=>p.id!==offers[0].id));
 });
+
+test('240-vehicle stress fixture keeps incident lifecycle, capacity, and KPI denominators consistent',()=>{
+ const s=E.initialState({seed:4294967295,count:240});
+ assert.equal(s.vehicles.length,240);
+ assert.equal(E.kpis(s).available,240);
+ const ids=['AV-113','AV-157','AV-201','AV-252','AV-300','AV-340'];
+ const types=['door_ajar','flat_tire','immobilized','flatbed','depot','door_ajar'];
+ const incidents=ids.map((id,index)=>E.createIncident(s,id,types[index]));
+ assert.equal(E.kpis(s).available,234);
+ assert.equal(E.kpis(s).active,6);
+ assert.equal(new Set(incidents.map(i=>i.vehicleId)).size,6);
+ const first=incidents[0],offers=E.eligibleProviders(s,first.id);
+ assert.ok(offers.length>0);
+ E.assign(s,first.id,offers[0].id);
+ for(let step=0;step<3;step++)E.advance(s,first.id);
+ const k=E.kpis(s);
+ assert.equal(k.available,235);
+ assert.equal(k.active,5);
+ assert.equal(k.completed,1);
+ assert.equal(k.meanResponse,first.onSceneAt-first.created);
+ assert.equal(k.p90Response,k.meanResponse);
+ assert.ok(k.totalCost>0);
+ assert.equal(s.incidents.filter(i=>i.status==='queued').length,5);
+ const reset=E.initialState({seed:4294967295,count:240});
+ assert.equal(E.kpis(reset).available,240);
+ assert.equal(reset.incidents.length,0);
+ assert.deepEqual(reset.vehicles,E.initialState({seed:4294967295,count:240}).vehicles);
+});
