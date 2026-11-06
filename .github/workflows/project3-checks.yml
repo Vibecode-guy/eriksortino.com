@@ -43,7 +43,7 @@ jobs:
           node --check scripts/test-project3-planning.cjs
           node --check scripts/test-project3-analytics.cjs
           node --check scripts/test-project3-engine.cjs
-          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs scripts/test-project3-planning.cjs scripts/test-project3-map-density.cjs scripts/test-project3-geo.cjs
+          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs scripts/test-project3-planning.cjs scripts/test-project3-map-density.cjs scripts/test-project3-geo.cjs scripts/test-project3-street-map.cjs
       - name: Validate static integration, disclosure and inline JS
         run: |
           node - <<'NODE'
@@ -52,6 +52,8 @@ jobs:
           const home=fs.readFileSync('index.html','utf8');
           assert(home.includes('href="project3-av-command-center.html"'),'Portfolio navigation missing');
           assert(page.includes('src="scripts/project3-geo.js'),'Geography module missing');
+          assert(page.includes('src="scripts/project3-street-map.js'),'Street map module missing');
+          assert(page.includes('id="streetMapToggle"'),'Street map toggle missing');
           assert(page.includes('AVGeo.project(v.lat,v.lon)'),'Geography projection not integrated');
           assert(page.includes('src="scripts/project3-map-density.js'),'Map density module missing');
           assert(page.includes('src="scripts/project3-engine.js'),'Engine script missing');
