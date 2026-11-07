@@ -120,3 +120,14 @@
 - [ ] Verify CI run for `2431afab` and resolve the latest Pages failure before declaring current production deployed.
 - [ ] Highest priority: actual browser keyboard/mobile map toggle, incident lifecycle, 240-vehicle selector and focus/status announcements.
 - [ ] Next: confirm OSM tile usage/attribution policy and verify routing provider permission, reproducibility and clearly labeled straight-line fallback; no live fleet telemetry or traffic claims.
+
+
+### 2026-11-07 — public basemap keyboard accessibility
+- [x] Inspected latest repository commits, existing map integration and test workflow before editing.
+- [x] Added focusable public-basemap vehicle marker controls with role, descriptive synthetic-data aria-label, Enter/Space selection and no Tab interception; the existing schematic and workflows remain unchanged.
+- [x] Added mocked Leaflet regression covering accessible marker attributes and keyboard interaction.
+- [ ] Confirm new GitHub Actions regression and Pages deployment results for commits 68bf2388 / 9ca0d865 and this roadmap update.
+- [ ] Verify keyboard focus visibility and marker selection in an actual browser on desktop and mobile; mocked tests are not browser acceptance.
+- [ ] Confirm public OSM tile loading and attribution in browser; third-party tiles may be unavailable.
+- [ ] Validate road-network routing source, terms and availability before replacing synthetic distance-based ETA; retain documented deterministic fallback.
+- [ ] Check mobile focus, map toggle, incident workflows and 240-vehicle performance in real browsers.
