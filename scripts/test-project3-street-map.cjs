@@ -32,3 +32,17 @@ test('street map renders only valid synthetic markers, handles selection and cle
   assert(events.includes('resize')&&events.includes('remove')&&events.includes('tiles'));
  }finally{if(old===undefined)delete globalThis.L;else globalThis.L=old;}
 });
+
+
+test('public basemap marker exposes keyboard selection and accessible synthetic label',()=>{
+ const old=globalThis.L;let keyHandler,selected;const attrs={};
+ const element={setAttribute(k,v){attrs[k]=v;},addEventListener(k,fn){if(k==='keydown')keyHandler=fn;}};
+ const layer={clearLayers(){},addTo(){return this;}};
+ globalThis.L={map(){return {setView(){return this;},invalidateSize(){},remove(){}};},tileLayer(){return {addTo(){}};},layerGroup(){return layer;},circleMarker(){return {bindTooltip(){return this;},on(){return this;},addTo(){return this;},getElement(){return element;}};}};
+ try{const instance=M.create('map',id=>{selected=id;});instance.update([{id:'AV-42',lat:34.05,lon:-118.3,area:'Central LA',status:'available'}],null);
+ assert.equal(attrs.role,'button');assert.equal(attrs.tabindex,'0');assert.match(attrs['aria-label'],/synthetic vehicle AV-42/);
+ let prevented=false;keyHandler({key:'Enter',preventDefault(){prevented=true;}});assert.equal(selected,'AV-42');assert(prevented);
+ selected=null;keyHandler({key:' ',preventDefault(){prevented=true;}});assert.equal(selected,'AV-42');
+ selected=null;keyHandler({key:'Tab',preventDefault(){throw Error('Tab should not be prevented');}});assert.equal(selected,null);
+ instance.destroy();}finally{if(old===undefined)delete globalThis.L;else globalThis.L=old;}
+});
