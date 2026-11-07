@@ -12,7 +12,7 @@ function create(container,onSelect){
  const map=globalThis.L.map(container,{scrollWheelZoom:false}).setView([34.0522,-118.30],10);
  globalThis.L.tileLayer(OSM_TILES,{attribution:ATTRIBUTION,maxZoom:18}).addTo(map);
  const layer=globalThis.L.layerGroup().addTo(map);
- return {update(vehicles,selected){layer.clearLayers();for(const v of points(vehicles)){const marker=globalThis.L.circleMarker([v.lat,v.lon],{radius:v.id===selected?9:6,color:v.id===selected?'#ffffff':'#092331',weight:2,fillColor:v.status==='available'?'#89e7b3':'#ff8b92',fillOpacity:.95});marker.bindTooltip(String(v.id)+' · '+String(v.area)+' · '+String(v.status));marker.on('click',()=>onSelect(v.id));marker.addTo(layer);} },invalidate(){map.invalidateSize();},destroy(){map.remove();}};
+ return {update(vehicles,selected){layer.clearLayers();for(const v of points(vehicles)){const marker=globalThis.L.circleMarker([v.lat,v.lon],{radius:v.id===selected?9:6,color:v.id===selected?'#ffffff':'#092331',weight:2,fillColor:v.status==='available'?'#89e7b3':'#ff8b92',fillOpacity:.95});marker.bindTooltip(String(v.id)+' · '+String(v.area)+' · '+String(v.status));marker.on('click',()=>onSelect(v.id));marker.addTo(layer);const el=typeof marker.getElement==='function'?marker.getElement():null;if(el){el.setAttribute('tabindex','0');el.setAttribute('role','button');el.setAttribute('aria-label','Select synthetic vehicle '+String(v.id)+' in '+String(v.area)+', '+String(v.status));el.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onSelect(v.id);}});}} },invalidate(){map.invalidateSize();},destroy(){map.remove();}};
 }
 return {OSM_TILES,ATTRIBUTION,eligible,points,create};
 });
