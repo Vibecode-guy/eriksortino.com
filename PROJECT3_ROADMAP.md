@@ -113,3 +113,10 @@
 - [ ] Complete actual mobile/keyboard browser acceptance, live page navigation, and attribution checks. GitHub Pages deployment alone does not prove browser interactions work.
 - [ ] Validate a verifiable routing source, permissions/quotas and deterministic labeled fallback before replacing synthetic straight-line estimates.
 - [ ] Expose optional 240-vehicle fixture controls only after mobile selector and map density acceptance.
+
+### 2026-11-06 evening — public street-map lifecycle regression
+- [x] Inspected recent commits, deployed workflow statuses, Project 3 street-map module, existing tests, and roadmap. Homepage project renaming commit `b9c723bf` passed Project 3 CI but its Pages deployment run `42267270632` failed; preceding roadmap commit `efadb205` deployed successfully (run `42229486940`). Do not equate successful CI with a deployed homepage.
+- [x] Added isolated mocked-Leaflet regression covering map initialization and OSM attribution, invalid-coordinate exclusion, synthetic marker positions, selected-marker emphasis, click-to-select, re-render clearing, resize and cleanup. Commit `2431afab`. This is a unit test, **not** a real browser, mobile, tile-availability, or live-geography verification.
+- [ ] Verify CI run for `2431afab` and resolve the latest Pages failure before declaring current production deployed.
+- [ ] Highest priority: actual browser keyboard/mobile map toggle, incident lifecycle, 240-vehicle selector and focus/status announcements.
+- [ ] Next: confirm OSM tile usage/attribution policy and verify routing provider permission, reproducibility and clearly labeled straight-line fallback; no live fleet telemetry or traffic claims.
