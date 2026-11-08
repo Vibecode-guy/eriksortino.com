@@ -56,3 +56,12 @@ test('street-map coordinate filtering preserves input and accepts geographic edg
  assert.notEqual(M.points(vehicles)[0],vehicles[0]);
  assert.throws(()=>M.points(null),/array/);
 });
+
+// Static contract: keyboard-operable Leaflet markers must also show visible focus.
+test('dashboard provides visible keyboard focus for public street-map markers',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const html=fs.readFileSync(path.join(__dirname,'..','project3-av-command-center.html'),'utf8');
+ assert.match(html,/#streetMap\\s+\\.leaflet-interactive:focus-visible\\s*\\{[^}]*outline:\\s*[3-9]px\\s+solid\\s+var\\(--gold\\)/);
+ assert.match(html,/id="streetMapToggle"[^>]*aria-pressed="false"/);
+ assert.match(html,/id="streetMapStatus"[^>]*role="status"/);
+});
