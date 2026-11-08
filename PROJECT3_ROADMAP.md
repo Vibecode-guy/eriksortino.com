@@ -137,3 +137,10 @@
 - [x] Added public basemap WGS84 boundary regression: ±90° latitude, ±180° longitude, invalid out-of-range coordinates, missing/nonnumeric values, nonmutation and rejected non-array input (`1583ce0c`). All map coordinates remain synthetic and not street-snapped.
 - [ ] Confirm CI and Pages for the newest test/roadmap commits; no live browser or mobile device acceptance has been performed.
 - [ ] Next: browser-based focus visibility and mobile interaction acceptance; road-network routing requires a verifiable service, rate-limit/privacy assessment, and explicit deterministic fallback. Do not equate a successful Pages build with browser correctness.
+
+### 2026-11-08 morning — visible focus for keyboard-operated public map markers
+- [x] Inspected default-branch commits, current HTML, street-map module, regression suite, roadmap and Actions history. Latest preceding commit `f42cca49` passed both Project 3 checks and GitHub Pages deployment. Existing 100-vehicle/six-team synthetic engine, optional OSM basemap, incident workflows, provider ranking and scenario planning were retained.
+- [x] Added explicit high-contrast `:focus-visible` outline and stroke emphasis for Leaflet SVG vehicle markers (`26006757`); added static regression for focus styling, map toggle state and status announcement (`1e0a6963`). No changes to Projects 1 or 2.
+- [ ] Verify CI and Pages runs for the new changes before claiming they passed; the checks were queued when inspected. Confirm actual focus outline, marker selection, map tiles and incident lifecycle in real desktop/mobile browsers, which CI mocks cannot establish.
+- [ ] Prioritize road-network travel estimates only after selecting a permitted, reproducible routing source and documenting cost/quotas, no live telemetry, and a deterministic labeled straight-line fallback.
+- [ ] Continue checking 100-vehicle default/240-vehicle stress fixture performance, six-team dispatch eligibility, KPI denominators and scenario comparisons without duplicating existing controls.
