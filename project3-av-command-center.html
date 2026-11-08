@@ -72,6 +72,8 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 .stress-summary strong{color:#55ddd1}
 @media(max-width:570px){.stress-presets button{flex:1;padding:9px 6px;font-size:11px}}
 
+/* Keyboard focus on SVG Leaflet vehicle markers must remain visible over map tiles. */
+#streetMap .leaflet-interactive:focus-visible{outline:4px solid var(--gold);outline-offset:4px;stroke-width:5px;filter:drop-shadow(0 0 3px #08121d)}
 #streetMap{height:430px;max-height:65vh;border:1px solid var(--edge);border-radius:10px;background:#102838}#streetMap[hidden]{display:none}.map-toggle{margin:9px 0}.leaflet-container{font:13px system-ui,sans-serif}@media(max-width:570px){#streetMap{height:300px}}
 </style></head><body><div class="shell">
 <header><a class="brand" href="index.html">ES <span>/ OPERATIONS LAB</span></a><span class="tag">Populated demo · synthetic data only</span></header>
