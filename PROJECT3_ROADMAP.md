@@ -131,3 +131,9 @@
 - [ ] Confirm public OSM tile loading and attribution in browser; third-party tiles may be unavailable.
 - [ ] Validate road-network routing source, terms and availability before replacing synthetic distance-based ETA; retain documented deterministic fallback.
 - [ ] Check mobile focus, map toggle, incident workflows and 240-vehicle performance in real browsers.
+
+### 2026-11-07 evening — geographic boundary regression
+- [x] Confirmed latest prior CI `42379296746` and Pages deployment `42379297591` succeeded for `ef0fe54f`.
+- [x] Added public basemap WGS84 boundary regression: ±90° latitude, ±180° longitude, invalid out-of-range coordinates, missing/nonnumeric values, nonmutation and rejected non-array input (`1583ce0c`). All map coordinates remain synthetic and not street-snapped.
+- [ ] Confirm CI and Pages for the newest test/roadmap commits; no live browser or mobile device acceptance has been performed.
+- [ ] Next: browser-based focus visibility and mobile interaction acceptance; road-network routing requires a verifiable service, rate-limit/privacy assessment, and explicit deterministic fallback. Do not equate a successful Pages build with browser correctness.
