@@ -46,3 +46,13 @@ test('public basemap marker exposes keyboard selection and accessible synthetic 
  selected=null;keyHandler({key:'Tab',preventDefault(){throw Error('Tab should not be prevented');}});assert.equal(selected,null);
  instance.destroy();}finally{if(old===undefined)delete globalThis.L;else globalThis.L=old;}
 });
+
+// Public map data is illustrative: invalid WGS84 coordinates never become markers.
+test('street-map coordinate filtering preserves input and accepts geographic edge values',()=>{
+ const vehicles=[{id:'west',lat:0,lon:-180,status:'available',area:'Edge'},{id:'east',lat:0,lon:180,status:'available',area:'Edge'},{id:'north',lat:90,lon:0,status:'available',area:'Edge'},{id:'south',lat:-90,lon:0,status:'available',area:'Edge'},{id:'bad-lat',lat:-90.01,lon:0},{id:'bad-lon',lat:0,lon:180.01},{id:'missing',lat:null,lon:0},{id:'string',lat:'34.05',lon:-118.3}];
+ const before=JSON.stringify(vehicles);
+ assert.deepEqual(M.points(vehicles).map(v=>v.id),['west','east','north','south']);
+ assert.equal(JSON.stringify(vehicles),before);
+ assert.notEqual(M.points(vehicles)[0],vehicles[0]);
+ assert.throws(()=>M.points(null),/array/);
+});
