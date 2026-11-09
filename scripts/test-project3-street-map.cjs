@@ -65,3 +65,23 @@ test('dashboard provides visible keyboard focus for public street-map markers',(
  assert.match(html,/id="streetMapToggle"[^>]*aria-pressed="false"/);
  assert.match(html,/id="streetMapStatus"[^>]*role="status"/);
 });
+
+test('keyboard marker selection restores focus after synchronous map redraw',async()=>{
+ const old=globalThis.L;
+ let focused=null,instance;
+ const elements=[];
+ const container={querySelectorAll(){return elements.slice(-1);}};
+ const layer={clearLayers(){elements.length=0;},addTo(){return this;}};
+ globalThis.L={map(){return {setView(){return this;},invalidateSize(){},remove(){}};},tileLayer(){return {addTo(){}};},layerGroup(){return layer;},circleMarker(){const attrs={},handlers={};const el={setAttribute(k,v){attrs[k]=v;},getAttribute(k){return attrs[k];},addEventListener(k,fn){handlers[k]=fn;},focus(){focused=attrs['data-synthetic-vehicle-id'];},trigger(k,event){handlers[k](event);}};return {bindTooltip(){return this;},on(){return this;},addTo(){elements.push(el);return this;},getElement(){return el;}};}};
+ try{
+  const fleet=[{id:'AV-42',lat:34.05,lon:-118.3,area:'Central LA',status:'available'}];
+  instance=M.create(container,id=>instance.update(fleet,id));
+  instance.update(fleet,null);
+  const oldElement=elements[0];
+  oldElement.trigger('keydown',{key:'Enter',preventDefault(){}});
+  await Promise.resolve();
+  assert.equal(focused,'AV-42');
+  assert.notEqual(elements[0],oldElement);
+  instance.destroy();
+ }finally{if(old===undefined)delete globalThis.L;else globalThis.L=old;}
+});
