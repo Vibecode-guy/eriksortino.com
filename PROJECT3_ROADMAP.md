@@ -153,3 +153,10 @@
 - [ ] Confirm latest CI and Pages deployment for both code and documentation commits; passing mocked tests is not live mobile/desktop acceptance.
 - [ ] In a real browser, verify keyboard Tab/Enter/Space, focus restoration, screen-reader announcements, map toggle, OSM tile attribution, and 100/240-vehicle performance.
 - [ ] Continue verifiable road-network routing research with privacy/usage constraints and deterministic, clearly labeled synthetic fallback; do not claim live traffic, real telemetry or partner data.
+
+### 2026-11-09 morning — selected-marker state for assistive technology
+- [x] Inspected latest commits, Project 3 street-map module, mocked map regression, engine seed/configuration and GitHub Actions status. Previous commit `a692f2df` passed CI and Pages deployment.
+- [x] Added `aria-pressed` to synthetic street-map vehicle buttons to distinguish selected and unselected markers for assistive technology (`bc791dc4`). Existing map rendering and dispatch remain unchanged.
+- [x] Expanded mocked regression to assert `aria-pressed=false` initially and `true` after keyboard selection and synchronous redraw (`fd08b3fb`).
+- [ ] Confirm CI and Pages results for the new commits; no claim of browser acceptance until actual browser checks. Live tile availability and mobile focus visibility remain unverified.
+- [ ] Next: real browser/mobile keyboard and map-tile acceptance, map density with 240 vehicles, then evaluate permitted verifiable road-network routing with deterministic clearly labeled fallback. Synthetic positions are not live telemetry or road-snapped coordinates.
