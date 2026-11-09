@@ -144,3 +144,12 @@
 - [ ] Verify CI and Pages runs for the new changes before claiming they passed; the checks were queued when inspected. Confirm actual focus outline, marker selection, map tiles and incident lifecycle in real desktop/mobile browsers, which CI mocks cannot establish.
 - [ ] Prioritize road-network travel estimates only after selecting a permitted, reproducible routing source and documenting cost/quotas, no live telemetry, and a deterministic labeled straight-line fallback.
 - [ ] Continue checking 100-vehicle default/240-vehicle stress fixture performance, six-team dispatch eligibility, KPI denominators and scenario comparisons without duplicating existing controls.
+
+
+### 2026-11-08 evening — preserve keyboard focus across public-map rerenders
+- [x] Inspected default-branch Project 3 page, street-map module, regression suite, recent commits and Actions history. Prior commit `51810844` passed CI and Pages.
+- [x] Leaflet markers are rebuilt after selection; keyboard focus could be lost when the selected marker was removed. Restore focus to the same synthetic marker after synchronous render using a microtask, without intercepting Tab or changing map coordinates. Commit `281a6e0b`.
+- [x] Add mocked regression for Enter selection, redraw and focus restoration. Commit `9d69a8ea`.
+- [ ] Confirm latest CI and Pages deployment for both code and documentation commits; passing mocked tests is not live mobile/desktop acceptance.
+- [ ] In a real browser, verify keyboard Tab/Enter/Space, focus restoration, screen-reader announcements, map toggle, OSM tile attribution, and 100/240-vehicle performance.
+- [ ] Continue verifiable road-network routing research with privacy/usage constraints and deterministic, clearly labeled synthetic fallback; do not claim live traffic, real telemetry or partner data.
