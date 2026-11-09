@@ -40,7 +40,7 @@ test('public basemap marker exposes keyboard selection and accessible synthetic 
  const layer={clearLayers(){},addTo(){return this;}};
  globalThis.L={map(){return {setView(){return this;},invalidateSize(){},remove(){}};},tileLayer(){return {addTo(){}};},layerGroup(){return layer;},circleMarker(){return {bindTooltip(){return this;},on(){return this;},addTo(){return this;},getElement(){return element;}};}};
  try{const instance=M.create('map',id=>{selected=id;});instance.update([{id:'AV-42',lat:34.05,lon:-118.3,area:'Central LA',status:'available'}],null);
- assert.equal(attrs.role,'button');assert.equal(attrs.tabindex,'0');assert.match(attrs['aria-label'],/synthetic vehicle AV-42/);
+ assert.equal(attrs.role,'button');assert.equal(attrs.tabindex,'0');assert.equal(attrs['aria-pressed'],'false');assert.match(attrs['aria-label'],/synthetic vehicle AV-42/);
  let prevented=false;keyHandler({key:'Enter',preventDefault(){prevented=true;}});assert.equal(selected,'AV-42');assert(prevented);
  selected=null;keyHandler({key:' ',preventDefault(){prevented=true;}});assert.equal(selected,'AV-42');
  selected=null;keyHandler({key:'Tab',preventDefault(){throw Error('Tab should not be prevented');}});assert.equal(selected,null);
@@ -77,10 +77,12 @@ test('keyboard marker selection restores focus after synchronous map redraw',asy
   const fleet=[{id:'AV-42',lat:34.05,lon:-118.3,area:'Central LA',status:'available'}];
   instance=M.create(container,id=>instance.update(fleet,id));
   instance.update(fleet,null);
+  assert.equal(elements[0].getAttribute('aria-pressed'),'false');
   const oldElement=elements[0];
   oldElement.trigger('keydown',{key:'Enter',preventDefault(){}});
   await Promise.resolve();
   assert.equal(focused,'AV-42');
+  assert.equal(elements[0].getAttribute('aria-pressed'),'true');
   assert.notEqual(elements[0],oldElement);
   instance.destroy();
  }finally{if(old===undefined)delete globalThis.L;else globalThis.L=old;}
