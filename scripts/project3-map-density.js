@@ -2,7 +2,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.AVMapDensity=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 function visibleVehicles(vehicles,{search='',status='all',selected='',limit=24}={}){
- if(!Array.isArray(vehicles)||!Number.isSafeInteger(limit)||limit<1)throw Error('Invalid map density input');
+ if(!Array.isArray(vehicles)||!Number.isSafeInteger(limit)||limit<1||!['all','available','unavailable'].includes(status))throw Error('Invalid map density input');
  const q=String(search).trim().toLowerCase();
  const matches=vehicles.filter(v=>(!q||(v.id+' '+v.area).toLowerCase().includes(q))&&(status==='all'||(status==='available'?v.status==='available':status==='unavailable'&&v.status!=='available')));
  // Explicit search and unavailable-only views must show all matches.
