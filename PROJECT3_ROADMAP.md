@@ -166,3 +166,13 @@
 - [x] Added 240-vehicle regression asserting deterministic bounded default rendering, incident/selected priority, stable source ordering, unique IDs and no mutation; explicit search and unavailable filters retain all matching markers even above the display cap (`b2a02be5`).
 - [ ] Confirm CI for `b2a02be5` and latest Pages deployment before claiming this new regression passes. The mock/unit tests do not establish browser frame rate or mobile interaction.
 - [ ] Next: browser/device acceptance (map tile loading, keyboard focus, touch, 100/240 markers); investigate verifiable public routing service, usage/privacy constraints, deterministic offline fallback and honest ETA labeling. Keep synthetic data and do not change Projects 1/2.
+
+### 2026-11-10 morning — map filter fail-fast regression
+- [x] Inspected recent commits, map-density implementation, existing regression tests, roadmap, and Actions status. Baseline `9b6b5300` CI and Pages deployment passed.
+- [x] Reject unsupported status filter values rather than silently returning an empty fleet; accepted values remain `all`, `available`, `unavailable`. Existing dashboard uses the accepted values.
+- [x] Added regression coverage for invalid values and valid status match counts. The initial test accidentally treated an omitted/defaulted `undefined` parameter as invalid; corrected in commit `254b58fb`.
+- [x] Implementation-only commit `704a7ab9` passed Project 3 Actions run `42830225248`.
+- [ ] Confirm CI and Pages for corrected test commit `254b58fb`; queued at time of this entry. Prior intermediate test commit `2f8ed0d3` failed.
+- [ ] Actual mobile/browser acceptance, public tile availability and routing-source verification remain outstanding; synthetic modeled ETAs are not road-network routing.
+
+**Priority next:** (1) Confirm corrected CI/deployment; (2) real browser/mobile and keyboard acceptance; (3) document routing source and terms, deterministic fallback; (4) expand end-to-end dispatch/KPI tests; (5) expose fixture controls only after 240-vehicle UI performance verification.
