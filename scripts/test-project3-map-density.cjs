@@ -51,9 +51,10 @@ test('explicit filtered views are uncapped and retain match counts',()=>{
 
 test('invalid status filters fail explicitly rather than showing an empty synthetic fleet',()=>{
  const fleet=E.initialState({count:100}).vehicles;
- for(const status of ['offline','Available','',null,undefined]){
+ for(const status of ['offline','Available','',null]){
   assert.throws(()=>visibleVehicles(fleet,{status}),/Invalid map density input/);
  }
+ assert.equal(visibleVehicles(fleet,{}).matches.length,100);
  assert.equal(visibleVehicles(fleet,{status:'all'}).matches.length,100);
  assert.equal(visibleVehicles(fleet,{status:'available'}).matches.length,100);
  assert.equal(visibleVehicles(fleet,{status:'unavailable'}).matches.length,0);
