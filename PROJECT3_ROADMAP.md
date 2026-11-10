@@ -160,3 +160,9 @@
 - [x] Expanded mocked regression to assert `aria-pressed=false` initially and `true` after keyboard selection and synchronous redraw (`fd08b3fb`).
 - [ ] Confirm CI and Pages results for the new commits; no claim of browser acceptance until actual browser checks. Live tile availability and mobile focus visibility remain unverified.
 - [ ] Next: real browser/mobile keyboard and map-tile acceptance, map density with 240 vehicles, then evaluate permitted verifiable road-network routing with deterministic clearly labeled fallback. Synthetic positions are not live telemetry or road-snapped coordinates.
+
+### 2026-11-09 evening — 240-vehicle map density regression
+- [x] Confirmed preceding default-branch commit `43703aec` passed Project 3 checks and GitHub Pages deployment; inspected current density selector, test suite, workflow and recent commits.
+- [x] Added 240-vehicle regression asserting deterministic bounded default rendering, incident/selected priority, stable source ordering, unique IDs and no mutation; explicit search and unavailable filters retain all matching markers even above the display cap (`b2a02be5`).
+- [ ] Confirm CI for `b2a02be5` and latest Pages deployment before claiming this new regression passes. The mock/unit tests do not establish browser frame rate or mobile interaction.
+- [ ] Next: browser/device acceptance (map tile loading, keyboard focus, touch, 100/240 markers); investigate verifiable public routing service, usage/privacy constraints, deterministic offline fallback and honest ETA labeling. Keep synthetic data and do not change Projects 1/2.
