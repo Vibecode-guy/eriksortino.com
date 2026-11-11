@@ -176,3 +176,5 @@
 - [ ] Actual mobile/browser acceptance, public tile availability and routing-source verification remain outstanding; synthetic modeled ETAs are not road-network routing.
 
 **Priority next:** (1) Confirm corrected CI/deployment; (2) real browser/mobile and keyboard acceptance; (3) document routing source and terms, deterministic fallback; (4) expand end-to-end dispatch/KPI tests; (5) expose fixture controls only after 240-vehicle UI performance verification.
+
+- 2026-11-10 evening: Added normalized case-insensitive/whitespace-trimmed search regression for seeded 100/240-vehicle fixtures, uncapped explicit area matches, and input nonmutation (`cc03509e`). CI/deployment pending verification. Next: browser/mobile acceptance, routing-source assessment, KPI end-to-end tests; no routing or telemetry claims.
