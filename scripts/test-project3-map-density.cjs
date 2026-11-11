@@ -75,3 +75,31 @@ test('map search normalizes whitespace and case without mutating 100/240-vehicle
   assert.deepEqual(E.initialState({count,seed:20261102}).vehicles,fleet,'same seed should reproduce map fixture');
  }
 });
+
+
+test('priority saturation intentionally exceeds display cap without hiding active incidents',()=>{
+ const fleet=E.initialState({count:100}).vehicles.map((v,i)=>({...v,status:i<35?'incident':'available'}));
+ const snapshot=JSON.stringify(fleet);
+ const selected=fleet.at(-1).id;
+ const view=visibleVehicles(fleet,{selected,limit:12});
+ assert.equal(view.matches.length,100);
+ assert.equal(view.shown.length,36,'35 incidents plus selected available vehicle must remain visible');
+ assert.equal(view.limited,true);
+ assert.equal(new Set(view.shown.map(v=>v.id)).size,36);
+ assert(fleet.slice(0,35).every(v=>view.shown.includes(v)));
+ assert(view.shown.some(v=>v.id===selected));
+ assert.equal(JSON.stringify(fleet),snapshot);
+});
+
+test('empty and exact-cap filtered views report honest counts',()=>{
+ const fleet=E.initialState({count:100}).vehicles;
+ const none=visibleVehicles(fleet,{status:'unavailable',limit:1});
+ assert.deepEqual(none,{matches:[],shown:[],limited:false});
+ const exact=visibleVehicles(fleet.slice(0,24),{limit:24});
+ assert.equal(exact.matches.length,24);
+ assert.equal(exact.shown.length,24);
+ assert.equal(exact.limited,false);
+ const one=visibleVehicles(fleet,{search:fleet[0].id,limit:1});
+ assert.equal(one.matches.length,1);
+ assert.equal(one.limited,false);
+});
