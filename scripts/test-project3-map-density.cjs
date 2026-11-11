@@ -59,3 +59,19 @@ test('invalid status filters fail explicitly rather than showing an empty synthe
  assert.equal(visibleVehicles(fleet,{status:'available'}).matches.length,100);
  assert.equal(visibleVehicles(fleet,{status:'unavailable'}).matches.length,0);
 });
+
+test('map search normalizes whitespace and case without mutating 100/240-vehicle fixtures',()=>{
+ for(const count of [100,240]){
+  const fleet=E.initialState({count,seed:20261102}).vehicles;
+  const before=JSON.stringify(fleet);
+  const target=fleet.at(-1);
+  const byId=visibleVehicles(fleet,{search:'  '+target.id.toLowerCase()+'  ',limit:1});
+  assert.deepEqual(byId.shown.map(v=>v.id),[target.id]);
+  const byArea=visibleVehicles(fleet,{search:'  '+target.area.toUpperCase()+'  ',limit:1});
+  assert(byArea.shown.length>0);
+  assert(byArea.shown.every(v=>v.area.toLowerCase().includes(target.area.toLowerCase())));
+  assert.equal(byArea.shown.length,byArea.matches.length,'explicit search should not hide matches');
+  assert.equal(JSON.stringify(fleet),before);
+  assert.deepEqual(E.initialState({count,seed:20261102}).vehicles,fleet,'same seed should reproduce map fixture');
+ }
+});
