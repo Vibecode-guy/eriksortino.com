@@ -6,6 +6,8 @@ on:
       - index.html
       - scripts/project3-street-map.js
       - scripts/test-project3-street-map.cjs
+      - scripts/project3-routing.js
+      - scripts/test-project3-routing.cjs
       - scripts/project3-geo.js
       - scripts/test-project3-geo.cjs
       - scripts/project3-map-density.js
@@ -32,6 +34,8 @@ jobs:
         run: |
           node --check scripts/project3-street-map.js
           node --check scripts/test-project3-street-map.cjs
+          node --check scripts/project3-routing.js
+          node --check scripts/test-project3-routing.cjs
           node --check scripts/project3-geo.js
           node --check scripts/test-project3-geo.cjs
           node --check scripts/project3-map-density.js
@@ -43,7 +47,7 @@ jobs:
           node --check scripts/test-project3-planning.cjs
           node --check scripts/test-project3-analytics.cjs
           node --check scripts/test-project3-engine.cjs
-          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs scripts/test-project3-planning.cjs scripts/test-project3-map-density.cjs scripts/test-project3-geo.cjs scripts/test-project3-street-map.cjs
+          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs scripts/test-project3-planning.cjs scripts/test-project3-map-density.cjs scripts/test-project3-geo.cjs scripts/test-project3-street-map.cjs scripts/test-project3-routing.cjs
       - name: Validate static integration, disclosure and inline JS
         run: |
           node - <<'NODE'
