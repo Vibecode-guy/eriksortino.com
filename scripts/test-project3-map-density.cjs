@@ -103,3 +103,18 @@ test('empty and exact-cap filtered views report honest counts',()=>{
  assert.equal(one.matches.length,1);
  assert.equal(one.limited,false);
 });
+
+
+test('filtered views never leak selected vehicles outside filter and preserve deterministic order',()=>{
+ const fleet=E.initialState({count:100}).vehicles.map((v,i)=>({...v,status:i<10?'incident':'available'}));
+ const selected=fleet[0].id;
+ const view=visibleVehicles(fleet,{status:'available',selected,limit:5});
+ assert.equal(view.matches.length,90);
+ assert.equal(view.shown.length,5);
+ assert(view.shown.every(v=>v.status==='available'));
+ assert(!view.shown.some(v=>v.id===selected));
+ assert.deepEqual(view.shown,visibleVehicles(fleet,{status:'available',selected,limit:5}).shown);
+ const onlyIncident=visibleVehicles(fleet,{search:selected,status:'unavailable',selected,limit:1});
+ assert.deepEqual(onlyIncident.shown.map(v=>v.id),[selected]);
+ assert.equal(onlyIncident.limited,false);
+});
