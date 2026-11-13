@@ -188,3 +188,9 @@
 - [x] Added isolated `scripts/project3-routing.js` adapter for OSRM-compatible route-response validation (seconds→rounded-up minutes; meters→kilometers), coordinate guards, implausible-result rejection, and explicitly labeled deterministic straight-line fallback. Added four local Node regression tests and CI wiring.
 - [ ] **Not yet connected to live dispatch or planner.** Road-network routing source, licensing/rate limits, service reliability and provenance have NOT been validated. Adapter output is labeled `road_network_unverified`; do not treat it as a verified ETA. Existing dispatch and planner still use the synthetic straight-line estimator, deliberately unchanged.
 - [ ] Check latest CI/Pages runs and perform real mobile/browser acceptance; test complete safety/transfer workflow. No claims of live traffic or operational telemetry.
+
+### 2026-11-12 evening — routing geometry validation
+- [x] Inspected latest routing adapter, tests, CI configuration and recent commits before editing. Previous morning Pages deployment `43232792543` succeeded.
+- [x] Reject OSRM-compatible responses whose reported road distance is shorter than great-circle endpoint separation (allowing 1% plus 100 m tolerance). Such responses fall back to explicitly labeled synthetic estimates; the adapter still does **not** authenticate routing provenance or fetch live routes.
+- [x] Added impossible-distance regression fixtures and adjusted the existing valid route conversion fixture to a physically feasible distance.
+- [ ] Verify new CI run and Pages deployment; run actual mobile/browser acceptance and permitted road-routing service integration. Do not represent unverified road responses as trusted ETAs.
