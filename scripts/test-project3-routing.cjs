@@ -21,3 +21,11 @@ test('missing, malformed, unsuccessful and implausible route data fall back safe
   assert.deepEqual(R.fromRoadResponse(data,lax,downtown),R.fallback(lax,downtown));
  }
 });
+
+test('reject routes shorter than geodesic distance, including zero-distance routes between distinct points',()=>{
+ for(const distance of [0,100,1000]){
+  const result=R.fromRoadResponse({code:'Ok',routes:[{duration:600,distance}]},lax,downtown);
+  assert.deepEqual(result,R.fallback(lax,downtown));
+ }
+ assert.equal(R.fromRoadResponse({code:'Ok',routes:[{duration:900,distance:25000}]},lax,downtown).basis,'road_network_unverified');
+});
