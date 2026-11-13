@@ -29,3 +29,10 @@ test('reject routes shorter than geodesic distance, including zero-distance rout
  }
  assert.equal(R.fromRoadResponse({code:'Ok',routes:[{duration:900,distance:25000}]},lax,downtown).basis,'road_network_unverified');
 });
+
+test('implausibly fast road responses fall back while realistic slow routes remain usable',()=>{
+ const tooFast={code:'Ok',routes:[{duration:60,distance:25000}]};
+ assert.deepEqual(R.fromRoadResponse(tooFast,lax,downtown),R.fallback(lax,downtown));
+ const slow={code:'Ok',routes:[{duration:7200,distance:25000}]};
+ assert.equal(R.fromRoadResponse(slow,lax,downtown).basis,'road_network_unverified');
+});
