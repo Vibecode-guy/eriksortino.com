@@ -24,6 +24,9 @@ function fromRoadResponse(response,origin,destination){
  // A road route cannot be shorter than the great-circle distance between endpoints.
  // Allow 1% or 100m of coordinate/rounding tolerance, whichever is larger.
  const minDistance=Math.max(0,greatCircleKm(origin,destination)*0.99-0.1);
+ // Reject physically implausible average speeds before a third-party response reaches dispatch.
+ // This conservative 160 km/h ceiling is a validation bound, not a traffic model.
+ if(route.distance/(route.duration/3600)>160000)return assumed;
  if(minutes>1440||distanceKm>1000||distanceKm<minDistance)return assumed;
  return {minutes,distanceKm,basis:'road_network_unverified',description:'OSRM-compatible route response; road estimate only if source and request are independently verified. No live traffic assumed'};
 }
