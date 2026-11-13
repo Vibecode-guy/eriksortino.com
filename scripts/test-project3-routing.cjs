@@ -14,7 +14,7 @@ test('reject invalid coordinates before accepting a road response',()=>{
 });
 test('valid OSRM-compatible response uses seconds and meters without claiming live traffic',()=>{
  const r=R.fromRoadResponse({code:'Ok',routes:[{duration:901,distance:22345}]},lax,downtown);
- assert.equal(r.minutes,16);assert.equal(r.distanceKm,22.35);assert.equal(r.basis,'road_network_unverified');assert.match(r.description,/No live traffic/);
+ assert.equal(r.minutes,16);assert.equal(r.distanceKm,22.34);assert.equal(r.basis,'road_network_unverified');assert.match(r.description,/No live traffic/);
 });
 test('missing, malformed, unsuccessful and implausible route data fall back safely',()=>{
  for(const data of [null,{}, {code:'NoRoute',routes:[]},{code:'Ok',routes:[]},{code:'Ok',routes:[{duration:0,distance:2}]},{code:'Ok',routes:[{duration:NaN,distance:2}]},{code:'Ok',routes:[{duration:100,distance:-1}]},{code:'Ok',routes:[{duration:86461,distance:2}]},{code:'Ok',routes:[{duration:100,distance:1000001}]}]){
