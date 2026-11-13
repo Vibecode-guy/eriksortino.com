@@ -194,3 +194,10 @@
 - [x] Reject OSRM-compatible responses whose reported road distance is shorter than great-circle endpoint separation (allowing 1% plus 100 m tolerance). Such responses fall back to explicitly labeled synthetic estimates; the adapter still does **not** authenticate routing provenance or fetch live routes.
 - [x] Added impossible-distance regression fixtures and adjusted the existing valid route conversion fixture to a physically feasible distance.
 - [ ] Verify new CI run and Pages deployment; run actual mobile/browser acceptance and permitted road-routing service integration. Do not represent unverified road responses as trusted ETAs.
+
+### 2026-11-13 morning — routing validation and CI recovery
+- [x] Inspected current Project 3 routing adapter, tests, CI configuration, recent commits and workflow logs. Latest prior run `43355985248` failed 1 of 70 tests: expected 22.35 km for 22,345 meters, but the adapter correctly rounds to 22.34 km. Corrected the test fixture.
+- [x] Reject OSRM-compatible responses with modeled average speeds above 160 km/h (validation ceiling, **not** a traffic model); add regression covering implausibly fast routes and realistic slow routes. No live routing provider configured, and dispatch still uses explicitly labeled synthetic fallback.
+- [ ] Verify latest GitHub Actions test/static-integration result and Pages deployment after these commits; perform actual browser/mobile acceptance checks.
+- [ ] Prioritize permitted road-network provider integration, source provenance, request/response failure handling, and deterministic fallback; do not claim traffic-aware ETAs.
+- [ ] Add browser-based dispatch → passenger safety → completion → KPI acceptance checks; then expose 100/240-vehicle seed controls only after performance/accessibility validation.
