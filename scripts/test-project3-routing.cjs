@@ -55,3 +55,13 @@ test('alternative-route selection is deterministic and safely falls back when al
                   R.fromRoadResponse({code:'Ok',routes:[valid,invalid]},lax,downtown));
  assert.deepEqual(R.fromRoadResponse({code:'Ok',routes:[invalid,null,{duration:0,distance:0}]},lax,downtown),R.fallback(lax,downtown));
 });
+
+test('synthetic fallback uses latitude-aware great-circle geometry, not a fixed longitude scale',()=>{
+ const equator=R.fallback({lat:0,lon:0},{lat:0,lon:1});
+ const highLatitude=R.fallback({lat:80,lon:0},{lat:80,lon:1});
+ assert(equator.minutes>highLatitude.minutes*3);
+ assert.equal(equator.minutes,Math.round(111.195/.52+5));
+ assert.equal(highLatitude.minutes,Math.round(19.309/.52+5));
+ assert.equal(highLatitude.basis,'synthetic_straight_line');
+ assert.deepEqual(R.fallback({lat:80,lon:1},{lat:80,lon:0}),highLatitude);
+});
