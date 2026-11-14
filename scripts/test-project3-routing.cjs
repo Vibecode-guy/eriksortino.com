@@ -36,3 +36,22 @@ test('implausibly fast road responses fall back while realistic slow routes rema
  const slow={code:'Ok',routes:[{duration:7200,distance:25000}]};
  assert.equal(R.fromRoadResponse(slow,lax,downtown).basis,'road_network_unverified');
 });
+
+test('select fastest physically valid alternative when the first route is malformed',()=>{
+ const response={code:'Ok',routes:[
+  {duration:60,distance:25000},
+  {duration:1800,distance:27000},
+  {duration:1200,distance:26000}
+ ]};
+ const result=R.fromRoadResponse(response,lax,downtown);
+ assert.equal(result.basis,'road_network_unverified');
+ assert.equal(result.minutes,20);
+ assert.equal(result.distanceKm,26);
+});
+test('alternative-route selection is deterministic and safely falls back when all routes fail',()=>{
+ const valid={duration:1800,distance:25000};
+ const invalid={duration:1,distance:25000};
+ assert.deepEqual(R.fromRoadResponse({code:'Ok',routes:[invalid,valid]},lax,downtown),
+                  R.fromRoadResponse({code:'Ok',routes:[valid,invalid]},lax,downtown));
+ assert.deepEqual(R.fromRoadResponse({code:'Ok',routes:[invalid,null,{duration:0,distance:0}]},lax,downtown),R.fallback(lax,downtown));
+});
