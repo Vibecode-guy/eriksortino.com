@@ -209,3 +209,13 @@
 - [x] Add two regressions for invalid-first alternatives, deterministic route order, and all-invalid fallback.
 - [ ] Confirm CI and Pages for `db1cd9cf` and `31c590f2`; perform actual browser/mobile acceptance. These are not verified at documentation time.
 - [ ] **Highest priority:** integrate a permitted road-routing provider with explicit provenance, rate-limit/error handling, and fallback, then add browser-level dispatch and safety workflow tests. Do not present unverified OSRM-compatible JSON as a verified road ETA.
+
+### 2026-11-14 morning — routing fallback geometry
+- [x] Inspected latest routing module, routing tests, recent commits and workflow outcomes before editing. Previous baseline `026698df` passed Project 3 checks and Pages deployment (runs 43549649061 and 43549648407).
+- [x] Replace the fixed 92-km-per-longitude-degree approximation in `scripts/project3-routing.js` with the existing WGS84-radius great-circle calculation for deterministic synthetic fallback. This improves consistency across latitudes; **not** a road-network estimate or traffic model.
+- [x] Add regression for equatorial versus high-latitude longitude distances, approximate expected travel minutes, symmetry and synthetic labeling.
+- [ ] Verify new CI and Pages runs; run Node tests and browser/mobile acceptance if execution is available. Do not mark passed before checking.
+- [ ] **P0:** Complete incident-to-recovery end-to-end browser acceptance and keyboard/mobile accessibility.
+- [ ] **P1:** Validate permissible road-routing source, request provenance, throttling and outages; only then wire verified results to dispatch with labeled deterministic fallback.
+- [ ] **P1:** Validate public basemap rendering and map-tile attribution on deployed site; no live vehicle telemetry.
+- [ ] **P2:** Review workbench fixture-size/seed controls, 240-vehicle performance, planning denominator consistency and executive demonstration.
