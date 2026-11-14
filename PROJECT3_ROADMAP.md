@@ -201,3 +201,11 @@
 - [ ] Verify latest GitHub Actions test/static-integration result and Pages deployment after these commits; perform actual browser/mobile acceptance checks.
 - [ ] Prioritize permitted road-network provider integration, source provenance, request/response failure handling, and deterministic fallback; do not claim traffic-aware ETAs.
 - [ ] Add browser-based dispatch → passenger safety → completion → KPI acceptance checks; then expose 100/240-vehicle seed controls only after performance/accessibility validation.
+
+
+### 2026-11-13 evening — OSRM alternative-route validation
+- [x] Inspected routing adapter, its tests, CI workflow, latest commits, and GitHub Actions status before editing. Previous baseline `71e27dc1` passed CI run `43439909937` and Pages run `43439910272`.
+- [x] Validate each OSRM-compatible route independently; discard malformed, implausibly fast, or geometrically impossible alternatives and select the fastest feasible route with deterministic distance/index tie-breaks. If all routes fail, retain labeled synthetic fallback. No external service or live traffic is connected.
+- [x] Add two regressions for invalid-first alternatives, deterministic route order, and all-invalid fallback.
+- [ ] Confirm CI and Pages for `db1cd9cf` and `31c590f2`; perform actual browser/mobile acceptance. These are not verified at documentation time.
+- [ ] **Highest priority:** integrate a permitted road-routing provider with explicit provenance, rate-limit/error handling, and fallback, then add browser-level dispatch and safety workflow tests. Do not present unverified OSRM-compatible JSON as a verified road ETA.
