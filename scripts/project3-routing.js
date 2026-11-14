@@ -9,7 +9,9 @@ function greatCircleKm(a,b){
 }
 function fallback(origin,destination){
  if(!validPoint(origin)||!validPoint(destination))throw Error('Invalid routing coordinates');
- const km=Math.hypot((origin.lat-destination.lat)*111,(origin.lon-destination.lon)*92);
+ // Great-circle distance keeps the deterministic fallback geographically consistent
+ // across latitudes; it remains a straight-line model, never a road route.
+ const km=greatCircleKm(origin,destination);
  return {minutes:Math.max(6,Math.round(km/.52+5)),distanceKm:null,basis:'synthetic_straight_line',description:'Synthetic straight-line estimate at assumed 31 km/h plus 5 minutes; not a road ETA or live traffic'};
 }
 /* Accepts an OSRM-compatible Route v1 JSON response only after caller verifies service provenance.
