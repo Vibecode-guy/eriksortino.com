@@ -17,18 +17,19 @@ function fallback(origin,destination){
 function fromRoadResponse(response,origin,destination){
  const assumed=fallback(origin,destination);
  if(!response||response.code!=='Ok'||!Array.isArray(response.routes)||!response.routes.length)return assumed;
- const route=response.routes[0];
- if(!route||!Number.isFinite(route.duration)||route.duration<=0||!Number.isFinite(route.distance)||route.distance<0||route.distance>1000000)return assumed;
- const minutes=Math.max(1,Math.ceil(route.duration/60));
- const distanceKm=+(route.distance/1000).toFixed(2);
- // A road route cannot be shorter than the great-circle distance between endpoints.
- // Allow 1% or 100m of coordinate/rounding tolerance, whichever is larger.
  const minDistance=Math.max(0,greatCircleKm(origin,destination)*0.99-0.1);
- // Reject physically implausible average speeds before a third-party response reaches dispatch.
- // This conservative 160 km/h ceiling is a validation bound, not a traffic model.
- if(route.distance/(route.duration/3600)>160000)return assumed;
- if(minutes>1440||distanceKm>1000||distanceKm<minDistance)return assumed;
- return {minutes,distanceKm,basis:'road_network_unverified',description:'OSRM-compatible route response; road estimate only if source and request are independently verified. No live traffic assumed'};
+ // Evaluate alternative routes independently: an invalid first route must not hide a
+ // valid alternative. Prefer the shortest valid duration, then distance, then index.
+ const candidates=response.routes.map((route,index)=>{
+  if(!route||!Number.isFinite(route.duration)||route.duration<=0||!Number.isFinite(route.distance)||route.distance<0||route.distance>1000000)return null;
+  const minutes=Math.max(1,Math.ceil(route.duration/60));
+  const distanceKm=+(route.distance/1000).toFixed(2);
+  if(route.distance/(route.duration/3600)>160000||minutes>1440||distanceKm>1000||distanceKm<minDistance)return null;
+  return {minutes,distanceKm,duration:route.duration,distance:route.distance,index};
+ }).filter(Boolean).sort((a,b)=>a.duration-b.duration||a.distance-b.distance||a.index-b.index);
+ if(!candidates.length)return assumed;
+ const best=candidates[0];
+ return {minutes:best.minutes,distanceKm:best.distanceKm,basis:'road_network_unverified',description:'OSRM-compatible route response; road estimate only if source and request are independently verified. No live traffic assumed'};
 }
 return {fallback,fromRoadResponse};
 });
