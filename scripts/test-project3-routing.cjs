@@ -86,3 +86,22 @@ test('OSRM-compatible payload never implies independently verified source or tra
  assert.match(result.description,/No live traffic/);
  assert.equal(R.fromRoadResponse({code:'NoRoute',routes:response.routes},lax,downtown).basis,'synthetic_straight_line');
 });
+
+test('route alternatives are not mutated by ranking and valid tie-breaking is repeatable',()=>{
+ const routes=[{duration:1800,distance:28000},{duration:1800,distance:25000},{duration:2100,distance:30000}];
+ const original=JSON.stringify(routes);
+ const response={code:'Ok',routes};
+ const first=R.fromRoadResponse(response,lax,downtown);
+ assert.equal(first.minutes,30);
+ assert.equal(first.distanceKm,25);
+ assert.deepEqual(first,R.fromRoadResponse(response,lax,downtown));
+ assert.equal(JSON.stringify(routes),original,'routing must not reorder or alter caller data');
+});
+test('nonfinite and negative route measurements never produce a road estimate',()=>{
+ for(const duration of [Infinity,-Infinity,NaN,-1]){
+  assert.equal(R.fromRoadResponse({code:'Ok',routes:[{duration,distance:25000}]},lax,downtown).basis,'synthetic_straight_line');
+ }
+ for(const distance of [Infinity,-Infinity,NaN,-25000]){
+  assert.equal(R.fromRoadResponse({code:'Ok',routes:[{duration:1800,distance}]},lax,downtown).basis,'synthetic_straight_line');
+ }
+});
