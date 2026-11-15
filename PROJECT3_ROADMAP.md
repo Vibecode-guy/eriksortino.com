@@ -219,3 +219,9 @@
 - [ ] **P1:** Validate permissible road-routing source, request provenance, throttling and outages; only then wire verified results to dispatch with labeled deterministic fallback.
 - [ ] **P1:** Validate public basemap rendering and map-tile attribution on deployed site; no live vehicle telemetry.
 - [ ] **P2:** Review workbench fixture-size/seed controls, 240-vehicle performance, planning denominator consistency and executive demonstration.
+
+### 2026-11-14 evening — routing boundary regression
+- [x] Reinspect current repository head, existing page, routing adapter/tests, CI and roadmap; no modifications to Projects 1/2 or existing dashboard.
+- [x] Add two routing regressions for antimeridian shortest-arc and identical-point deterministic fallbacks, plus explicit unverified-source/no-traffic labels; commit 2082d079.
+- [ ] Confirm new GitHub Actions result and Pages deployment; no local Node/browser execution was available in this run. Committed tests are not verified passing tests.
+- [ ] Next: prioritize end-to-end browser dispatch/recovery/KPI tests over adapter-only tests; integrate a permitted routing source with provenance and failure labels only after validation.
