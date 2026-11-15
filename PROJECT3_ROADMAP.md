@@ -225,3 +225,13 @@
 - [x] Add two routing regressions for antimeridian shortest-arc and identical-point deterministic fallbacks, plus explicit unverified-source/no-traffic labels; commit 2082d079.
 - [ ] Confirm new GitHub Actions result and Pages deployment; no local Node/browser execution was available in this run. Committed tests are not verified passing tests.
 - [ ] Next: prioritize end-to-end browser dispatch/recovery/KPI tests over adapter-only tests; integrate a permitted routing source with provenance and failure labels only after validation.
+
+
+### 2026-11-15 morning — routing regression maintenance
+- [x] Re-inspected recent commits, existing Project 3 HTML, routing adapter, regression suite and CI workflow before changes.
+- [x] Added regression cases for deterministic tie-breaking without mutating OSRM-compatible input routes, and rejection of nonfinite/negative duration and distance values (`09cb5a6b`).
+- [ ] Confirm CI for this commit and deployed Pages revision; direct local clone/test execution blocked by GitHub DNS resolution in execution environment. Do not claim passing tests from source inspection alone.
+- [ ] **P0:** Browser-level dispatch, passenger-transfer, completion and KPI acceptance checks; keyboard and mobile audit.
+- [ ] **P1:** Validate a permitted road-routing provider, provenance, attribution, request quotas, timeout and failure policy before wiring adapter into dispatch; keep synthetic fallback explicitly labeled.
+- [ ] **P1:** Verify public LA basemap tiles/attribution and map keyboard accessibility on deployed page; generated positions remain synthetic and not road-snapped.
+- [ ] **P2:** Expose seeded fixture controls only after performance/reset/keyboard verification; reconcile planner's four-team baseline with six-team workbench and clearly state KPI denominators.
