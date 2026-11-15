@@ -65,3 +65,24 @@ test('synthetic fallback uses latitude-aware great-circle geometry, not a fixed 
  assert.equal(highLatitude.basis,'synthetic_straight_line');
  assert.deepEqual(R.fallback({lat:80,lon:1},{lat:80,lon:0}),highLatitude);
 });
+
+// Boundary cases: coordinate wraparound must use the shorter geodesic arc,
+// and the routing adapter must never claim a verified road source on its own.
+test('antimeridian and identical-coordinate fallbacks remain finite and explicitly synthetic',()=>{
+ const across=R.fallback({lat:10,lon:179.9},{lat:10,lon:-179.9});
+ const reverse=R.fallback({lat:10,lon:-179.9},{lat:10,lon:179.9});
+ assert.deepEqual(across,reverse);
+ assert(across.minutes>5&&across.minutes<120,'must cross the short arc, not 359.8 degrees');
+ const same=R.fallback(lax,lax);
+ assert.equal(same.minutes,6);
+ assert.equal(same.distanceKm,null);
+ assert.equal(same.basis,'synthetic_straight_line');
+});
+test('OSRM-compatible payload never implies independently verified source or traffic',()=>{
+ const response={code:'Ok',routes:[{duration:1200,distance:25000}]};
+ const result=R.fromRoadResponse(response,lax,downtown);
+ assert.equal(result.basis,'road_network_unverified');
+ assert.match(result.description,/independently verified/);
+ assert.match(result.description,/No live traffic/);
+ assert.equal(R.fromRoadResponse({code:'NoRoute',routes:response.routes},lax,downtown).basis,'synthetic_straight_line');
+});
