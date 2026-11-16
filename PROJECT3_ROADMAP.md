@@ -245,3 +245,14 @@
 - [ ] P1: reconcile six-team interactive baseline against independent 30-day planning assumptions and document KPI denominators before publishing comparisons.
 - [ ] P2: add accessible configuration controls for fixture seed/count only after reset and large-selector browser acceptance.
 - Projects 1 and 2 unchanged. All positions, providers, costs and scenarios remain synthetic; no private partner data.
+
+
+### 2026-11-16 morning — acceptance-test gate and prioritized delivery checklist
+- [x] Read default-branch Project 3 page, durable roadmap and six most recent commit IDs before changes. Current head observed: `c0a9091f`. Project 3 HTML exists; Projects 1/2 are out of scope.
+- [ ] **P0 — browser acceptance harness (next code milestone):** Use an actual DOM-capable browser runner to exercise the existing page rather than add more isolated routing-adapter tests. For each test, reset to fixed seed; select a vehicle; create an incident; verify one active assignment per recovery team; select only a compatible available team; advance en route → on scene → completed; verify vehicle readiness, incident status, provider capacity, and KPI numerators/denominators. Include a passenger-transfer/safety escalation path and a negative case for incompatible/unavailable teams. Assert state after every step and repeat with identical seed.
+- [ ] **P0 — verify reproducibility:** Compare initial 100 vehicle IDs/coordinates, six crew IDs, initial incidents, and KPIs after two resets; repeat with alternate seed and count 240; ensure no duplicate IDs, selection remains usable, and display density remains bounded.
+- [ ] **P0 — release evidence:** Record GitHub Actions run URL/conclusion and Pages run URL/conclusion for exact head SHA, then test deployed URL at desktop and 375px mobile width; check keyboard focus, controls, readable map alternative, map attribution, no console errors, and incident lifecycle. Do not equate deployment success with browser acceptance.
+- [ ] **P1 — routing provenance:** Document endpoint operator, license/attribution, public usage limits, timeout and caching before connecting a provider. Validate OSRM-compatible responses and distinguish verified route geometry from synthetic positions, fallback minutes, and live traffic. No routing service is currently verified by this checklist.
+- [ ] **P1 — planning consistency:** Explicitly separate four-provider 30-day planner baseline from six-team interactive workbench; publish denominators for fleet availability, incident response SLA, mean/p90 completion, and recovery cost. Do not imply observed operational performance.
+- [ ] **P2 — portfolio narrative:** Add a three-minute guided scenario only after workflow acceptance; include methodology and limitations without implying real AV telemetry.
+- [ ] No code, tests, or deployment status is marked complete by this checklist alone. Preserve existing features and avoid editing Projects 1/2.
