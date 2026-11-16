@@ -105,3 +105,20 @@ test('nonfinite and negative route measurements never produce a road estimate',(
   assert.equal(R.fromRoadResponse({code:'Ok',routes:[{duration:1800,distance}]},lax,downtown).basis,'synthetic_straight_line');
  }
 });
+
+// A single malformed alternative must not poison a usable road response.
+test('mixed invalid alternatives retain the valid route without changing the response',()=>{
+ const response={code:'Ok',routes:[null,{duration:60,distance:25000},{duration:2400,distance:30000},{duration:NaN,distance:25000}]};
+ const snapshot=response.routes.map(route=>route&&{...route});
+ const result=R.fromRoadResponse(response,lax,downtown);
+ assert.equal(result.basis,'road_network_unverified');
+ assert.equal(result.minutes,40);
+ assert.equal(result.distanceKm,30);
+ assert.deepEqual(response.routes,snapshot);
+});
+test('routing rejects out-of-range destination even when response appears valid',()=>{
+ const payload={code:'Ok',routes:[{duration:2400,distance:30000}]};
+ for(const bad of [{lat:-91,lon:0},{lat:0,lon:-181},{lat:Infinity,lon:0},{lat:0,lon:undefined}]){
+  assert.throws(()=>R.fromRoadResponse(payload,lax,bad),/Invalid routing coordinates/);
+ }
+});
