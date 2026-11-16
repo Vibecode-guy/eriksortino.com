@@ -235,3 +235,13 @@
 - [ ] **P1:** Validate a permitted road-routing provider, provenance, attribution, request quotas, timeout and failure policy before wiring adapter into dispatch; keep synthetic fallback explicitly labeled.
 - [ ] **P1:** Verify public LA basemap tiles/attribution and map keyboard accessibility on deployed page; generated positions remain synthetic and not road-snapped.
 - [ ] **P2:** Expose seeded fixture controls only after performance/reset/keyboard verification; reconcile planner's four-team baseline with six-team workbench and clearly state KPI denominators.
+
+### 2026-11-15 evening — routing validation edge cases
+- [x] Inspected recent commits and current routing adapter, regression suite, simulation engine, CI wiring, and durable roadmap before editing.
+- [x] Added two adapter regression tests for mixed invalid/valid route alternatives (including immutable input) and invalid destination coordinates despite an apparently valid response; commit `c99db02f`. No production routing service or live traffic integration claimed.
+- [ ] Verify GitHub Actions result and Pages deployment for the latest commits; commit creation is not evidence of passing tests or deployed browser behavior.
+- [ ] P0: browser-level lifecycle acceptance (incident, dispatch, passenger transfer, completion, KPI reconciliation) plus keyboard/mobile and 240-vehicle density checks.
+- [ ] P1: validate public tile-provider usage, source attribution and permissible road-routing endpoint; wire dispatch only after source provenance, reproducibility, error handling and explicit fallback labeling are tested.
+- [ ] P1: reconcile six-team interactive baseline against independent 30-day planning assumptions and document KPI denominators before publishing comparisons.
+- [ ] P2: add accessible configuration controls for fixture seed/count only after reset and large-selector browser acceptance.
+- Projects 1 and 2 unchanged. All positions, providers, costs and scenarios remain synthetic; no private partner data.
