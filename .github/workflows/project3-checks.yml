@@ -19,6 +19,7 @@ on:
       - scripts/test-project3-analytics.cjs
       - scripts/test-project3-planning.cjs
       - scripts/test-project3-engine.cjs
+      - scripts/test-project3-lifecycle-acceptance.cjs
       - PROJECT3_ROADMAP.md
       - .github/workflows/project3-checks.yml
   workflow_dispatch:
@@ -47,7 +48,8 @@ jobs:
           node --check scripts/test-project3-planning.cjs
           node --check scripts/test-project3-analytics.cjs
           node --check scripts/test-project3-engine.cjs
-          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs scripts/test-project3-planning.cjs scripts/test-project3-map-density.cjs scripts/test-project3-geo.cjs scripts/test-project3-street-map.cjs scripts/test-project3-routing.cjs
+          node --check scripts/test-project3-lifecycle-acceptance.cjs
+          node --test scripts/test-project3-engine.cjs scripts/test-project3-analytics.cjs scripts/test-project3-planning.cjs scripts/test-project3-map-density.cjs scripts/test-project3-geo.cjs scripts/test-project3-street-map.cjs scripts/test-project3-routing.cjs scripts/test-project3-lifecycle-acceptance.cjs
       - name: Validate static integration, disclosure and inline JS
         run: |
           node - <<'NODE'
