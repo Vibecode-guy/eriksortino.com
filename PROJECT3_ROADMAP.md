@@ -256,3 +256,12 @@
 - [ ] **P1 — planning consistency:** Explicitly separate four-provider 30-day planner baseline from six-team interactive workbench; publish denominators for fleet availability, incident response SLA, mean/p90 completion, and recovery cost. Do not imply observed operational performance.
 - [ ] **P2 — portfolio narrative:** Add a three-minute guided scenario only after workflow acceptance; include methodology and limitations without implying real AV telemetry.
 - [ ] No code, tests, or deployment status is marked complete by this checklist alone. Preserve existing features and avoid editing Projects 1/2.
+
+### 2026-11-16 evening — engine lifecycle acceptance gate
+- [x] Inspected current engine, routing adapter, regression suite, workflow and recent commits before changes.
+- [x] Added `scripts/test-project3-lifecycle-acceptance.cjs` with synthetic end-to-end **engine-level** assertions: incident creation, danger flag, emergency escalation, replacement dispatch/arrival, explicit transfer clearance, team assignment, completion, safety SLA closure, response-stage sample denominators, costs, availability and deterministic 240-vehicle replay. Commit `9dcc699c`.
+- [x] Wired the new test into Project 3 CI push paths, syntax validation and Node test runner. Commit `a29f7834`.
+- [ ] Confirm GitHub Actions outcome for the CI wiring commit. Local checkout/test execution blocked by GitHub DNS resolution; these are not yet verified passing.
+- [ ] Add actual browser-driven acceptance (click and keyboard controls), not merely engine-level tests; validate mobile, Leaflet tile load/attribution and Pages deployment.
+- [ ] Verify permitted routing service before integrating road estimates; retain explicit synthetic fallback and separate planning/interactive denominators.
+- [ ] Expose seeded fleet configuration only after selector/reset/240-vehicle browser performance checks.
