@@ -265,3 +265,8 @@
 - [ ] Add actual browser-driven acceptance (click and keyboard controls), not merely engine-level tests; validate mobile, Leaflet tile load/attribution and Pages deployment.
 - [ ] Verify permitted routing service before integrating road estimates; retain explicit synthetic fallback and separate planning/interactive denominators.
 - [ ] Expose seeded fleet configuration only after selector/reset/240-vehicle browser performance checks.
+
+### 2026-11-17 morning — lifecycle guard regression
+- Added two engine-level tests in `scripts/test-project3-lifecycle-acceptance.cjs`: compatible team capacity (no double booking, equipment rejection, availability after completion) and passenger emergency/transfer guards (duplicate escalation, invalid replacement, clearance refusal without clock/KPI mutation). Commit `ed54ff2294e7ad597216c677e45c40364c08f014`.
+- **Verification pending:** local checkout failed because github.com DNS could not resolve. GitHub Actions result must be checked; do not call these tests passing until verified. Browser/mobile behavior remains untested.
+- **Priority:** (1) confirm CI and fix failures, (2) browser-level acceptance with real click/keyboard paths, (3) verify public basemap attribution and production tile behavior, (4) connect validated routing source to dispatch with explicit fallback, (5) reconcile six-team workbench versus four-team planning denominator and test responsive/accessibility behavior.
