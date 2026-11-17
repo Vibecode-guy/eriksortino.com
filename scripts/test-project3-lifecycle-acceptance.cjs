@@ -58,3 +58,46 @@ test('same seed and actions reproduce workflow timestamps, safety and costs',()=
  }
  assert.deepEqual(run(),run());
 });
+
+test('provider capacity and equipment guards prevent double assignment without corrupting queue',()=>{
+ const s=E.initialState({seed:20261102,count:100});
+ const first=E.createIncident(s,'AV-101','flatbed');
+ const second=E.createIncident(s,'AV-102','flatbed');
+ const eligible=E.eligibleProviders(s,first.id);
+ assert.ok(eligible.length>0);
+ const chosen=eligible[0];
+ E.assign(s,first.id,chosen.id);
+ assert.equal(E.eligibleProviders(s,second.id).some(p=>p.id===chosen.id),false);
+ assert.throws(()=>E.assign(s,second.id,chosen.id),/already assigned/i);
+ assert.equal(second.status,'queued');
+ assert.equal(second.providerId,null);
+ const incapable=s.providers.find(p=>!p.capabilities.includes('flatbed'));
+ assert.ok(incapable);
+ assert.throws(()=>E.assign(s,second.id,incapable.id),/not equipped/i);
+ assert.equal(E.kpis(s).active,2);
+ for(let n=0;n<3;n++)E.advance(s,first.id);
+ assert.equal(E.eligibleProviders(s,second.id).some(p=>p.id===chosen.id),true);
+});
+
+test('passenger safety guard failures preserve availability and timestamps',()=>{
+ const s=E.initialState({seed:20261102,count:100});
+ const i=E.createIncident(s,'AV-103','immobilized');
+ assert.throws(()=>E.escalateCustomerEmergency(s,i.id),/flag customer danger/i);
+ E.flagCustomerDanger(s,i.id,'unsafe_location');
+ assert.throws(()=>E.flagCustomerDanger(s,i.id,'unsafe_location'),/already flagged/i);
+ E.escalateCustomerEmergency(s,i.id);
+ assert.throws(()=>E.escalateCustomerEmergency(s,i.id),/already recorded/i);
+ const r=E.availableReplacementAVs(s,i.id)[0];
+ assert.throws(()=>E.dispatchReplacement(s,i.id,i.vehicleId),/different available/i);
+ E.dispatchReplacement(s,i.id,r.id);
+ assert.throws(()=>E.dispatchReplacement(s,i.id,r.id),/already dispatched/i);
+ E.arriveReplacement(s,i.id);
+ const at=s.minute;
+ assert.throws(()=>E.completePassengerTransfer(s,i.id,false),/clearance/i);
+ assert.equal(s.minute,at);
+ assert.equal(E.kpis(s).available,98);
+ assert.equal(E.safetyMetrics(s).awaiting,1);
+ E.completePassengerTransfer(s,i.id,true);
+ assert.equal(E.kpis(s).available,99);
+ assert.equal(E.safetyMetrics(s).awaiting,0);
+});
