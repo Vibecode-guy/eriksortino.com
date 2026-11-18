@@ -126,3 +126,26 @@ test('fleet configuration rejects invalid seeds and sizes before generating fixt
  for(const count of [0,11,241,100.5,NaN,Infinity])assert.throws(()=>E.initialState({seed:1,count}),/fleet size/i);
  for(const seed of [-1,4294967296,1.5,NaN,Infinity])assert.throws(()=>E.initialState({seed,count:100}),/seed/i);
 });
+
+test('dispatch fallback uses latitude-aware great-circle distance and remains explicitly synthetic',()=>{
+ const s=E.initialState({seed:20261102,count:100});
+ const i=E.createIncident(s,'AV-101','door_ajar');
+ const v=s.vehicles.find(v=>v.id==='AV-101');
+ const p=s.providers.find(p=>p.id==='P-01');
+ const rad=Math.PI/180;
+ const dLat=(p.lat-v.lat)*rad,dLon=(p.lon-v.lon)*rad;
+ const a=Math.sin(dLat/2)**2+Math.cos(v.lat*rad)*Math.cos(p.lat*rad)*Math.sin(dLon/2)**2;
+ const expected=Math.max(6,Math.round((6371*2*Math.asin(Math.sqrt(a)))/.52+5));
+ const offer=E.eligibleProviders(s,i.id).find(x=>x.id===p.id);
+ assert.equal(offer.estimatedMinutes,expected);
+ assert.match(offer.estimateBasis,/Synthetic straight-line/);
+ assert.match(offer.estimateBasis,/no road routing or traffic/);
+ // At high latitude, one longitude degree is much shorter than at the equator.
+ // Reposition only the test fixture; never present these as actual LA vehicles.
+ v.lat=70;v.lon=0;p.lat=70;p.lon=1;
+ const polar=E.eligibleProviders(s,i.id).find(x=>x.id===p.id).estimatedMinutes;
+ v.lat=0;p.lat=0;
+ const equatorial=E.eligibleProviders(s,i.id).find(x=>x.id===p.id).estimatedMinutes;
+ assert.ok(polar<equatorial);
+ assert.deepEqual(E.eligibleProviders(s,i.id),E.eligibleProviders(s,i.id));
+});
