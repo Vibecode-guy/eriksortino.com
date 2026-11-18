@@ -280,3 +280,14 @@
 - **Priority 3:** Validate a permitted road-network route source and its licensing/availability before connecting ETA to dispatch; label deterministic fallback.
 - **Priority 4:** Reconcile the six-team interactive baseline with the four-team planning baseline, denominators and comparative costs.
 - **Priority 5:** Run 240-vehicle keyboard, responsive, and performance checks and confirm production Pages deployment.
+
+
+### 2026-11-18 morning — interactive dispatch geographic fallback
+- [x] Inspected current Project 3 engine, lifecycle acceptance tests, map density suite, CI workflow, dashboard and recent commits.
+- [x] Replaced the interactive dispatch engine's fixed 92-km-per-longitude-degree approximation with latitude-aware great-circle distance. This aligns the geographic basis with the separate routing fallback while retaining a **synthetic** 31.2 km/h effective speed, 5-minute overhead and 6-minute floor. This is not road routing, traffic prediction or real vehicle telemetry.
+- [x] Added regression coverage comparing the computed great-circle dispatch estimate, explicit synthetic labeling, and high-latitude versus equatorial longitude behavior.
+- [ ] Verify GitHub Actions and Pages deployment for commits 7171126a and d78cfc94; browser/mobile behavior still needs direct acceptance testing.
+- [ ] Priority 1: Browser-driven incident/dispatch/passenger-transfer/KPI checks and mobile keyboard acceptance.
+- [ ] Priority 2: Verify public basemap tile accessibility and attribution in production; preserve schematic fallback.
+- [ ] Priority 3: Obtain permitted verifiable road-network routing service; label unavailable-routing estimates synthetic and test failures.
+- [ ] Priority 4: Reconcile six-team interactive dispatch with four-provider 30-day planning model and document comparable denominators.
