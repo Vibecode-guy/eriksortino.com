@@ -73,7 +73,15 @@ function eligibleProviders(s,incidentId){
   .map(p=>({...p,estimatedMinutes:estimateTravel(v,p),estimatedOnSceneMinutes:t.minutes[0]+estimateTravel(v,p),estimatedCost:p.baseCost+surcharge,estimateBasis:'Synthetic straight-line distance / assumed 31 km/h; no road routing or traffic'}))
   .sort((a,b)=>a.estimatedOnSceneMinutes-b.estimatedOnSceneMinutes||a.estimatedCost-b.estimatedCost||a.id.localeCompare(b.id));
 }
-function estimateTravel(v,p){const dy=(v.lat-p.lat)*111,dx=(v.lon-p.lon)*92;return Math.max(6,Math.round(Math.hypot(dx,dy)/.52+5));} // synthetic effective speed ~31 km/h
+function estimateTravel(v,p){
+ // Great-circle distance is a geographic baseline, NOT a road route or live ETA.
+ // Assumptions: 31.2 km/h effective speed, 5-minute dispatch overhead, 6-minute floor.
+ const rad=Math.PI/180,lat1=v.lat*rad,lat2=p.lat*rad;
+ const dLat=(p.lat-v.lat)*rad,dLon=(p.lon-v.lon)*rad;
+ const a=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+ const km=6371*2*Math.asin(Math.min(1,Math.sqrt(a)));
+ return Math.max(6,Math.round(km/.52+5));
+}
 function recordProviderOffer(s,incidentId,providerId,outcome){
  const i=incident(s,incidentId),p=provider(s,providerId);
  if(i.status!=='queued')throw Error('Offers require a queued incident');
