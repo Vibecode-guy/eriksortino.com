@@ -101,3 +101,28 @@ test('passenger safety guard failures preserve availability and timestamps',()=>
  assert.equal(E.kpis(s).available,99);
  assert.equal(E.safetyMetrics(s).awaiting,0);
 });
+
+test('seeded fleet configuration preserves unique IDs, stable anchor points and isolated resets',()=>{
+ const baseline=E.initialState({seed:20261102,count:100});
+ const repeated=E.initialState({seed:20261102,count:100});
+ assert.deepEqual(baseline.vehicles,repeated.vehicles);
+ assert.equal(baseline.vehicles.length,100);
+ assert.equal(baseline.providers.length,6);
+ assert.equal(new Set(baseline.vehicles.map(v=>v.id)).size,100);
+ const large=E.initialState({seed:20261102,count:240});
+ assert.equal(large.vehicles.length,240);
+ assert.deepEqual(large.vehicles.slice(0,100),baseline.vehicles);
+ assert.deepEqual(large.vehicles.slice(0,12),baseline.vehicles.slice(0,12));
+ const different=E.initialState({seed:20261103,count:100});
+ assert.deepEqual(different.vehicles.slice(0,12),baseline.vehicles.slice(0,12));
+ assert.notDeepEqual(different.vehicles.slice(12),baseline.vehicles.slice(12));
+ E.createIncident(baseline,'AV-101','door_ajar');
+ assert.equal(repeated.vehicles[0].status,'available');
+ assert.equal(E.kpis(repeated).active,0);
+ assert.equal(E.initialState({seed:20261102,count:100}).vehicles[0].status,'available');
+});
+
+test('fleet configuration rejects invalid seeds and sizes before generating fixtures',()=>{
+ for(const count of [0,11,241,100.5,NaN,Infinity])assert.throws(()=>E.initialState({seed:1,count}),/fleet size/i);
+ for(const seed of [-1,4294967296,1.5,NaN,Infinity])assert.throws(()=>E.initialState({seed,count:100}),/seed/i);
+});
