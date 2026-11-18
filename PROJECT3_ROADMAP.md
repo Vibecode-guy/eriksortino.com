@@ -270,3 +270,13 @@
 - Added two engine-level tests in `scripts/test-project3-lifecycle-acceptance.cjs`: compatible team capacity (no double booking, equipment rejection, availability after completion) and passenger emergency/transfer guards (duplicate escalation, invalid replacement, clearance refusal without clock/KPI mutation). Commit `ed54ff2294e7ad597216c677e45c40364c08f014`.
 - **Verification pending:** local checkout failed because github.com DNS could not resolve. GitHub Actions result must be checked; do not call these tests passing until verified. Browser/mobile behavior remains untested.
 - **Priority:** (1) confirm CI and fix failures, (2) browser-level acceptance with real click/keyboard paths, (3) verify public basemap attribution and production tile behavior, (4) connect validated routing source to dispatch with explicit fallback, (5) reconcile six-team workbench versus four-team planning denominator and test responsive/accessibility behavior.
+
+
+### 2026-11-17 evening — seeded fixture regression milestone
+- Added engine-boundary regression tests for reproducible 100-vehicle generation, six-team default, unique vehicle IDs, 240-vehicle prefix stability, fixed 12 anchor points, changed-seed variation, state isolation/reset, and invalid seed/count rejection (`2c441db8744b5b8614bcaafa870296ca7742f891`).
+- **Verification:** GitHub accepted the test commit; CI and Pages status must be checked separately. These tests do not constitute browser/mobile acceptance.
+- **Priority 1:** Confirm CI results and browser-drive full incident/passenger-transfer/dispatch/KPI flow; do not infer browser correctness from engine tests.
+- **Priority 2:** Verify synthetic street-map tile attribution and accessible fallback on deployed site; never describe generated coordinates as telemetry or street-snapped.
+- **Priority 3:** Validate a permitted road-network route source and its licensing/availability before connecting ETA to dispatch; label deterministic fallback.
+- **Priority 4:** Reconcile the six-team interactive baseline with the four-team planning baseline, denominators and comparative costs.
+- **Priority 5:** Run 240-vehicle keyboard, responsive, and performance checks and confirm production Pages deployment.
