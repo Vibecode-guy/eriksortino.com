@@ -301,3 +301,11 @@
 - **Priority 4:** Reconcile four-provider 30-day planner with six-team interactive baseline and make KPI denominators explicit.
 - **Priority 5:** Performance and accessible selection at 240 vehicles; maintain seeded fixture documentation.
 - Do not infer live telemetry, traffic, confidential partner data, or operational forecasts from this synthetic simulation.
+
+### 2026-11-19 morning — mobile/focus static regression
+- [x] Added static test for mobile control/analytics/planner stacking, visible keyboard focus on controls and Leaflet markers, and opt-in street-map hidden state. Commit aa586d79. This protects existing CSS contracts; it is **not** a browser or screen-reader accessibility audit.
+- [ ] Confirm CI run for aa586d79 and Pages publication; perform real 375px mobile, keyboard-only, and screen-reader smoke tests.
+- [ ] Highest priority: browser-driven incident → safety escalation → passenger transfer → compatible provider dispatch → completion → KPI reconciliation, including failure states.
+- [ ] Validate street tile attribution and routing-service terms; distinguish public geographic context from synthetic vehicle positions and modeled fallback ETAs.
+- [ ] Reconcile six-team interactive workbench with four-provider 30-day planner, documenting distinct cohorts and denominators.
+- [ ] Check 240-vehicle marker/selector performance, focus management, and deterministic resets.
