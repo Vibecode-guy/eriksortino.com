@@ -17,3 +17,13 @@ test('public street map is explicitly opt-in and labeled',()=>{
  assert.match(page,/synthetic WGS84 positions, not GPS telemetry or road-snapped/);
  assert.match(page,/No actual company or partner data/);
 });
+
+test('mobile layouts and keyboard focus cues remain available',()=>{
+ assert.match(page,/@media\(max-width:570px\)/,'Mobile breakpoint missing');
+ assert.match(page,/\.controls\{grid-template-columns:1fr\}/,'Mobile controls must stack');
+ assert.match(page,/\.analytics-grid\{grid-template-columns:1fr\}/,'Mobile analytics must stack');
+ assert.match(page,/\.planning-grid\{grid-template-columns:1fr\}/,'Mobile planner must stack');
+ assert.match(page,/button:focus-visible,select:focus-visible,a:focus-visible/,'Keyboard focus indication missing');
+ assert.match(page,/#streetMap \.leaflet-interactive:focus-visible/,'Map marker focus indication missing');
+ assert.match(page,/#streetMap\[hidden\]\{display:none\}/,'Opt-in map must be hidden by default');
+});
