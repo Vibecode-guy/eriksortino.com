@@ -291,3 +291,13 @@
 - [ ] Priority 2: Verify public basemap tile accessibility and attribution in production; preserve schematic fallback.
 - [ ] Priority 3: Obtain permitted verifiable road-network routing service; label unavailable-routing estimates synthetic and test failures.
 - [ ] Priority 4: Reconcile six-team interactive dispatch with four-provider 30-day planning model and document comparable denominators.
+
+### 2026-11-18 evening — static accessibility regression
+- Added `scripts/test-project3-accessibility-static.cjs` to guard existing vehicle/incident select labels, queue identity, live status announcements, opt-in map toggle state/target, and synthetic geography disclosures. This is **static markup coverage**, not a substitute for keyboard, screen-reader, mobile or live-browser acceptance.
+- Wired the new test into `.github/workflows/project3-checks.yml` (syntax check and Node test runner). Confirm CI outcome before marking passing.
+- **Priority 1:** Browser-driven incident → dispatch → passenger transfer → recovery → KPI tests, including keyboard and focus behavior.
+- **Priority 2:** Verify production Pages and public map attribution/tile loading on mobile; audit contrast and controls.
+- **Priority 3:** Validate road-network routing source/usage and expose source provenance, with deterministic synthetic fallback.
+- **Priority 4:** Reconcile four-provider 30-day planner with six-team interactive baseline and make KPI denominators explicit.
+- **Priority 5:** Performance and accessible selection at 240 vehicles; maintain seeded fixture documentation.
+- Do not infer live telemetry, traffic, confidential partner data, or operational forecasts from this synthetic simulation.
