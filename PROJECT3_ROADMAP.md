@@ -309,3 +309,14 @@
 - [ ] Validate street tile attribution and routing-service terms; distinguish public geographic context from synthetic vehicle positions and modeled fallback ETAs.
 - [ ] Reconcile six-team interactive workbench with four-provider 30-day planner, documenting distinct cohorts and denominators.
 - [ ] Check 240-vehicle marker/selector performance, focus management, and deterministic resets.
+
+
+### 2026-11-19 evening — dispatch offer ranking regression
+- [x] Inspected current Project 3 engine, regression suite, accessibility tests, CI and recent commits. Existing 100-AV/six-team fixture, opt-in public street map, schematic map and 30-day four-provider planner are separate features; do not duplicate them.
+- [x] Added `scripts/test-project3-dispatch-ranking.cjs` covering deterministic ETA/cost/ID ordering, capability compatibility, capacity exclusion/release, explicit synthetic ETA basis and initial modeled charges across five incident categories.
+- [x] Registered the new test in `.github/workflows/project3-checks.yml` path filters, syntax checks and Node test runner.
+- [ ] Confirm GitHub Actions pass for the new commits and deployed Pages build. Connector commit acknowledgments alone do not establish passing tests.
+- [ ] Highest priority: real browser acceptance of incident creation → dispatch → passenger transfer → recovery → KPI reconciliation; keyboard/mobile QA at 100 and 240 vehicles.
+- [ ] Validate public map tile loading, attribution, provider usage terms and a permitted road-network routing source; retain labeled synthetic fallback until verified.
+- [ ] Reconcile the four-provider planning cohort with six-team operational workbench and document KPI denominators before comparing them.
+- [ ] Verify production URL and cross-browser performance. No live telemetry or confidential partner data used.
