@@ -320,3 +320,12 @@
 - [ ] Validate public map tile loading, attribution, provider usage terms and a permitted road-network routing source; retain labeled synthetic fallback until verified.
 - [ ] Reconcile the four-provider planning cohort with six-team operational workbench and document KPI denominators before comparing them.
 - [ ] Verify production URL and cross-browser performance. No live telemetry or confidential partner data used.
+
+### 2026-11-20 morning — offer and cancellation lifecycle regression
+- [x] Reviewed current engine, dispatch test, CI workflow, recent commits and roadmap before editing.
+- [x] Added two regression cases to `scripts/test-project3-dispatch-ranking.cjs`: declined offers must leave incidents queued and crew capacity available; pre-arrival cancellation must record its reason, release capacity, and preserve simulation time. Commit `780d37de`.
+- [ ] Confirm the latest Project 3 Actions test conclusion; a GitHub write acknowledgement is not a test pass.
+- [ ] Highest priority: browser-driven end-to-end incident/safety/passenger transfer/dispatch/recovery/KPI checks, including keyboard and 375px mobile.
+- [ ] Validate deployed public street-map attribution and tile loading, then permitted road-network routing source and fallback provenance.
+- [ ] Reconcile four-provider planning with six-team interactive dispatch and clearly separate KPI cohorts and denominators.
+- [ ] Verify 240-vehicle selector performance and accessible reset semantics.
