@@ -34,3 +34,35 @@ test('modeled initial charge is consistent with provider and incident type',()=>
   }
  }
 });
+
+test('declined offer does not occupy a crew or change queued incident',()=>{
+ const s=E.initialState({seed:20261102,count:100});
+ const i=E.createIncident(s,'AV-104','flatbed');
+ const p=E.eligibleProviders(s,i.id)[0];
+ const minute=s.minute;
+ const offer=E.recordProviderOffer(s,i.id,p.id,'declined');
+ assert.equal(offer.outcome,'declined');
+ assert.equal(i.status,'queued');
+ assert.equal(s.minute,minute);
+ assert.ok(E.eligibleProviders(s,i.id).some(x=>x.id===p.id));
+ assert.equal(E.providerBoard(s).find(x=>x.id===p.id).busy,false);
+ assert.throws(()=>E.recordProviderOffer(s,i.id,p.id,'accepted'),/already offered/);
+});
+test('cancellation releases capacity and preserves an auditable reason',()=>{
+ const s=E.initialState();
+ const i=E.createIncident(s,'AV-104','flatbed');
+ const p=E.eligibleProviders(s,i.id)[0];
+ E.recordProviderOffer(s,i.id,p.id,'accepted');
+ assert.ok(!E.eligibleProviders(s,i.id).some(x=>x.id===p.id) || i.status==='dispatched');
+ const before=s.minute;
+ assert.throws(()=>E.cancelProviderAssignment(s,i.id,''),/reason/);
+ E.cancelProviderAssignment(s,i.id,'Synthetic crew unavailable');
+ assert.equal(i.status,'queued');
+ assert.equal(i.providerId,null);
+ assert.equal(s.minute,before);
+ assert.equal(s.providerCancellations.length,1);
+ assert.equal(s.providerCancellations[0].providerId,p.id);
+ assert.equal(s.providerCancellations[0].reason,'Synthetic crew unavailable');
+ assert.equal(E.providerBoard(s).find(x=>x.id===p.id).busy,false);
+ assert.ok(E.eligibleProviders(s,i.id).some(x=>x.id===p.id));
+});
