@@ -95,3 +95,33 @@ test('cancelled dispatch can be reassigned and completed without double-counting
  assert.equal(E.providerAcceptance(s).find(p=>p.id===first.id||p.providerId===first.id).accepted,1);
  assert.equal(E.providerQuality(s).find(p=>p.providerId===first.id).cancellations,1);
 });
+
+test('timed-out offers remain auditable and cannot silently reserve a team',()=>{
+ const s=E.initialState({seed:20261102,count:100});
+ const i=E.createIncident(s,'AV-104','flatbed');
+ const team=E.eligibleProviders(s,i.id)[0];
+ const minute=s.minute;
+ const offer=E.recordProviderOffer(s,i.id,team.id,'timed_out');
+ assert.deepEqual(offer,{incidentId:i.id,providerId:team.id,outcome:'timed_out',minute});
+ assert.equal(i.status,'queued');
+ assert.equal(s.minute,minute);
+ assert.equal(E.providerBoard(s).find(p=>p.id===team.id).busy,false);
+ assert.ok(E.eligibleProviders(s,i.id).some(p=>p.id===team.id));
+ assert.throws(()=>E.recordProviderOffer(s,i.id,team.id,'accepted'),/already offered/);
+ const alternative=E.eligibleProviders(s,i.id).find(p=>p.id!==team.id);
+ assert.ok(alternative,'a compatible alternative is required');
+ E.recordProviderOffer(s,i.id,alternative.id,'accepted');
+ assert.equal(i.providerId,alternative.id);
+ assert.equal(E.providerBoard(s).find(p=>p.id===alternative.id).busy,true);
+ assert.equal(s.providerOffers.filter(o=>o.outcome==='timed_out').length,1);
+});
+test('invalid offers cannot mutate queue, capacity, or offer history',()=>{
+ const s=E.initialState();
+ const i=E.createIncident(s,'AV-104','flatbed');
+ const incapable=s.providers.find(p=>!p.capabilities.includes('flatbed'));
+ assert.ok(incapable);
+ const snapshot=JSON.stringify(s);
+ assert.throws(()=>E.recordProviderOffer(s,i.id,incapable.id,'accepted'),/not equipped/);
+ assert.throws(()=>E.recordProviderOffer(s,i.id,s.providers.find(p=>p.capabilities.includes('flatbed')).id,'unknown'),/Invalid offer outcome/);
+ assert.equal(JSON.stringify(s),snapshot);
+});
