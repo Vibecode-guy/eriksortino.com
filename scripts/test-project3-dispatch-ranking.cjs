@@ -66,3 +66,32 @@ test('cancellation releases capacity and preserves an auditable reason',()=>{
  assert.equal(E.providerBoard(s).find(x=>x.id===p.id).busy,false);
  assert.ok(E.eligibleProviders(s,i.id).some(x=>x.id===p.id));
 });
+
+test('cancelled dispatch can be reassigned and completed without double-counting recovery',()=>{
+ const s=E.initialState({seed:20261102,count:100});
+ const i=E.createIncident(s,'AV-104','flatbed');
+ const first=E.eligibleProviders(s,i.id)[0];
+ E.recordProviderOffer(s,i.id,first.id,'accepted');
+ E.advance(s,i.id); // en route, before on-scene arrival
+ const cancelledAt=s.minute;
+ E.cancelProviderAssignment(s,i.id,'Synthetic vehicle breakdown');
+ assert.equal(s.minute,cancelledAt);
+ assert.equal(i.onSceneAt,null);
+ assert.equal(E.kpis(s).completed,0);
+ assert.equal(E.providerBoard(s).find(p=>p.id===first.id).busy,false);
+ const replacement=E.eligibleProviders(s,i.id).find(p=>p.id!==first.id);
+ assert.ok(replacement,'a second compatible crew must be available');
+ E.recordProviderOffer(s,i.id,replacement.id,'accepted');
+ assert.equal(E.providerBoard(s).find(p=>p.id===replacement.id).busy,true);
+ for(let step=0;step<3;step++)E.advance(s,i.id);
+ assert.equal(i.status,'completed');
+ assert.equal(i.arrivalProviderId,replacement.id);
+ assert.equal(E.kpis(s).completed,1);
+ assert.equal(E.kpis(s).active,0);
+ assert.equal(E.kpis(s).available,100);
+ assert.equal(E.providerBoard(s).filter(p=>p.busy).length,0);
+ assert.equal(s.providerCancellations.length,1);
+ assert.equal(s.providerOffers.filter(o=>o.outcome==='accepted').length,2);
+ assert.equal(E.providerAcceptance(s).find(p=>p.id===first.id||p.providerId===first.id).accepted,1);
+ assert.equal(E.providerQuality(s).find(p=>p.providerId===first.id).cancellations,1);
+});
