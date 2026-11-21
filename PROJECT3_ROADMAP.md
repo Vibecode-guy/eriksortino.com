@@ -329,3 +329,11 @@
 - [ ] Validate deployed public street-map attribution and tile loading, then permitted road-network routing source and fallback provenance.
 - [ ] Reconcile four-provider planning with six-team interactive dispatch and clearly separate KPI cohorts and denominators.
 - [ ] Verify 240-vehicle selector performance and accessible reset semantics.
+
+
+### 2026-11-20 evening — cancellation-to-reassignment acceptance regression
+- [x] Inspected current default-branch commits, engine, dispatch ranking tests, and Project 3 CI workflow before editing. Added an engine-level regression for an accepted offer cancelled while en route, re-offering to a different compatible team, completing recovery, and reconciling crew capacity, accepted-offer counts, cancellations, fleet availability and completed-job denominator. Test commit: `2e0906e330cf40bd8357bb3f93d9308b159af201`. The existing CI workflow already invokes this test file.
+- [ ] Confirm CI for this commit; no passing result is asserted until the run completes. Confirm GitHub Pages publication and test the deployed interface in a real browser. No Projects 1/2 files were changed.
+- **P0:** Browser automation of the existing incident, passenger-safety, reassignment and recovery workflows with KPI assertions.
+- **P1:** Reconcile six-team interactive dispatch and separate planning scenario baselines and denominators; test 240-vehicle interaction and keyboard navigation.
+- **P2:** Verify OSM/Leaflet tile usage and attribution in production, and validate a permitted road-network routing service before replacing labeled great-circle fallback ETAs.
