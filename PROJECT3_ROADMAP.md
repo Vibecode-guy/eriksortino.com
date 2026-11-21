@@ -337,3 +337,11 @@
 - **P0:** Browser automation of the existing incident, passenger-safety, reassignment and recovery workflows with KPI assertions.
 - **P1:** Reconcile six-team interactive dispatch and separate planning scenario baselines and denominators; test 240-vehicle interaction and keyboard navigation.
 - **P2:** Verify OSM/Leaflet tile usage and attribution in production, and validate a permitted road-network routing service before replacing labeled great-circle fallback ETAs.
+
+### 2026-11-21 morning — timeout and invalid-offer regression
+- [x] Inspected current default-branch commits, dispatch engine, ranking tests, dashboard and durable roadmap before editing. Added engine-level regression for timed-out offers (no crew reservation or clock movement; auditable outcome; alternative dispatch) and invalid offers (no state mutation). Test commit: `a164794d3af0afeeaed8e74efc4f6d501ed0495c`. Existing Project 3 CI references this test file.
+- [ ] Verify this commit's GitHub Actions conclusion, production Pages deployment and real browser behavior. A successful commit API response is not a passing test.
+- **P0:** Add browser-driven lifecycle and safety/passenger-transfer regression, including cancellation/reassignment and KPI assertions; test mobile and keyboard controls.
+- **P1:** Reconcile the six-team interactive workbench with four-provider 30-day planning baseline; document cohort and denominator differences and verify 240-vehicle performance.
+- **P2:** Verify attributed public LA street-map tiles and permitted road-network routing provenance; preserve explicitly synthetic straight-line ETA fallback.
+- **P3:** Confirm latest Pages deployment and regression CI status before claiming operational readiness. Projects 1 and 2 remain untouched.
