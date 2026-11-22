@@ -125,3 +125,39 @@ test('invalid offers cannot mutate queue, capacity, or offer history',()=>{
  assert.throws(()=>E.recordProviderOffer(s,i.id,s.providers.find(p=>p.capabilities.includes('flatbed')).id,'unknown'),/Invalid offer outcome/);
  assert.equal(JSON.stringify(s),snapshot);
 });
+
+
+test('240-vehicle seeded workload saturates six teams without double booking or KPI inflation',()=>{
+ const s=E.initialState({seed:20261102,count:240});
+ assert.equal(s.vehicles.length,240);
+ assert.equal(s.providers.length,6);
+ const assignments=[];
+ for(let n=113;n<119;n++){
+  const i=E.createIncident(s,'AV-'+n,'immobilized');
+  const options=E.eligibleProviders(s,i.id);
+  assert.ok(options.length>0,'each of the first six incidents should have a compatible free team');
+  E.assign(s,i.id,options[0].id);
+  assignments.push({id:i.id,providerId:options[0].id});
+ }
+ assert.equal(new Set(assignments.map(x=>x.providerId)).size,6,'all six teams must be unique');
+ assert.equal(E.providerBoard(s).filter(p=>p.busy).length,6);
+ const waiting=E.createIncident(s,'AV-119','immobilized');
+ assert.equal(E.eligibleProviders(s,waiting.id).length,0,'no seventh team should be offered');
+ assert.equal(E.kpis(s).total,240);
+ assert.equal(E.kpis(s).available,233);
+ assert.equal(E.kpis(s).active,7);
+ assert.equal(E.kpis(s).completed,0);
+ for(const job of assignments)for(let step=0;step<3;step++)E.advance(s,job.id);
+ assert.equal(E.kpis(s).completed,6);
+ assert.equal(E.kpis(s).active,1);
+ assert.equal(E.kpis(s).available,239);
+ assert.equal(E.providerBoard(s).filter(p=>p.busy).length,0);
+ assert.equal(E.eligibleProviders(s,waiting.id).length,6);
+ assert.equal(E.kpis(s).meanResponse!==null,true);
+ assert.equal(E.kpis(s).p90Response!==null,true);
+ const reset=E.initialState({seed:20261102,count:240});
+ assert.equal(reset.vehicles.length,240);
+ assert.equal(reset.incidents.length,0);
+ assert.equal(E.kpis(reset).available,240);
+ assert.equal(E.kpis(reset).completed,0);
+});
