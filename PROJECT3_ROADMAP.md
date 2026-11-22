@@ -345,3 +345,12 @@
 - **P1:** Reconcile the six-team interactive workbench with four-provider 30-day planning baseline; document cohort and denominator differences and verify 240-vehicle performance.
 - **P2:** Verify attributed public LA street-map tiles and permitted road-network routing provenance; preserve explicitly synthetic straight-line ETA fallback.
 - **P3:** Confirm latest Pages deployment and regression CI status before claiming operational readiness. Projects 1 and 2 remain untouched.
+
+
+### 2026-11-21 evening — Offer KPI denominator regression
+- [x] Inspected current Project 3 engine, existing offer regression tests, CI workflow, and latest commits before editing.
+- [x] Added `scripts/test-project3-offer-denominators.cjs`: synthetic accepted/declined/timed-out offers contribute to the correct acceptance denominator; no-offer rate remains null; accepted-then-cancelled assignments remain counted as accepted, with cancellation rate based on accepted offers and on-time rate null when no arrivals exist.
+- [x] Registered syntax validation and Node test execution in `.github/workflows/project3-checks.yml`.
+- [ ] Verify new GitHub Actions run and live Pages deployment for commits `0a7b0d56` and `54187855`; connector write acknowledgement alone does not prove test success.
+- [ ] Highest priority: real browser lifecycle acceptance, mobile keyboard/screen-reader checks, map tile/attribution validation, road-network routing source and fallback disclosure, 240-vehicle performance, and reconciliation of operational six-team versus four-provider planning cohorts.
+- Guardrails unchanged: all operational positions, offers, rates and costs are synthetic; no telemetry or confidential partner information; Projects 1 and 2 untouched.
