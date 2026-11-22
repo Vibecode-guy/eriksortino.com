@@ -354,3 +354,13 @@
 - [ ] Verify new GitHub Actions run and live Pages deployment for commits `0a7b0d56` and `54187855`; connector write acknowledgement alone does not prove test success.
 - [ ] Highest priority: real browser lifecycle acceptance, mobile keyboard/screen-reader checks, map tile/attribution validation, road-network routing source and fallback disclosure, 240-vehicle performance, and reconciliation of operational six-team versus four-provider planning cohorts.
 - Guardrails unchanged: all operational positions, offers, rates and costs are synthetic; no telemetry or confidential partner information; Projects 1 and 2 untouched.
+
+
+### 2026-11-22 morning — 240-vehicle capacity and KPI stress regression
+- [x] Inspected default-branch recent commits, Project 3 dashboard, dispatch engine, existing ranking tests, CI workflow and backlog before editing. Existing deterministic 100-vehicle/six-team simulation, public opt-in map and separate 30-day planner are preserved.
+- [x] Added engine-level 240-vehicle stress regression to `scripts/test-project3-dispatch-ranking.cjs` (commit `33fdce0e5d8cffa4cf2d174928eee53aadc56b6c`): six simultaneous immobilized incidents consume six distinct teams; seventh incident remains queued with no available offers; after completion capacity and fleet/KPI denominators reconcile; seeded reset clears the workload. Existing CI already runs this test file.
+- [ ] Verify GitHub Actions conclusion for this commit, and Pages deployment and real browser/mobile behavior; commit acknowledgement is not a passing test.
+- **P0:** Browser-driven safety/passenger-transfer/incident/dispatch/recovery acceptance, including keyboard and focus checks.
+- **P1:** Confirm 240-vehicle UI responsiveness, deterministic reset, accessible selectors, and compare four-provider planning cohort versus six-team operational cohort with explicit denominators.
+- **P2:** Validate public LA map tile loading and attribution, plus routing-service license/terms and route provenance; preserve labeled synthetic great-circle fallback.
+- **P3:** Verify CI, production Pages and performance before asserting release readiness. Projects 1/2 unchanged; no real telemetry or confidential partner data.
