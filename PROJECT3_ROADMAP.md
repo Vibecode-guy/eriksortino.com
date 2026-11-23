@@ -377,3 +377,13 @@
 - [ ] Priority 4: validate permitted road-network routing and caching, with clear deterministic fallback and no fabricated traffic ETA.
 - [ ] Priority 5: measure UI responsiveness with 240 vehicles, then consider user-facing seed/fixture controls.
 - No Project 1 or Project 2 files changed in this milestone. No real telemetry or confidential operational data used.
+
+
+### 2026-11-23 morning — Fleet-size contract and next acceptance priorities
+- [x] Inspected latest repository commits, existing seeded generator, dispatch lifecycle acceptance tests, CI workflow and roadmap before editing. Existing workbench remains 100 synthetic AVs / six fictional teams by default; no Project 1 or 2 edits.
+- [x] Added `scripts/test-project3-fleet-size-contract.cjs` to verify **every integer fixture size from 12 through 240**, three edge/default seeds, contiguous unique IDs, finite WGS84 coordinate ranges, six distinct teams, and count-independent seeded prefixes. CI syntax and test execution wired in `.github/workflows/project3-checks.yml`. Commits: `f518f0fe`, `5d10a079`.
+- [ ] Confirm new GitHub Actions result and Pages deployment. Until a run passes, do not claim the new regression is green; static tests do not replace browser/mobile testing.
+- [ ] **P0:** Run actual browser acceptance (incident, safety flag, replacement AV, clearance, dispatch, cancellation, recovery, KPI reconciliation) and keyboard/screen-reader checks.
+- [ ] **P1:** Reconcile historical four-provider planning descriptions with the current six-team baseline and optional seventh crew; explicitly distinguish planner workload from interactive fleet size and all KPI denominators.
+- [ ] **P1:** Validate street-map public data attribution/usage and an authorized road-network ETA source; retain synthetic straight-line fallback labels until verified.
+- [ ] **P2:** Measure 240-vehicle UI responsiveness, map marker density, and mobile controls before exposing fleet seed/count configuration.
