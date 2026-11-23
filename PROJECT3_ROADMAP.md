@@ -364,3 +364,16 @@
 - **P1:** Confirm 240-vehicle UI responsiveness, deterministic reset, accessible selectors, and compare four-provider planning cohort versus six-team operational cohort with explicit denominators.
 - **P2:** Validate public LA map tile loading and attribution, plus routing-service license/terms and route provenance; preserve labeled synthetic great-circle fallback.
 - **P3:** Verify CI, production Pages and performance before asserting release readiness. Projects 1/2 unchanged; no real telemetry or confidential partner data.
+
+
+### 2026-11-22 evening — seeded fixture boundary regression
+- [x] Re-inspected current Project 3 engine, dispatch tests, CI, roadmap and latest seven commits before editing.
+- [x] Added `scripts/test-project3-seeded-fixtures.cjs` covering 12/100/240 vehicle configurations, seeds 0/default/maximum unsigned 32-bit, stable unique IDs, six providers, fixed first 12 demonstration anchors, changed generated positions for changed seeds, rejected invalid seed/count inputs, and independent reset after incident/provider mutation.
+- [x] Registered new test in `.github/workflows/project3-checks.yml` for syntax checking and Node test execution.
+- [ ] Verify this commit's CI result; connector writes alone do not prove tests pass. Verify current GitHub Pages deployment and browser/mobile behavior independently.
+- [ ] Priority 1: run real browser-driven incident → safety/transfer → dispatch/reassignment → recovery → KPI acceptance tests and keyboard/mobile checks.
+- [ ] Priority 2: reconcile four-provider 30-day planning baseline with six-team operational simulation; document separate denominator and fleet-size assumptions.
+- [ ] Priority 3: verify public LA street-map attribution, licensing, tile loading and accessible fallback; keep synthetic positions explicitly labeled.
+- [ ] Priority 4: validate permitted road-network routing and caching, with clear deterministic fallback and no fabricated traffic ETA.
+- [ ] Priority 5: measure UI responsiveness with 240 vehicles, then consider user-facing seed/fixture controls.
+- No Project 1 or Project 2 files changed in this milestone. No real telemetry or confidential operational data used.
