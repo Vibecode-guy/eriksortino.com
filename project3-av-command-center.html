@@ -127,7 +127,7 @@ h1{font-size:clamp(30px,3.4vw,48px);margin:16px 0 8px}
 </div></section>
 <section class="panel" id="planning" aria-labelledby="planningHeading" style="margin-top:22px">
 <h2 id="planningHeading">Scenario planning · staging and dispatch tradeoffs</h2>
-<p class="intro">Compare the existing four fictional crews against adding one crew at LAX/Westside, the Valley, or San Pedro/Harbor. A separate seeded 30-day planning model replays <strong>identical synthetic incidents</strong> across each option. It does not alter the live tabletop queue or vehicle markers.</p>
+<p class="intro">Compare six baseline fictional crews against seven crews (one additional staged crew at LAX/Westside, the Valley, or San Pedro/Harbor). A separate seeded 30-day planning model replays <strong>identical synthetic incidents</strong> across each option. The planner fleet-size control scales incident demand, not the interactive 100-vehicle simulation, queue or map markers.</p>
 <div class="planning-grid">
 <div><label for="planFleet">Modeled fleet size (not map markers)</label><select id="planFleet"><option value="12">12 AVs</option><option value="24" selected>24 AVs</option><option value="60">60 AVs</option><option value="120">120 AVs</option><option value="240">240 AVs</option></select></div>
 <div><label for="planRate">Incidents per 100 AVs per day</label><select id="planRate"><option value="2">2 (low)</option><option value="5" selected>5 (moderate)</option><option value="10">10 (high)</option><option value="20">20 (stress)</option><option value="30">30 (extreme)</option></select></div>
