@@ -27,3 +27,10 @@ test('mobile layouts and keyboard focus cues remain available',()=>{
  assert.match(page,/#streetMap \.leaflet-interactive:focus-visible/,'Map marker focus indication missing');
  assert.match(page,/#streetMap\[hidden\]\{display:none\}/,'Opt-in map must be hidden by default');
 });
+
+ test('planner copy matches six baseline crews and independent workload scale',()=>{
+ assert.match(page,/Compare six baseline fictional crews against seven crews/);
+ assert.match(page,/relative to the six-provider baseline/);
+ assert.match(page,/planner fleet-size control scales incident demand, not the interactive 100-vehicle simulation/);
+ assert.doesNotMatch(page,/existing four fictional crews/);
+});
