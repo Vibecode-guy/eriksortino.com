@@ -387,3 +387,10 @@
 - [ ] **P1:** Reconcile historical four-provider planning descriptions with the current six-team baseline and optional seventh crew; explicitly distinguish planner workload from interactive fleet size and all KPI denominators.
 - [ ] **P1:** Validate street-map public data attribution/usage and an authorized road-network ETA source; retain synthetic straight-line fallback labels until verified.
 - [ ] **P2:** Measure 240-vehicle UI responsiveness, map marker density, and mobile controls before exposing fleet seed/count configuration.
+
+### 2026-11-23 evening — planner baseline disclosure correction
+- [x] Inspected latest six commits, dashboard, planning engine, planning regression and CI. Confirmed actual planner already uses six baseline teams and seven in staging alternatives; stale dashboard introduction incorrectly said four. Corrected copy and clarified independent demand slider (`f5c33a20`). Existing planning tests already assert six/seven provider counts.
+- [x] Added static regression for the corrected disclosure (`9fcbdccf`); checked the three copy assertions against the retrieved committed HTML. Full Node CI and production browser verification remain pending.
+- **P0:** Browser-driven lifecycle, safety, transfer, dispatch and KPI acceptance; keyboard/mobile and 240-vehicle performance. Confirm CI and Pages deployment.
+- **P1:** Audit scenario KPI denominators and costs; validate public map attribution and permitted road-network routing with labeled synthetic fallback.
+- **P2:** Expose fixture configuration only after performance and reset acceptance. Historical four-provider roadmap references describe superseded assumptions, not current planner behavior. No Projects 1/2 edits.
