@@ -10,7 +10,7 @@ function render(){
  try{
   const c={fleetSize:Number($('planFleet').value),incidentsPer100PerDay:Number($('planRate').value),budget:Number($('planBudget').value)};
   const x=P.compare(c),base=x.baseline,chosen=x.recommendation;
-  $('planStatus').textContent=x.assumptions.events+' synthetic incidents across '+x.assumptions.horizonDays+' days; '+c.fleetSize+' modeled AVs; '+c.incidentsPer100PerDay+' incidents per 100 AVs/day. Every option uses the same seeded events.';
+  $('scenarioPlanStatus').textContent=x.assumptions.events+' synthetic incidents across '+x.assumptions.horizonDays+' days; '+c.fleetSize+' modeled AVs; '+c.incidentsPer100PerDay+' incidents per 100 AVs/day. Every option uses the same seeded events.';
   // The planner and tabletop are separate models: visualize the planning result without moving AV markers.
   const layer=$('coverageLayer'),decision=$('coverageDecision');
   if(layer)layer.dataset.focus=chosen.id;
@@ -78,7 +78,7 @@ function render(){
   for(const e of chosen.examples){const li=document.createElement('li');li.textContent=e.vehicleId+' / '+E.TYPES[e.type].label+' → '+e.provider+': '+e.queueMinutes+' min crew wait + dispatch preparation + '+e.travelMinutes+' min synthetic travel = '+e.responseMinutes+' min response; variable cost '+cash(e.estimatedCost)+'. '+e.reason;examples.append(li);}
   $('planMethod').textContent='Assumptions: '+x.assumptions.providerCrewCapacity+'. Additional crew overhead '+cash(x.assumptions.siteFixedCost)+'/30 days; distance charge '+cash(x.assumptions.perKmCost)+'/km plus fictional base fees and surcharges. '+x.assumptions.eventGeneration+'. '+x.assumptions.dispatchRule+'. Straight-line travel, no traffic, passenger-trip utilization, safety clearance, or real provider capacity. Estimates are not forecasts.';
  }catch(e){
-  $('planStatus').textContent='Planning calculation unavailable: '+e.message;
+  $('scenarioPlanStatus').textContent='Planning calculation unavailable: '+e.message;
   $('planRecommendation').textContent='No scenario recommendation available.';
   $('planTable').replaceChildren();$('planExamples').replaceChildren();
  }
