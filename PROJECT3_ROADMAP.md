@@ -394,3 +394,12 @@
 - **P0:** Browser-driven lifecycle, safety, transfer, dispatch and KPI acceptance; keyboard/mobile and 240-vehicle performance. Confirm CI and Pages deployment.
 - **P1:** Audit scenario KPI denominators and costs; validate public map attribution and permitted road-network routing with labeled synthetic fallback.
 - **P2:** Expose fixture configuration only after performance and reset acceptance. Historical four-provider roadmap references describe superseded assumptions, not current planner behavior. No Projects 1/2 edits.
+
+
+### 2026-11-28 — HTML integrity and independent status controls
+- [x] Inspected five recent commits, dashboard, planning UI, CI and roadmap. Prior trailing corruption repair: `1dc38e7`.
+- [x] Separated planner output from provider quality selector (`ce867b6b`, `003ab189`); verified retrieved committed sources have 135 unique static IDs, one terminal closing HTML tag and two dedicated planner status references.
+- [x] Added CI static integrity assertions (`f1f744bd`); equivalent source checks passed during this run. Full Node CI and live browser behavior not yet verified.
+- **P0:** Verify CI and Pages; browser acceptance for safety, transfer, dispatch, cancellation, recovery, KPI reconciliation and independent status controls.
+- **P1:** Validate public LA geography/attribution, permitted routing source and labeled fallback; audit scenario costs and KPI denominators; mobile and keyboard accessibility.
+- **P2:** Measure 240-vehicle UI performance and expose deterministic seed/count controls after reset acceptance. Existing 100-vehicle/six-team engine and planning features preserved. Projects 1/2 untouched; synthetic data only.
