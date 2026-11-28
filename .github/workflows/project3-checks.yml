@@ -80,6 +80,13 @@ jobs:
           for(const id of ['aProviders','aTypes','aAreas','aStages','aReady','aSla'])assert(page.includes('id="'+id+'"'),'Missing analytics panel: '+id);
           for(const id of ['planning','planFleet','planRate','planBudget','planTable','planRecommendation','planExamples','planMethod'])assert(page.includes('id="'+id+'"'),'Missing planning control: '+id);
           assert(page.includes('Synthetic scenario')&&page.includes('No actual company or partner data'),'Synthetic disclosures missing');
+          const ids=[...page.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+          assert.equal(ids.length,new Set(ids).size,'Duplicate static element IDs');
+          assert.equal((page.match(/<\/html>/gi)||[]).length,1,'Expected one closing HTML tag');
+          assert(page.trimEnd().endsWith('</html>'),'Unexpected trailing HTML content');
+          const planner=fs.readFileSync('scripts/project3-planning-ui.js','utf8');
+          assert(page.includes('<p id="scenarioPlanStatus"')&&page.includes('id="planStatus"'),'Separate status controls missing');
+          assert(!planner.includes("$('planStatus')")&&(planner.match(/scenarioPlanStatus/g)||[]).length===2,'Planner status target mismatch');
           const inline=page.split('<script>').slice(1).map(block=>block.split('</script>')[0]);
           assert(inline.length,'Inline UI script missing');
           for(const block of inline)new Function(block);
